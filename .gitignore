@@ -1,0 +1,30 @@
+# Root .gitignore for IT342-Garbo-PawnScan
+
+# Maven / Java
+target/
+**/target/
+*.class
+*.jar
+*.war
+*.ear
+
+# Application properties (ignore any application.properties files)
+**/application.properties
+
+# IDEs and editors
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+.vscode/
+
+# Logs
+*.log
+
+# Node
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
