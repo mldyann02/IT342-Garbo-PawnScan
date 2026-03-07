@@ -18,6 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
+import edu.cit.garbo.pawnscan.security.JwtService;
+
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
@@ -25,6 +27,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final BusinessProfileService businessProfileService;
+    private final JwtService jwtService;
 
     @Override
     @Transactional
@@ -81,14 +84,18 @@ public class AuthServiceImpl implements AuthService {
                 ? businessProfileService.getSummaryByUserId(user.getUserId())
                 : Optional.empty();
 
+        // Generate JWT token including role
+        String token = jwtService.generateToken(user);
+
         return AuthResponse.builder()
-                .userId(user.getUserId())
-                .email(user.getEmail())
-                .fullName(user.getFullName())
-                .role(user.getRole().name())
-                .businessProfile(businessProfileSummary.orElse(null))
-                .message("Login successful")
-                .build();
+            .userId(user.getUserId())
+            .email(user.getEmail())
+            .fullName(user.getFullName())
+            .role(user.getRole().name())
+            .token(token)
+            .businessProfile(businessProfileSummary.orElse(null))
+            .message("Login successful")
+            .build();
     }
 
     private boolean hasBusinessRegistrationFields(RegisterRequest request) {
