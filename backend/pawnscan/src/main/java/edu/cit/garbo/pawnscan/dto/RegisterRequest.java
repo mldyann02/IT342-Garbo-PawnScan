@@ -1,5 +1,6 @@
 package edu.cit.garbo.pawnscan.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import edu.cit.garbo.pawnscan.entity.UserRole;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -33,6 +34,18 @@ public class RegisterRequest {
 
     @Size(max = 20, message = "Phone number must not exceed 20 characters")
     private String phoneNumber;
+
+    @JsonAlias({"business_name", "businessName"})
+    @Size(max = 255, message = "Business name must not exceed 255 characters")
+    private String businessName;
+
+    @JsonAlias({"business_address", "businessAddress"})
+    @Size(max = 2000, message = "Business address must not exceed 2000 characters")
+    private String businessAddress;
+
+    @JsonAlias({"permit_number", "permitNumber"})
+    @Size(max = 100, message = "Permit number must not exceed 100 characters")
+    private String permitNumber;
 
     @NotNull(message = "Role is required")
     private UserRole role;

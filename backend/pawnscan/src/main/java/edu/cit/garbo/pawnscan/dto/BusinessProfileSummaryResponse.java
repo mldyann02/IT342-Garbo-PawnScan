@@ -11,12 +11,9 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AuthResponse {
+public class BusinessProfileSummaryResponse {
 
     private Long userId;
-    private String email;
-    private String fullName;
-    private String role;
-    private BusinessProfileSummaryResponse businessProfile;
-    private String message;
+    private String businessName;
+    private boolean isVerified;
 }
