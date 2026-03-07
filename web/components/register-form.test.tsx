@@ -21,7 +21,15 @@ describe('RegisterForm', () => {
 
   it('submits individual registration successfully', async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
-      new Response(JSON.stringify({ message: 'User registered', token: 'jwt-token' }), { status: 201 })
+      new Response(
+        JSON.stringify({
+          message: 'User registered',
+          token: 'jwt-token',
+          email: 'juan@example.com',
+          role: 'USER'
+        }),
+        { status: 201 }
+      )
     );
 
     render(<RegisterForm />);
@@ -56,7 +64,7 @@ describe('RegisterForm', () => {
     expect(window.sessionStorage.getItem('pawnscan_jwt')).toBe('jwt-token');
 
     await waitFor(() => {
-      expect(pushMock).toHaveBeenCalledWith('/login');
+      expect(pushMock).toHaveBeenCalledWith('/login?registered=1&email=juan%40example.com&role=USER');
     });
   });
 

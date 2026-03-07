@@ -1,5 +1,6 @@
 package edu.cit.garbo.pawnscan.dto;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -11,12 +12,8 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AuthResponse {
+public class BusinessVerificationRequest {
 
-    private Long userId;
-    private String email;
-    private String fullName;
-    private String role;
-    private BusinessProfileSummaryResponse businessProfile;
-    private String message;
+    @NotNull(message = "Verification status is required")
+    private Boolean isVerified;
 }

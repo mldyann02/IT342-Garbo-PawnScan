@@ -17,7 +17,9 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const token = getJwt();
-    if (!token) {
+    const authenticatedEmail = getAuthUser();
+
+    if (!token && !authenticatedEmail) {
       router.replace('/login');
     }
   }, [router]);
