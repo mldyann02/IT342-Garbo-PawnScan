@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { clearAuthSession, getAuthUser, getJwt } from '@/lib/auth';
+import { clearAuthSession, getAuthUser, getAuthRole, getJwt } from '@/lib/auth';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -13,6 +13,14 @@ export default function DashboardPage() {
     }
 
     return getAuthUser() || '';
+  }, []);
+
+  const userRole = useMemo(() => {
+    if (typeof window === 'undefined') {
+      return '';
+    }
+
+    return getAuthRole() || '';
   }, []);
 
   useEffect(() => {
@@ -61,7 +69,7 @@ export default function DashboardPage() {
           <div className="w-full rounded-[10px] border border-border-muted bg-slate-950/70 p-6 sm:p-8">
             <h2 className="text-2xl font-semibold text-slate-100">Welcome</h2>
             <p className="mt-2 text-sm text-slate-300">
-              {userEmail ? `Logged in as ${userEmail}` : 'You are authenticated.'}
+              {userRole === 'ADMIN' ? 'Welcome, System Admin' : userEmail ? `Logged in as ${userEmail}` : 'You are authenticated.'}
             </p>
 
             <div className="mt-6 rounded-[10px] border border-border-muted bg-slate-900 p-4 text-sm text-slate-300">
