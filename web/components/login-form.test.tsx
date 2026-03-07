@@ -5,11 +5,13 @@ import { vi } from 'vitest';
 import LoginForm from './login-form';
 
 const pushMock = vi.fn();
+let mockSearchParams = new URLSearchParams();
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
     push: pushMock
-  })
+  }),
+  useSearchParams: () => mockSearchParams
 }));
 
 describe('LoginForm', () => {
@@ -17,6 +19,7 @@ describe('LoginForm', () => {
     vi.clearAllMocks();
     vi.stubGlobal('fetch', vi.fn());
     window.sessionStorage.clear();
+    mockSearchParams = new URLSearchParams();
   });
 
   it('submits login successfully and redirects to dashboard', async () => {
@@ -45,7 +48,7 @@ describe('LoginForm', () => {
       );
     });
 
-    expect(window.sessionStorage.getItem('pawnscan_jwt')).toBeTruthy();
+    expect(window.sessionStorage.getItem('pawnscan_jwt')).toBeNull();
     expect(window.sessionStorage.getItem('pawnscan_auth_user')).toBe('user@example.com');
 
     await waitFor(() => {
@@ -65,5 +68,15 @@ describe('LoginForm', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Login' }));
 
     expect(await screen.findByText(/Login failed: Invalid email or password/i)).toBeInTheDocument();
+  });
+
+  it('shows registration success message from query params', async () => {
+    mockSearchParams = new URLSearchParams('registered=1&email=biz%40example.com&role=BUSINESS');
+
+    render(<LoginForm />);
+
+    expect(
+      screen.getByText('Business account for biz@example.com registered successfully. Please log in.')
+    ).toBeInTheDocument();
   });
 });

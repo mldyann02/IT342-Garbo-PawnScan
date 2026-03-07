@@ -1,15 +1,22 @@
 package edu.cit.garbo.pawnscan.service;
 
 import edu.cit.garbo.pawnscan.dto.AuthResponse;
+import edu.cit.garbo.pawnscan.dto.BusinessProfileRequest;
+import edu.cit.garbo.pawnscan.dto.BusinessProfileSummaryResponse;
 import edu.cit.garbo.pawnscan.dto.LoginRequest;
 import edu.cit.garbo.pawnscan.dto.RegisterRequest;
 import edu.cit.garbo.pawnscan.entity.User;
+import edu.cit.garbo.pawnscan.entity.UserRole;
 import edu.cit.garbo.pawnscan.exception.EmailAlreadyExistsException;
 import edu.cit.garbo.pawnscan.exception.InvalidCredentialsException;
+import edu.cit.garbo.pawnscan.exception.InvalidBusinessProfileException;
 import edu.cit.garbo.pawnscan.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -17,11 +24,17 @@ public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final BusinessProfileService businessProfileService;
 
     @Override
+    @Transactional
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new EmailAlreadyExistsException("Email is already registered");
+        }
+
+        if (request.getRole() == UserRole.BUSINESS && !hasBusinessRegistrationFields(request)) {
+            throw new InvalidBusinessProfileException("Business name, business address, and permit number are required for BUSINESS users");
         }
 
         User user = User.builder()
@@ -34,11 +47,23 @@ public class AuthServiceImpl implements AuthService {
 
         User savedUser = userRepository.save(user);
 
+        Optional<BusinessProfileSummaryResponse> businessProfileSummary = Optional.empty();
+        if (savedUser.getRole() == UserRole.BUSINESS) {
+            businessProfileService.createProfileForRegistration(savedUser, BusinessProfileRequest.builder()
+                    .businessName(request.getBusinessName())
+                    .businessAddress(request.getBusinessAddress())
+                    .permitNumber(request.getPermitNumber())
+                    .build());
+
+            businessProfileSummary = businessProfileService.getSummaryByUserId(savedUser.getUserId());
+        }
+
         return AuthResponse.builder()
                 .userId(savedUser.getUserId())
                 .email(savedUser.getEmail())
                 .fullName(savedUser.getFullName())
                 .role(savedUser.getRole().name())
+                .businessProfile(businessProfileSummary.orElse(null))
                 .message("User registered successfully")
                 .build();
     }
@@ -52,12 +77,27 @@ public class AuthServiceImpl implements AuthService {
             throw new InvalidCredentialsException("Invalid email or password");
         }
 
+        Optional<BusinessProfileSummaryResponse> businessProfileSummary = user.getRole() == UserRole.BUSINESS
+                ? businessProfileService.getSummaryByUserId(user.getUserId())
+                : Optional.empty();
+
         return AuthResponse.builder()
                 .userId(user.getUserId())
                 .email(user.getEmail())
                 .fullName(user.getFullName())
                 .role(user.getRole().name())
+                .businessProfile(businessProfileSummary.orElse(null))
                 .message("Login successful")
                 .build();
+    }
+
+    private boolean hasBusinessRegistrationFields(RegisterRequest request) {
+        return !isBlank(request.getBusinessName())
+                && !isBlank(request.getBusinessAddress())
+                && !isBlank(request.getPermitNumber());
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
     }
 }
