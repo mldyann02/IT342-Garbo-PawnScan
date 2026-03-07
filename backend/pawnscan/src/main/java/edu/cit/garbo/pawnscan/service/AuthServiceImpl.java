@@ -37,14 +37,15 @@ public class AuthServiceImpl implements AuthService {
         }
 
         if (request.getRole() == UserRole.BUSINESS && !hasBusinessRegistrationFields(request)) {
-            throw new InvalidBusinessProfileException("Business name, business address, and permit number are required for BUSINESS users");
+            throw new InvalidBusinessProfileException(
+                    "Business name, business address, and permit number are required for BUSINESS users");
         }
 
         User user = User.builder()
                 .fullName(request.getFullName())
                 .email(request.getEmail())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
-                .phoneNumber(request.getPhoneNumber())
+                .phoneNumber(normalizePhilippinePhone(request.getPhoneNumber()))
                 .role(request.getRole())
                 .build();
 
@@ -71,6 +72,39 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
+    private String normalizePhilippinePhone(String input) {
+        if (input == null)
+            return null;
+        String v = input.trim();
+        if (v.isEmpty())
+            return v;
+
+        // Already normalized: +639XXXXXXXXX
+        if (v.matches("^\\+639\\d{9}$"))
+            return v;
+
+        // Local 0XXXXXXXXXX -> +63XXXXXXXXXX
+        if (v.matches("^0\\d{10}$"))
+            return "+63" + v.substring(1);
+
+        // Missing plus: 63XXXXXXXXXX -> +63XXXXXXXXXX
+        if (v.matches("^63\\d{10}$"))
+            return "+" + v;
+
+        // Extract digits and try to normalize common patterns
+        String digits = v.replaceAll("[^\\d]", "");
+        if (digits.length() == 11 && digits.startsWith("09")) {
+            return "+63" + digits.substring(1);
+        }
+        if (digits.length() == 12 && digits.startsWith("63")) {
+            return "+" + digits;
+        }
+
+        // If nothing matched, return original trimmed input to allow validation to
+        // catch it
+        return v;
+    }
+
     @Override
     public AuthResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
@@ -88,14 +122,14 @@ public class AuthServiceImpl implements AuthService {
         String token = jwtService.generateToken(user);
 
         return AuthResponse.builder()
-            .userId(user.getUserId())
-            .email(user.getEmail())
-            .fullName(user.getFullName())
-            .role(user.getRole().name())
-            .token(token)
-            .businessProfile(businessProfileSummary.orElse(null))
-            .message("Login successful")
-            .build();
+                .userId(user.getUserId())
+                .email(user.getEmail())
+                .fullName(user.getFullName())
+                .role(user.getRole().name())
+                .token(token)
+                .businessProfile(businessProfileSummary.orElse(null))
+                .message("Login successful")
+                .build();
     }
 
     private boolean hasBusinessRegistrationFields(RegisterRequest request) {
