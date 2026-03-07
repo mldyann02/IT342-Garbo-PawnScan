@@ -1,4 +1,4 @@
-package edu.cit.garbo.pawnscan.user;
+package edu.cit.garbo.pawnscan.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Column;
@@ -27,35 +27,28 @@ import java.time.LocalDateTime;
 @Builder
 public class User {
 
-    // Primary key for the users table.
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
     private Long userId;
 
-    // Email used for identity and login. Must be unique.
     @Column(nullable = false, unique = true)
     private String email;
 
-    // Hashed password only. Not exposed in JSON responses.
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
-    // Display name of the account owner.
     @Column(name = "full_name", nullable = false)
     private String fullName;
 
-    // Optional contact number.
     @Column(name = "phone_number")
     private String phoneNumber;
 
-    // Role for RBAC (USER, BUSINESS, ADMIN), stored as string.
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UserRole role;
 
-    // Timestamp when the record is created.
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
