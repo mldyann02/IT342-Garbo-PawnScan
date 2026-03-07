@@ -4,7 +4,7 @@ import Link from 'next/link';
 import React from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { storeAuthUser, storeJwt } from '@/lib/auth';
+import { storeAuthUser, storeJwt, storeAuthRole } from '@/lib/auth';
 import { validateEmail, validatePassword } from '@/lib/validation';
 
 type LoginValues = {
@@ -126,6 +126,11 @@ export default function LoginForm() {
       const token = data.token || data.jwt || data.accessToken || data.access_token;
       if (token) {
         storeJwt(token);
+      }
+
+      const role = (data as any).role || (data as any).user?.role || '';
+      if (role) {
+        storeAuthRole(role);
       }
 
       storeAuthUser(values.email.trim());
