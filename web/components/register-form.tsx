@@ -116,11 +116,11 @@ export default function RegisterForm() {
 
       setApiMessage({
         type: 'success',
-        text: data.message || 'Registration successful. Redirecting to your dashboard...'
+        text: data.message || 'Registration successful. Redirecting to login...'
       });
 
       setTimeout(() => {
-        router.push('/dashboard');
+        router.push('/login');
       }, 500);
     } catch {
       setApiMessage({
