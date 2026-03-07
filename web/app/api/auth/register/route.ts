@@ -28,7 +28,10 @@ export async function POST(request: Request) {
         email: body.email,
         password: body.password,
         phoneNumber: body.phoneNumber,
-        role: backendRole
+        role: backendRole,
+        business_name: body.business_name,
+        business_address: body.business_address,
+        permit_number: body.permit_number
       })
     });
 

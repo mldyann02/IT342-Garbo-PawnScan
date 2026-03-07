@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import React from 'react';
-import { useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { storeAuthUser, storeJwt } from '@/lib/auth';
 import { validateEmail, validatePassword } from '@/lib/validation';
 
@@ -44,11 +44,30 @@ function EyeIcon({ open }: { open: boolean }) {
 
 export default function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [values, setValues] = useState<LoginValues>({ email: '', password: '' });
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [apiMessage, setApiMessage] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
+
+  useEffect(() => {
+    const isRegistered = searchParams.get('registered') === '1';
+    if (!isRegistered) {
+      return;
+    }
+
+    const registeredEmail = searchParams.get('email');
+    const registeredRole = searchParams.get('role');
+    const roleLabel = registeredRole === 'BUSINESS' ? 'Business account' : 'User account';
+
+    setApiMessage({
+      type: 'success',
+      text: registeredEmail
+        ? `${roleLabel} for ${registeredEmail} registered successfully. Please log in.`
+        : 'Registration successful. Please log in.'
+    });
+  }, [searchParams]);
 
   const errors = useMemo(() => {
     const nextErrors: Partial<Record<keyof LoginValues, string>> = {};
@@ -107,8 +126,6 @@ export default function LoginForm() {
       const token = data.token || data.jwt || data.accessToken || data.access_token;
       if (token) {
         storeJwt(token);
-      } else {
-        storeJwt(`session-${Date.now()}`);
       }
 
       storeAuthUser(values.email.trim());

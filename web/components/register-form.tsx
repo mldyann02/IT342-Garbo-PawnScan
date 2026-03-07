@@ -14,6 +14,8 @@ type ApiResponse = {
   jwt?: string;
   accessToken?: string;
   access_token?: string;
+  email?: string;
+  role?: string;
   errors?: Record<string, string>;
 };
 
@@ -114,13 +116,27 @@ export default function RegisterForm() {
         storeJwt(token);
       }
 
+      const registeredEmail = typeof data.email === 'string' ? data.email : '';
+      const registeredRole = typeof data.role === 'string' ? data.role : '';
+      const params = new URLSearchParams({
+        registered: '1'
+      });
+
+      if (registeredEmail) {
+        params.set('email', registeredEmail);
+      }
+
+      if (registeredRole) {
+        params.set('role', registeredRole);
+      }
+
       setApiMessage({
         type: 'success',
         text: data.message || 'Registration successful. Redirecting to login...'
       });
 
       setTimeout(() => {
-        router.push('/login');
+        router.push(`/login?${params.toString()}`);
       }, 500);
     } catch {
       setApiMessage({
