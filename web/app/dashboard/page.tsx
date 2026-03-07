@@ -1,26 +1,26 @@
-'use client';
+"use client";
 
-import { useEffect, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
-import { clearAuthSession, getAuthUser, getAuthRole, getJwt } from '@/lib/auth';
+import { useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { clearAuthSession, getAuthUser, getAuthRole, getJwt } from "@/lib/auth";
 
 export default function DashboardPage() {
   const router = useRouter();
 
   const userEmail = useMemo(() => {
-    if (typeof window === 'undefined') {
-      return '';
+    if (typeof window === "undefined") {
+      return "";
     }
 
-    return getAuthUser() || '';
+    return getAuthUser() || "";
   }, []);
 
   const userRole = useMemo(() => {
-    if (typeof window === 'undefined') {
-      return '';
+    if (typeof window === "undefined") {
+      return "";
     }
 
-    return getAuthRole() || '';
+    return getAuthRole() || "";
   }, []);
 
   useEffect(() => {
@@ -28,25 +28,33 @@ export default function DashboardPage() {
     const authenticatedEmail = getAuthUser();
 
     if (!token && !authenticatedEmail) {
-      router.replace('/login');
+      router.replace("/login");
     }
   }, [router]);
 
   function handleLogout() {
     clearAuthSession();
-    router.push('/login');
+    router.push("/login");
   }
 
   return (
-    <main className="min-h-screen w-full bg-bg-main px-4 py-6 sm:px-6 lg:px-8">
-      <section className="mx-auto grid min-h-[calc(100vh-3rem)] w-full max-w-6xl grid-cols-1 overflow-hidden rounded-[10px] border border-border-muted bg-transparent md:grid-cols-1 lg:grid-cols-2">
-        <aside className="relative flex flex-col justify-center border-b border-border-muted p-6 sm:p-8 lg:border-b-0 lg:border-r lg:p-12">
-          <div className="absolute inset-0 bg-gradient-to-br from-brand/15 via-transparent to-transparent" aria-hidden="true" />
+    <main className="min-h-screen w-full px-4 py-6 sm:px-6 lg:px-8 flex items-center justify-center">
+      <section className="mx-auto grid min-h-[calc(100vh-3rem)] w-full max-w-6xl grid-cols-1 overflow-hidden md:grid-cols-1 lg:grid-cols-2">
+        <aside className="relative flex flex-col justify-center p-6 sm:p-8 lg:p-12">
+          <div
+            className="absolute inset-0 bg-gradient-to-br from-brand/15 via-transparent to-transparent"
+            aria-hidden="true"
+          />
           <div className="relative">
-            <p className="mb-2 text-sm font-medium uppercase tracking-[0.12em] text-brand">PawnScan</p>
-            <h1 className="text-3xl font-semibold leading-tight text-slate-100 sm:text-4xl">Dashboard</h1>
+            <p className="mb-2 text-sm font-medium uppercase tracking-[0.12em] text-brand">
+              PawnScan
+            </p>
+            <h1 className="text-3xl font-semibold leading-tight text-slate-100 sm:text-4xl">
+              Dashboard
+            </h1>
             <p className="mt-4 max-w-xl text-base leading-relaxed text-slate-300">
-              You are logged in and can now access PawnScan modules. This is a temporary dashboard screen.
+              You are logged in and can now access PawnScan modules. This is a
+              temporary dashboard screen.
             </p>
             <div className="mt-6 inline-flex min-h-12 items-center gap-3 rounded-[10px] border border-border-muted bg-slate-950/70 px-4 py-3 text-slate-200">
               <svg
@@ -66,21 +74,25 @@ export default function DashboardPage() {
         </aside>
 
         <section className="flex items-center p-4 sm:p-8 lg:p-12">
-          <div className="w-full rounded-[10px] border border-border-muted bg-slate-950/70 p-6 sm:p-8">
+          <div className="w-full glass-panel p-6 sm:p-8 rounded-md">
             <h2 className="text-2xl font-semibold text-slate-100">Welcome</h2>
             <p className="mt-2 text-sm text-slate-300">
-              {userRole === 'ADMIN' ? 'Welcome, System Admin' : userEmail ? `Logged in as ${userEmail}` : 'You are authenticated.'}
+              {userRole === "ADMIN"
+                ? "Welcome, System Admin"
+                : userEmail
+                  ? `Logged in as ${userEmail}`
+                  : "You are authenticated."}
             </p>
-
-            <div className="mt-6 rounded-[10px] border border-border-muted bg-slate-900 p-4 text-sm text-slate-300">
-              Temporary dashboard content goes here while the full module pages are being built.
+            <div className="mt-6 rounded-md bg-slate-900/30 p-4 text-sm text-slate-300">
+              Temporary dashboard content goes here while the full module pages
+              are being built.
             </div>
 
             <button
               type="button"
               onClick={handleLogout}
               aria-label="Logout"
-              className="mt-6 min-h-12 w-full rounded-[10px] border border-border-muted bg-slate-900 px-4 py-3 text-base font-semibold text-slate-100 transition hover:border-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+              className="mt-6 min-h-12 w-full rounded-md bg-slate-800/40 px-4 py-3 text-base font-semibold text-slate-100 transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
             >
               Logout
             </button>
