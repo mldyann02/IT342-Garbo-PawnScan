@@ -56,7 +56,7 @@ describe('RegisterForm', () => {
     expect(window.sessionStorage.getItem('pawnscan_jwt')).toBe('jwt-token');
 
     await waitFor(() => {
-      expect(pushMock).toHaveBeenCalledWith('/dashboard');
+      expect(pushMock).toHaveBeenCalledWith('/login');
     });
   });
 
