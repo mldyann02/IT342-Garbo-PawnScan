@@ -8,8 +8,7 @@ target/
 *.war
 *.ear
 
-# Application properties (ignore any application.properties files)
-**/application.properties
+# Application properties (previously ignored) — now tracked
 
 # IDEs and editors
 .idea/
