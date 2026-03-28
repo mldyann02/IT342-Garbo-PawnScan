@@ -1,4 +1,4 @@
-package com.cit.pawnscan
+﻿package com.cit.pawnscan
 
 import android.content.Intent
 import android.os.Bundle
@@ -362,4 +362,5 @@ class RegistrationActivity : AppCompatActivity() {
         finish()
     }
 }
+
 
