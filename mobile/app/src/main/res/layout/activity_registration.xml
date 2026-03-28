@@ -1,0 +1,381 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/bg_main_dark">
+
+    <!-- Navigation Bar with Back Button -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:background="@color/bg_main_dark"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:gravity="center_vertical">
+
+        <!-- Back Button - Left -->
+        <Button
+            android:id="@+id/back_button"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:text="‹"
+            android:textColor="@color/brand_green"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:background="@drawable/button_rounded_pill_outline_green"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <!-- Brand Name - Center -->
+        <TextView
+            android:id="@+id/logo_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="@string/app_name"
+            android:textColor="@color/brand_green"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:includeFontPadding="false"
+            android:letterSpacing="0.05" />
+    </RelativeLayout>
+
+    <!-- Divider -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/border_muted" />
+
+    <!-- Scrollable Content Area -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingTop="24dp"
+        android:paddingBottom="24dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Title -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/registration_title"
+                android:textColor="@color/text_white"
+                android:textStyle="bold"
+                android:textSize="28sp"
+                android:gravity="start"
+                android:includeFontPadding="false"
+                android:layout_marginBottom="6dp" />
+
+            <!-- Subtitle -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/registration_subtitle"
+                android:textColor="@color/text_muted_gray"
+                android:textSize="14sp"
+                android:gravity="start"
+                android:includeFontPadding="false"
+                android:layout_marginBottom="24dp" />
+
+            <!-- Account Type Label -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/registration_account_type_label"
+                android:textColor="@color/text_white"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:includeFontPadding="false"
+                android:layout_marginBottom="10dp" />
+
+            <!-- Account Type Toggle Buttons -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:orientation="horizontal"
+                android:background="@color/bg_input"
+                android:gravity="center"
+                android:layout_marginBottom="20dp"
+                android:elevation="2dp"
+                android:baselineAligned="false">
+
+                <Button
+                    android:id="@+id/btn_individual"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:text="@string/registration_individual"
+                    android:textColor="@color/bg_main_dark"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:background="@color/brand_green"
+                    android:gravity="center"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:includeFontPadding="false"
+                    android:stateListAnimator="@null" />
+
+                <Button
+                    android:id="@+id/btn_business"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:text="@string/registration_business"
+                    android:textColor="@color/text_white"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:background="@color/bg_input"
+                    android:gravity="center"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:includeFontPadding="false"
+                    android:stateListAnimator="@null" />
+            </LinearLayout>
+
+            <!-- Form Fields Container -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="16dp">
+
+                <!-- Full Name (Individual only) -->
+                <EditText
+                    android:id="@+id/full_name_input"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:hint="@string/registration_full_name_hint"
+                    android:textColor="@color/text_white"
+                    android:textColorHint="@color/text_placeholder"
+                    android:textSize="14sp"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:background="@drawable/input_field_background"
+                    android:layout_marginBottom="12dp"
+                    android:inputType="text"
+                    android:includeFontPadding="false"
+                    android:visibility="visible" />
+
+                <!-- Business Name (Business only) -->
+                <EditText
+                    android:id="@+id/business_name_input"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:hint="@string/registration_business_name_hint"
+                    android:textColor="@color/text_white"
+                    android:textColorHint="@color/text_placeholder"
+                    android:textSize="14sp"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:background="@drawable/input_field_background"
+                    android:layout_marginBottom="12dp"
+                    android:inputType="text"
+                    android:includeFontPadding="false"
+                    android:visibility="gone" />
+
+                <!-- Business Address (Business only) -->
+                <EditText
+                    android:id="@+id/business_address_input"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:hint="@string/registration_business_address_hint"
+                    android:textColor="@color/text_white"
+                    android:textColorHint="@color/text_placeholder"
+                    android:textSize="14sp"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:background="@drawable/input_field_background"
+                    android:layout_marginBottom="12dp"
+                    android:inputType="text"
+                    android:includeFontPadding="false"
+                    android:visibility="gone" />
+
+                <!-- Permit Number (Business only) -->
+                <EditText
+                    android:id="@+id/permit_number_input"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:hint="@string/registration_permit_number_hint"
+                    android:textColor="@color/text_white"
+                    android:textColorHint="@color/text_placeholder"
+                    android:textSize="14sp"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:background="@drawable/input_field_background"
+                    android:layout_marginBottom="12dp"
+                    android:inputType="text"
+                    android:includeFontPadding="false"
+                    android:visibility="gone" />
+
+                <!-- Email -->
+                <EditText
+                    android:id="@+id/email_input"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:hint="@string/registration_email_hint"
+                    android:textColor="@color/text_white"
+                    android:textColorHint="@color/text_placeholder"
+                    android:textSize="14sp"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:background="@drawable/input_field_background"
+                    android:layout_marginBottom="12dp"
+                    android:inputType="textEmailAddress"
+                    android:includeFontPadding="false" />
+
+                <!-- Phone Number -->
+                <EditText
+                    android:id="@+id/phone_input"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:hint="@string/registration_phone_hint"
+                    android:textColor="@color/text_white"
+                    android:textColorHint="@color/text_placeholder"
+                    android:textSize="14sp"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:background="@drawable/input_field_background"
+                    android:layout_marginBottom="12dp"
+                    android:inputType="phone"
+                    android:includeFontPadding="false" />
+
+                <!-- Password with Toggle -->
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginBottom="12dp">
+
+                    <EditText
+                        android:id="@+id/password_input"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:hint="@string/registration_password_hint"
+                        android:textColor="@color/text_white"
+                        android:textColorHint="@color/text_placeholder"
+                        android:textSize="14sp"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="48dp"
+                        android:background="@drawable/input_field_background"
+                        android:inputType="textPassword"
+                        android:includeFontPadding="false" />
+
+                    <Button
+                        android:id="@+id/btn_toggle_password"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_gravity="center_vertical|end"
+                        android:layout_marginEnd="4dp"
+                        android:background="?attr/selectableItemBackground"
+                        android:drawableTop="@drawable/ic_eye_open"
+                        android:contentDescription="@string/registration_show_password"
+                        android:scaleType="centerInside"
+                        android:gravity="center"
+                        android:stateListAnimator="@null" />
+                </FrameLayout>
+
+                <!-- Confirm Password with Toggle -->
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginBottom="12dp">
+
+                    <EditText
+                        android:id="@+id/confirm_password_input"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:hint="@string/registration_confirm_password_hint"
+                        android:textColor="@color/text_white"
+                        android:textColorHint="@color/text_placeholder"
+                        android:textSize="14sp"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="48dp"
+                        android:background="@drawable/input_field_background"
+                        android:inputType="textPassword"
+                        android:includeFontPadding="false" />
+
+                    <Button
+                        android:id="@+id/btn_toggle_confirm_password"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_gravity="center_vertical|end"
+                        android:layout_marginEnd="4dp"
+                        android:background="?attr/selectableItemBackground"
+                        android:drawableTop="@drawable/ic_eye_open"
+                        android:contentDescription="@string/registration_show_password"
+                        android:scaleType="centerInside"
+                        android:gravity="center"
+                        android:stateListAnimator="@null" />
+                </FrameLayout>
+            </LinearLayout>
+
+            <!-- Error/Status Message -->
+            <TextView
+                android:id="@+id/status_message"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:layout_marginBottom="12dp"
+                android:visibility="gone"
+                android:includeFontPadding="false" />
+
+            <!-- Terms Text -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/registration_terms"
+                android:textColor="@color/text_muted_gray"
+                android:textSize="12sp"
+                android:gravity="center"
+                android:layout_marginBottom="16dp"
+                android:includeFontPadding="false" />
+
+            <!-- Create Account Button -->
+            <Button
+                android:id="@+id/btn_create_account"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="@string/registration_cta_button"
+                android:textColor="@color/bg_main_dark"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:background="@drawable/button_rounded_pill_green"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_marginBottom="12dp"
+                android:stateListAnimator="@null"
+                android:includeFontPadding="false" />
+
+            <!-- Sign In Link -->
+            <TextView
+                android:id="@+id/sign_in_link"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/registration_sign_in_link"
+                android:textColor="@color/brand_green"
+                android:textSize="13sp"
+                android:gravity="center"
+                android:layout_marginBottom="32dp"
+                android:includeFontPadding="false"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground" />
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>
