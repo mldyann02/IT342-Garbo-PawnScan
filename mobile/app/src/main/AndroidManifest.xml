@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
@@ -32,6 +32,12 @@
             android:name=".RegistrationActivity"
             android:exported="false"
             android:label="@string/registration_title"
+            android:theme="@style/Theme.PawnScan" />
+        
+        <activity
+            android:name=".LoginActivity"
+            android:exported="false"
+            android:label="@string/login_title"
             android:theme="@style/Theme.PawnScan" />
     </application>
 
