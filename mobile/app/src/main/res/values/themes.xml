@@ -19,8 +19,16 @@
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
         <item name="android:statusBarColor">@color/bg_main_dark</item>
         <item name="android:navigationBarColor">@color/bg_main_dark</item>
+        <item name="android:windowLightStatusBar">false</item>
         
         <!-- Button styling -->
         <item name="buttonStyle">@style/Widget.AppCompat.Button.Colored</item>
+    </style>
+
+    <!-- Extra bold headline style -->
+    <style name="HeadlineExtraBold">
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">48sp</item>
+        <item name="android:textColor">@color/text_white</item>
     </style>
 </resources>
