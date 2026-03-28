@@ -52,6 +52,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun navigateToGetStarted() {
-        // TODO: Implement navigation to get started/registration screen
+        // Navigate to registration screen
+        val intent = Intent(this, RegistrationActivity::class.java)
+        startActivity(intent)
     }
 }
