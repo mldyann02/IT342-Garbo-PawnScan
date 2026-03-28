@@ -89,7 +89,7 @@ class RegistrationActivity : AppCompatActivity() {
 
         // Create account button
         btnCreateAccount.setOnClickListener {
-            val fullName = if (!isBusinessMode) fullNameInput.text.toString() else ""
+            val fullName = if (!isBusinessMode) fullNameInput.text.toString() else businessNameInput.text.toString()
             val businessName = if (isBusinessMode) businessNameInput.text.toString() else ""
             val businessAddress = if (isBusinessMode) businessAddressInput.text.toString() else ""
             val permitNumber = if (isBusinessMode) permitNumberInput.text.toString() else ""
@@ -137,13 +137,13 @@ class RegistrationActivity : AppCompatActivity() {
         permitNumberInput: EditText
     ) {
         if (isBusinessMode) {
-            // Keep full name visible so backend-required `fullName` is provided
-            fullNameInput.visibility = View.VISIBLE
+            fullNameInput.visibility = View.GONE
             businessNameInput.visibility = View.VISIBLE
             businessAddressInput.visibility = View.VISIBLE
             permitNumberInput.visibility = View.VISIBLE
 
-            // Do not clear fullName here; business should provide owner/full name
+            // Clear individual mode field
+            fullNameInput.text.clear()
         } else {
             fullNameInput.visibility = View.VISIBLE
             businessNameInput.visibility = View.GONE
@@ -253,9 +253,9 @@ class RegistrationActivity : AppCompatActivity() {
                     val successMsg = authResponse.message ?: "Registration successful!"
                     showStatusMessage(successMsg, isError = false)
 
-                    // Navigate to login after delay
+                    // Navigate to login after delay (pass registered email and role)
                     findViewById<TextView>(R.id.status_message).postDelayed({
-                        navigateToLogin()
+                        navigateToLogin(authResponse.email, authResponse.role)
                     }, 1500)
                 } else {
                     // Handle error response from server
@@ -314,14 +314,14 @@ class RegistrationActivity : AppCompatActivity() {
             ValidationUtil.validatePhoneNumber(phone)?.let { return it }
         }
 
-        // Always validate full name (backend requires it)
-        ValidationUtil.validateFullName(fullName)?.let { return it }
-
         if (isBusinessMode) {
             // Validate business fields
             ValidationUtil.validateBusinessName(businessName)?.let { return it }
             ValidationUtil.validateBusinessAddress(businessAddress)?.let { return it }
             ValidationUtil.validatePermitNumber(permitNumber)?.let { return it }
+        } else {
+            // Validate individual fields
+            ValidationUtil.validateFullName(fullName)?.let { return it }
         }
 
         return null // All validations passed
@@ -356,9 +356,11 @@ class RegistrationActivity : AppCompatActivity() {
         }
     }
 
-    private fun navigateToLogin() {
-        // TODO: Implement navigation to login screen
-        // For now, just finish the activity
+    private fun navigateToLogin(registeredEmail: String? = null, registeredRole: String? = null) {
+        val intent = Intent(this, LoginActivity::class.java)
+        if (!registeredEmail.isNullOrEmpty()) intent.putExtra("registered_email", registeredEmail)
+        if (!registeredRole.isNullOrEmpty()) intent.putExtra("registered_role", registeredRole)
+        startActivity(intent)
         finish()
     }
 }
