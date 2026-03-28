@@ -105,10 +105,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:orientation="horizontal"
-                android:background="@color/bg_input"
                 android:gravity="center"
                 android:layout_marginBottom="20dp"
-                android:elevation="2dp"
                 android:baselineAligned="false">
 
                 <Button
@@ -120,7 +118,7 @@
                     android:textColor="@color/bg_main_dark"
                     android:textSize="14sp"
                     android:textStyle="bold"
-                    android:background="@color/brand_green"
+                    android:background="@drawable/toggle_left_active"
                     android:gravity="center"
                     android:paddingStart="8dp"
                     android:paddingEnd="8dp"
@@ -136,7 +134,7 @@
                     android:textColor="@color/text_white"
                     android:textSize="14sp"
                     android:textStyle="bold"
-                    android:background="@color/bg_input"
+                    android:background="@drawable/toggle_right_inactive"
                     android:gravity="center"
                     android:paddingStart="8dp"
                     android:paddingEnd="8dp"
@@ -271,17 +269,18 @@
                         android:inputType="textPassword"
                         android:includeFontPadding="false" />
 
-                    <Button
+                    <ImageButton
                         android:id="@+id/btn_toggle_password"
                         android:layout_width="40dp"
                         android:layout_height="40dp"
                         android:layout_gravity="center_vertical|end"
                         android:layout_marginEnd="4dp"
-                        android:background="?attr/selectableItemBackground"
-                        android:drawableTop="@drawable/ic_eye_open"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:src="@drawable/ic_eye_open"
                         android:contentDescription="@string/registration_show_password"
                         android:scaleType="centerInside"
-                        android:gravity="center"
+                        android:adjustViewBounds="true"
+                        android:padding="6dp"
                         android:stateListAnimator="@null" />
                 </FrameLayout>
 
@@ -305,17 +304,18 @@
                         android:inputType="textPassword"
                         android:includeFontPadding="false" />
 
-                    <Button
+                    <ImageButton
                         android:id="@+id/btn_toggle_confirm_password"
                         android:layout_width="40dp"
                         android:layout_height="40dp"
                         android:layout_gravity="center_vertical|end"
                         android:layout_marginEnd="4dp"
-                        android:background="?attr/selectableItemBackground"
-                        android:drawableTop="@drawable/ic_eye_open"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:src="@drawable/ic_eye_open"
                         android:contentDescription="@string/registration_show_password"
                         android:scaleType="centerInside"
-                        android:gravity="center"
+                        android:adjustViewBounds="true"
+                        android:padding="6dp"
                         android:stateListAnimator="@null" />
                 </FrameLayout>
             </LinearLayout>

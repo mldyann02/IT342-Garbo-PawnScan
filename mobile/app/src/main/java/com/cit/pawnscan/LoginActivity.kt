@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.text.InputType
 import android.view.View
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -35,7 +36,7 @@ class LoginActivity : AppCompatActivity() {
         val passwordInput = findViewById<EditText>(R.id.password_input)
 
         // Password toggle button
-        val btnTogglePassword = findViewById<Button>(R.id.btn_toggle_password)
+        val btnTogglePassword = findViewById<ImageButton>(R.id.btn_toggle_password)
 
         // Check if user came from registration page
         val registrationEmail = intent.getStringExtra("registered_email")
@@ -73,17 +74,13 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    private fun togglePasswordVisibility(input: EditText, button: Button, isVisible: Boolean) {
+    private fun togglePasswordVisibility(input: EditText, button: ImageButton, isVisible: Boolean) {
         if (isVisible) {
             input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_NORMAL
-            button.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                0, R.drawable.ic_eye_open, 0, 0
-            )
+            button.setImageResource(R.drawable.ic_eye_off)
         } else {
             input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-            button.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                0, R.drawable.ic_eye_open, 0, 0
-            )
+            button.setImageResource(R.drawable.ic_eye_open)
         }
         input.setSelection(input.text.length)
     }
