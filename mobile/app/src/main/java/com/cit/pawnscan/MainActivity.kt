@@ -1,4 +1,4 @@
-package com.cit.pawnscan
+﻿package com.cit.pawnscan
 
 import android.content.Intent
 import android.os.Bundle
@@ -29,12 +29,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         navSignIn.setOnClickListener {
-            // TODO: Navigate to login screen
             navigateToLogin()
         }
 
         navGetStarted.setOnClickListener {
-            // TODO: Navigate to registration or appropriate screen
             navigateToGetStarted()
         }
     }
@@ -48,11 +46,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun navigateToLogin() {
-        // TODO: Implement navigation to login screen
+        val intent = Intent(this, LoginActivity::class.java)
+        startActivity(intent)
     }
 
     private fun navigateToGetStarted() {
-        // Navigate to registration screen
         val intent = Intent(this, RegistrationActivity::class.java)
         startActivity(intent)
     }
