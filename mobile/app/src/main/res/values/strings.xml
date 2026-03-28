@@ -15,4 +15,34 @@
     
     <string name="nav_sign_in">Sign In</string>
     <string name="nav_get_started">Get Started</string>
+    
+    <!-- Registration Page Strings -->
+    <string name="registration_title">Create Your Account</string>
+    <string name="registration_subtitle">Join the PawnScan network in a few simple steps</string>
+    
+    <!-- Account Type -->
+    <string name="registration_account_type_label">Account Type</string>
+    <string name="registration_individual">Individual</string>
+    <string name="registration_business">Business</string>
+    
+    <!-- Form Fields -->
+    <string name="registration_full_name_hint">Full Name</string>
+    <string name="registration_business_name_hint">Business Name</string>
+    <string name="registration_business_address_hint">Business Address</string>
+    <string name="registration_permit_number_hint">Permit Number</string>
+    <string name="registration_email_hint">Email Address</string>
+    <string name="registration_phone_hint">Contact Number</string>
+    <string name="registration_phone_placeholder">e.g. +639171234567</string>
+    <string name="registration_password_hint">Password</string>
+    <string name="registration_confirm_password_hint">Confirm Password</string>
+    
+    <!-- CTA and Links -->
+    <string name="registration_cta_button">Register Account</string>
+    <string name="registration_registering_button">Registering...</string>
+    <string name="registration_sign_in_link">Already registered? Sign in here.</string>
+    <string name="registration_terms">By creating an account, you agree to our Terms of Service</string>
+    
+    <!-- Messages -->
+    <string name="registration_show_password">Show password</string>
+    <string name="registration_hide_password">Hide password</string>
 </resources>
