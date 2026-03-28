@@ -39,6 +39,12 @@
             android:exported="false"
             android:label="@string/login_title"
             android:theme="@style/Theme.PawnScan" />
+
+        <activity
+            android:name=".TemporaryDashboardActivity"
+            android:exported="false"
+            android:label="@string/dashboard_welcome_title"
+            android:theme="@style/Theme.PawnScan" />
     </application>
 
 </manifest>
