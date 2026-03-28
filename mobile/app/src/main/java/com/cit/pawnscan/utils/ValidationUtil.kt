@@ -39,16 +39,17 @@ object ValidationUtil {
     }
 
     fun validatePhoneNumber(phoneNumber: String): String? {
+        // Follow web validation: contact number is required and must match Philippine formats
         if (phoneNumber.isBlank()) {
-            return null // Phone is optional
+            return "Contact number is required"
         }
-        
+
         // Pattern: +639171234567 or 09171234567
         val pattern = Regex("^(\\+63|0)9\\d{9}$")
-        
+
         return when {
             phoneNumber.length > 20 -> "Phone number must not exceed 20 characters"
-            !pattern.matches(phoneNumber) -> "Phone number must be a valid Philippine mobile number (e.g. +639171234567 or 09171234567)"
+            !pattern.matches(phoneNumber) -> "Contact number must be a valid Philippine mobile number (e.g. +639171234567 or 09171234567)"
             else -> null
         }
     }
