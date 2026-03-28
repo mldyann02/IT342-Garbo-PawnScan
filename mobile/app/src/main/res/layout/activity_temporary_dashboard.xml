@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/bg_main_dark"
+    android:padding="24dp">
+
+    <TextView
+        android:id="@+id/dashboard_badge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/dashboard_badge"
+        android:textColor="@color/brand_green"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:background="@drawable/badge_green_background"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp"
+        android:includeFontPadding="false" />
+
+    <TextView
+        android:id="@+id/dashboard_welcome_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="18dp"
+        android:text="@string/dashboard_welcome_title"
+        android:textColor="@color/text_white"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        android:includeFontPadding="false" />
+
+    <TextView
+        android:id="@+id/dashboard_subtitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/dashboard_subtitle"
+        android:textColor="@color/text_muted_gray"
+        android:textSize="14sp"
+        android:includeFontPadding="false" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:orientation="vertical"
+        android:background="@drawable/input_field_background"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/dashboard_user_email"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/text_white"
+            android:textSize="14sp"
+            android:includeFontPadding="false" />
+
+        <TextView
+            android:id="@+id/dashboard_user_role"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:textColor="@color/text_light_gray"
+            android:textSize="14sp"
+            android:includeFontPadding="false" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btn_logout"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginTop="24dp"
+        android:text="@string/dashboard_logout"
+        android:textColor="@color/bg_main_dark"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        android:background="@drawable/button_rounded_pill_green"
+        android:includeFontPadding="false" />
+
+</LinearLayout>
