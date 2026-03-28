@@ -207,8 +207,8 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun navigateToDashboard() {
-        // TODO: Navigate to dashboard screen
-        // For now, finish this activity and go back
+        val intent = Intent(this, TemporaryDashboardActivity::class.java)
+        startActivity(intent)
         finish()
     }
 }
