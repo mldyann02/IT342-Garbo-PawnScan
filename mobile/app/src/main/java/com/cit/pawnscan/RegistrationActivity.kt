@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.text.InputType
 import android.view.View
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -34,8 +35,8 @@ class RegistrationActivity : AppCompatActivity() {
         val signInLink = findViewById<TextView>(R.id.sign_in_link)
         
         // Password toggle buttons
-        val btnTogglePassword = findViewById<Button>(R.id.btn_toggle_password)
-        val btnToggleConfirmPassword = findViewById<Button>(R.id.btn_toggle_confirm_password)
+        val btnTogglePassword = findViewById<ImageButton>(R.id.btn_toggle_password)
+        val btnToggleConfirmPassword = findViewById<ImageButton>(R.id.btn_toggle_confirm_password)
 
         // Form inputs
         val fullNameInput = findViewById<EditText>(R.id.full_name_input)
@@ -46,6 +47,32 @@ class RegistrationActivity : AppCompatActivity() {
         val phoneInput = findViewById<EditText>(R.id.phone_input)
         val passwordInput = findViewById<EditText>(R.id.password_input)
         val confirmPasswordInput = findViewById<EditText>(R.id.confirm_password_input)
+
+        // Restrict phone input to digits and optional leading +, and limit length similar to web
+        phoneInput.filters = arrayOf(android.text.InputFilter.LengthFilter(13))
+        phoneInput.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: android.text.Editable?) {
+                s ?: return
+                var v = s.toString()
+                // Remove invalid characters (allow digits and plus)
+                v = v.replace(Regex("[^\\d+]") , "")
+                // Allow only a single leading plus
+                if (v.count { it == '+' } > 1) {
+                    v = v.replace("+", "")
+                    v = "+" + v
+                }
+                // If plus is not leading, remove it
+                if (v.contains('+') && !v.startsWith('+')) {
+                    v = v.replace("+", "")
+                }
+                if (v != s.toString()) {
+                    phoneInput.setText(v)
+                    phoneInput.setSelection(v.length.coerceAtMost(v.length))
+                }
+            }
+        })
 
         // Back button
         backButton.setOnClickListener {
@@ -118,15 +145,19 @@ class RegistrationActivity : AppCompatActivity() {
     }
 
     private fun updateAccountTypeUI(activeButton: Button, inactiveButton: Button) {
-        val brandGreenColor = resources.getColor(R.color.brand_green, null)
-        val bgInputColor = resources.getColor(R.color.bg_input, null)
         val textWhiteColor = resources.getColor(R.color.text_white, null)
         val bgMainDarkColor = resources.getColor(R.color.bg_main_dark, null)
 
-        activeButton.setBackgroundColor(brandGreenColor)
-        activeButton.setTextColor(bgMainDarkColor)
+        // Choose left/right pill shapes based on which button is active
+        if (activeButton.id == R.id.btn_individual) {
+            activeButton.setBackgroundResource(R.drawable.toggle_left_active)
+            inactiveButton.setBackgroundResource(R.drawable.toggle_right_inactive)
+        } else {
+            activeButton.setBackgroundResource(R.drawable.toggle_right_active)
+            inactiveButton.setBackgroundResource(R.drawable.toggle_left_inactive)
+        }
 
-        inactiveButton.setBackgroundColor(bgInputColor)
+        activeButton.setTextColor(bgMainDarkColor)
         inactiveButton.setTextColor(textWhiteColor)
     }
 
@@ -157,17 +188,13 @@ class RegistrationActivity : AppCompatActivity() {
         }
     }
 
-    private fun togglePasswordVisibility(input: EditText, button: Button, isVisible: Boolean) {
+    private fun togglePasswordVisibility(input: EditText, button: ImageButton, isVisible: Boolean) {
         if (isVisible) {
             input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_NORMAL
-            button.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                0, R.drawable.ic_eye_open, 0, 0
-            )
+            button.setImageResource(R.drawable.ic_eye_off)
         } else {
             input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-            button.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                0, R.drawable.ic_eye_open, 0, 0
-            )
+            button.setImageResource(R.drawable.ic_eye_open)
         }
         input.setSelection(input.text.length)
     }
@@ -309,10 +336,8 @@ class RegistrationActivity : AppCompatActivity() {
         // Validate confirm password
         ValidationUtil.validateConfirmPassword(password, confirmPassword)?.let { return it }
 
-        // Validate phone if provided
-        if (phone.isNotBlank()) {
-            ValidationUtil.validatePhoneNumber(phone)?.let { return it }
-        }
+        // Validate phone (required per web)
+        ValidationUtil.validatePhoneNumber(phone)?.let { return it }
 
         if (isBusinessMode) {
             // Validate business fields
