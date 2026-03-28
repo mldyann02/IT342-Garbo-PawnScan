@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">PawnScan</string>
+    
+    <!-- Landing Page Strings -->
+    <string name="landing_badge_text">Real-time Stolen Item Verification</string>
+    <string name="landing_headline_line1">Stop stolen</string>
+    <string name="landing_headline_line2">goods</string>
+    <string name="landing_headline_line3">before they</string>
+    <string name="landing_headline_green">sell.</string>
+    
+    <string name="landing_subheadline">PawnScan connects victims, businesses, and law enforcement through a unified registry. Report stolen items, verify serial numbers instantly, and recover what\'s yours.</string>
+    
+    <string name="landing_cta_primary">Report a Stolen Item ›</string>
+    <string name="landing_cta_secondary">Business Verification</string>
+    
+    <string name="nav_sign_in">Sign In</string>
+    <string name="nav_get_started">Get Started</string>
+</resources>
