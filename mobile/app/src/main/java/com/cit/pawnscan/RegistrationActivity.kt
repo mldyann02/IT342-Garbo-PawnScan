@@ -89,7 +89,7 @@ class RegistrationActivity : AppCompatActivity() {
 
         // Create account button
         btnCreateAccount.setOnClickListener {
-            val fullName = if (!isBusinessMode) fullNameInput.text.toString() else ""
+            val fullName = if (!isBusinessMode) fullNameInput.text.toString() else businessNameInput.text.toString()
             val businessName = if (isBusinessMode) businessNameInput.text.toString() else ""
             val businessAddress = if (isBusinessMode) businessAddressInput.text.toString() else ""
             val permitNumber = if (isBusinessMode) permitNumberInput.text.toString() else ""
@@ -218,7 +218,7 @@ class RegistrationActivity : AppCompatActivity() {
         // Prepare request
         val role = if (isBusinessMode) "BUSINESS" else "USER"
         val request = RegisterRequest(
-            fullName = if (!isBusinessMode) fullName else null,
+            fullName = fullName,
             email = email,
             password = password,
             phoneNumber = if (normalizedPhone.isNotBlank()) normalizedPhone else null,
@@ -253,9 +253,9 @@ class RegistrationActivity : AppCompatActivity() {
                     val successMsg = authResponse.message ?: "Registration successful!"
                     showStatusMessage(successMsg, isError = false)
 
-                    // Navigate to login after delay
+                    // Navigate to login after delay (pass registered email and role)
                     findViewById<TextView>(R.id.status_message).postDelayed({
-                        navigateToLogin()
+                        navigateToLogin(authResponse.email, authResponse.role)
                     }, 1500)
                 } else {
                     // Handle error response from server
@@ -356,9 +356,11 @@ class RegistrationActivity : AppCompatActivity() {
         }
     }
 
-    private fun navigateToLogin() {
-        // TODO: Implement navigation to login screen
-        // For now, just finish the activity
+    private fun navigateToLogin(registeredEmail: String? = null, registeredRole: String? = null) {
+        val intent = Intent(this, LoginActivity::class.java)
+        if (!registeredEmail.isNullOrEmpty()) intent.putExtra("registered_email", registeredEmail)
+        if (!registeredRole.isNullOrEmpty()) intent.putExtra("registered_role", registeredRole)
+        startActivity(intent)
         finish()
     }
 }
