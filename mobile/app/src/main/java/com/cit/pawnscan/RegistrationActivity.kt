@@ -137,13 +137,13 @@ class RegistrationActivity : AppCompatActivity() {
         permitNumberInput: EditText
     ) {
         if (isBusinessMode) {
-            fullNameInput.visibility = View.GONE
+            // Keep full name visible so backend-required `fullName` is provided
+            fullNameInput.visibility = View.VISIBLE
             businessNameInput.visibility = View.VISIBLE
             businessAddressInput.visibility = View.VISIBLE
             permitNumberInput.visibility = View.VISIBLE
 
-            // Clear individual mode field
-            fullNameInput.text.clear()
+            // Do not clear fullName here; business should provide owner/full name
         } else {
             fullNameInput.visibility = View.VISIBLE
             businessNameInput.visibility = View.GONE
@@ -218,7 +218,7 @@ class RegistrationActivity : AppCompatActivity() {
         // Prepare request
         val role = if (isBusinessMode) "BUSINESS" else "USER"
         val request = RegisterRequest(
-            fullName = if (!isBusinessMode) fullName else null,
+            fullName = fullName,
             email = email,
             password = password,
             phoneNumber = if (normalizedPhone.isNotBlank()) normalizedPhone else null,
@@ -314,14 +314,14 @@ class RegistrationActivity : AppCompatActivity() {
             ValidationUtil.validatePhoneNumber(phone)?.let { return it }
         }
 
+        // Always validate full name (backend requires it)
+        ValidationUtil.validateFullName(fullName)?.let { return it }
+
         if (isBusinessMode) {
             // Validate business fields
             ValidationUtil.validateBusinessName(businessName)?.let { return it }
             ValidationUtil.validateBusinessAddress(businessAddress)?.let { return it }
             ValidationUtil.validatePermitNumber(permitNumber)?.let { return it }
-        } else {
-            // Validate individual fields
-            ValidationUtil.validateFullName(fullName)?.let { return it }
         }
 
         return null // All validations passed
