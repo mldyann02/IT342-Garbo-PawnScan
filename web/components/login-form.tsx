@@ -189,9 +189,6 @@ export default function LoginForm() {
             aria-hidden="true"
           />
           <div className="relative">
-            <p className="mb-2 text-sm font-medium uppercase tracking-[0.12em] text-brand">
-              PawnScan
-            </p>
             <h1 className="text-3xl font-semibold leading-tight text-slate-100 sm:text-4xl">
               Welcome Back
             </h1>
@@ -288,7 +285,7 @@ export default function LoginForm() {
                       isPasswordVisible ? "Hide password" : "Show password"
                     }
                     onClick={() => setIsPasswordVisible((current) => !current)}
-                    className="inline-flex min-h-12 min-w-12 items-center justify-center rounded-[10px] border border-border-muted bg-slate-900 px-3 text-slate-200 transition hover:border-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
+                    className="inline-flex min-h-12 min-w-12 items-center justify-center rounded-[10px] border border-border-muted bg-slate-900 px-3 text-slate-200 transition hover:border-brand hover:bg-slate-800 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
                   >
                     <EyeIcon open={isPasswordVisible} />
                   </button>
@@ -318,7 +315,7 @@ export default function LoginForm() {
                 type="submit"
                 aria-label="Login"
                 disabled={!canSubmit}
-                className="min-h-12 w-full rounded-md bg-brand px-4 py-3 text-base font-semibold text-slate-950 transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 disabled:cursor-not-allowed disabled:opacity-50"
+                className="min-h-12 w-full rounded-md bg-brand px-4 py-3 text-base font-semibold text-slate-950 transition hover:brightness-90 active:scale-95 active:brightness-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isSubmitting ? "Signing in..." : "Login"}
               </button>
