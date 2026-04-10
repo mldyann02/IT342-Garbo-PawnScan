@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import React from "react";
-import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useMemo, useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { storeJwt } from "@/lib/auth";
 import {
   RegistrationFormValues,
@@ -72,6 +72,7 @@ function EyeIcon({ open }: { open: boolean }) {
 
 export default function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [values, setValues] = useState<RegistrationFormValues>(initialValues);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
@@ -82,6 +83,17 @@ export default function RegisterForm() {
     type: "error" | "success";
     text: string;
   } | null>(null);
+
+  // Set role from query parameter on mount
+  useEffect(() => {
+    const roleParam = searchParams.get("role");
+    if (roleParam === "BUSINESS" || roleParam === "INDIVIDUAL") {
+      setValues((current) => ({
+        ...current,
+        role: roleParam as RegistrationRole,
+      }));
+    }
+  }, [searchParams]);
 
   const errors = useMemo(() => validateRegistrationForm(values), [values]);
   const canSubmit = !hasValidationErrors(errors) && !isSubmitting;
@@ -253,9 +265,6 @@ export default function RegisterForm() {
             aria-hidden="true"
           />
           <div className="relative">
-            <p className="mb-2 text-sm font-medium uppercase tracking-[0.12em] text-brand">
-              PawnScan
-            </p>
             <h1 className="text-3xl font-semibold leading-tight text-slate-100 sm:text-4xl">
               Secure Your Transactions with PawnScan
             </h1>
@@ -318,7 +327,7 @@ export default function RegisterForm() {
                     aria-label="Select Individual account"
                     aria-pressed={values.role === "INDIVIDUAL"}
                     onClick={() => updateField("role", "INDIVIDUAL")}
-                    className={`relative z-10 flex min-h-12 items-center justify-center rounded-[8px] px-4 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${
+                    className={`relative z-10 flex min-h-12 items-center justify-center rounded-[8px] px-4 text-sm font-medium transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${
                       values.role === "INDIVIDUAL"
                         ? "text-slate-900"
                         : "text-slate-300 hover:text-slate-100"
@@ -331,7 +340,7 @@ export default function RegisterForm() {
                     aria-label="Select Business account"
                     aria-pressed={values.role === "BUSINESS"}
                     onClick={() => updateField("role", "BUSINESS")}
-                    className={`relative z-10 flex min-h-12 items-center justify-center rounded-[8px] px-4 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${
+                    className={`relative z-10 flex min-h-12 items-center justify-center rounded-[8px] px-4 text-sm font-medium transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${
                       values.role === "BUSINESS"
                         ? "text-slate-900"
                         : "text-slate-300 hover:text-slate-100"
@@ -544,7 +553,7 @@ export default function RegisterForm() {
                       isPasswordVisible ? "Hide password" : "Show password"
                     }
                     onClick={() => setIsPasswordVisible((current) => !current)}
-                    className="inline-flex min-h-12 min-w-12 items-center justify-center rounded-[10px] border border-border-muted bg-slate-900 px-3 text-slate-200 transition hover:border-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
+                    className="inline-flex min-h-12 min-w-12 items-center justify-center rounded-[10px] border border-border-muted bg-slate-900 px-3 text-slate-200 transition hover:border-brand hover:bg-slate-800 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
                   >
                     <EyeIcon open={isPasswordVisible} />
                   </button>
@@ -586,7 +595,7 @@ export default function RegisterForm() {
                     onClick={() =>
                       setIsConfirmPasswordVisible((current) => !current)
                     }
-                    className="inline-flex min-h-12 min-w-12 items-center justify-center rounded-[10px] border border-border-muted bg-slate-900 px-3 text-slate-200 transition hover:border-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
+                    className="inline-flex min-h-12 min-w-12 items-center justify-center rounded-[10px] border border-border-muted bg-slate-900 px-3 text-slate-200 transition hover:border-brand hover:bg-slate-800 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
                   >
                     <EyeIcon open={isConfirmPasswordVisible} />
                   </button>
@@ -617,7 +626,7 @@ export default function RegisterForm() {
                 type="submit"
                 aria-label="Register Account"
                 disabled={!canSubmit}
-                className="min-h-12 w-full rounded-[10px] bg-brand px-4 py-3 text-base font-semibold text-slate-950 transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 disabled:cursor-not-allowed disabled:opacity-50"
+                className="min-h-12 w-full rounded-[10px] bg-brand px-4 py-3 text-base font-semibold text-slate-950 transition hover:brightness-90 active:scale-95 active:brightness-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isSubmitting ? "Registering..." : "Register Account"}
               </button>
