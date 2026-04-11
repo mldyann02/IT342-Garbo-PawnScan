@@ -28,3 +28,6 @@ node_modules/
 .DS_Store
 Thumbs.db
 .env
+
+# User uploaded files
+uploads/
