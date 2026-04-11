@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import UserDashboardHeader from "@/components/user-dashboard-header";
 import { getAuthUser, getJwt } from "@/lib/auth";
@@ -15,7 +15,7 @@ function formatDate(value: string): string {
   return parsed.toLocaleString();
 }
 
-export default function ReportsPage() {
+function ReportsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [reports, setReports] = useState<Report[]>([]);
@@ -313,5 +313,13 @@ export default function ReportsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function ReportsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gradient-to-b from-bg-main to-[#071022]" />}>
+      <ReportsPageContent />
+    </Suspense>
   );
 }
