@@ -14,6 +14,7 @@ export type Report = {
   itemModel: string;
   description: string;
   createdAt: string;
+  updatedAt?: string;
   files: ReportFile[];
 };
 
@@ -28,6 +29,31 @@ type ApiErrorPayload = {
   message?: string;
   errors?: Record<string, string>;
 };
+
+const REQUEST_TIMEOUT_MS = 12000;
+
+async function fetchWithTimeout(
+  input: RequestInfo | URL,
+  init: RequestInit,
+  timeoutMs = REQUEST_TIMEOUT_MS,
+): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(input, {
+      ...init,
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new Error("Request timed out. Please try again.");
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
 
 function getAuthHeader(): HeadersInit {
   const token = getJwt();
@@ -59,7 +85,7 @@ async function handleResponse<T>(response: Response): Promise<T> {
 }
 
 export async function fetchReports(): Promise<Report[]> {
-  const response = await fetch("/api/reports", {
+  const response = await fetchWithTimeout("/api/reports", {
     method: "GET",
     headers: {
       ...getAuthHeader(),
@@ -70,7 +96,7 @@ export async function fetchReports(): Promise<Report[]> {
 }
 
 export async function createReport(payload: ReportPayload): Promise<Report> {
-  const response = await fetch("/api/reports", {
+  const response = await fetchWithTimeout("/api/reports", {
     method: "POST",
     headers: {
       ...getAuthHeader(),
@@ -82,7 +108,7 @@ export async function createReport(payload: ReportPayload): Promise<Report> {
 }
 
 export async function updateReport(reportId: number, payload: ReportPayload): Promise<Report> {
-  const response = await fetch(`/api/reports/${reportId}`, {
+  const response = await fetchWithTimeout(`/api/reports/${reportId}`, {
     method: "PUT",
     headers: {
       ...getAuthHeader(),
@@ -94,7 +120,7 @@ export async function updateReport(reportId: number, payload: ReportPayload): Pr
 }
 
 export async function deleteReport(reportId: number): Promise<void> {
-  const response = await fetch(`/api/reports/${reportId}`, {
+  const response = await fetchWithTimeout(`/api/reports/${reportId}`, {
     method: "DELETE",
     headers: {
       ...getAuthHeader(),
