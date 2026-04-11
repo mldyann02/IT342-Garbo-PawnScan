@@ -1,4 +1,4 @@
-# IT342--Garbo-PawnScan
+# IT342-Garbo-PawnScan
 
 ## Local Setup (Backend)
 
