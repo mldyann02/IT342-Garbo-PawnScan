@@ -27,7 +27,8 @@ import java.util.List;
 @Entity
 @Table(name = "reports", indexes = {
         @Index(name = "idx_reports_serial_number", columnList = "serial_number", unique = true),
-        @Index(name = "idx_reports_user_id", columnList = "user_id")
+        @Index(name = "idx_reports_user_id", columnList = "user_id"),
+        @Index(name = "idx_reports_status", columnList = "status")
 })
 @Getter
 @Setter
@@ -48,6 +49,11 @@ public class Report {
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String description;
+
+    @Builder.Default
+    @jakarta.persistence.Enumerated(jakarta.persistence.EnumType.STRING)
+    @Column(nullable = false, length = 32)
+    private ReportStatus status = ReportStatus.APPROVED;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
