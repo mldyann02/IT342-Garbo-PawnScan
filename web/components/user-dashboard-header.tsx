@@ -70,7 +70,7 @@ export default function UserDashboardHeader() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`relative py-1 text-base font-medium transition-all duration-200 ease-out active:scale-[0.98] ${
+                className={`relative py-1 text-base font-medium transition-all duration-200 ease-out active:scale-[0.98] group ${
                   isActive
                     ? "text-slate-100"
                     : "text-slate-300/80 hover:text-slate-200"
@@ -78,8 +78,10 @@ export default function UserDashboardHeader() {
               >
                 {item.label}
                 <span
-                  className={`absolute -bottom-1 left-0 h-[2px] rounded-full bg-brand transition-all duration-200 ${
-                    isActive ? "w-full opacity-100" : "w-0 opacity-0"
+                  className={`absolute -bottom-1 left-1/2 -translate-x-1/2 h-[2px] rounded-full bg-brand origin-center transition-all duration-300 ease-out ${
+                    isActive
+                      ? "w-full opacity-100"
+                      : "w-0 opacity-0 group-hover:w-full group-hover:opacity-100"
                   }`}
                 />
               </Link>
@@ -87,11 +89,18 @@ export default function UserDashboardHeader() {
           })}
         </div>
 
-        <div className="relative flex items-center gap-1.5 sm:gap-2" ref={dropdownContainerRef}>
+        <div
+          className="relative flex items-center gap-1.5 sm:gap-2"
+          ref={dropdownContainerRef}
+        >
           <button
             type="button"
             onClick={() => toggleDropdown("notifications")}
-            className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-border-muted/70 bg-slate-900/45 text-slate-300 transition-all duration-200 ease-out hover:bg-slate-800/75 hover:text-slate-100 active:scale-[0.96] sm:h-10 sm:w-10"
+            className={`relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-slate-700/40 to-slate-800/40 text-slate-300 transition-all duration-200 ease-out hover:from-slate-600/60 hover:to-slate-700/60 hover:text-slate-100 active:scale-[0.96] sm:h-10 sm:w-10 ${
+              openDropdown === "notifications"
+                ? "from-slate-600/60 to-slate-700/60 text-slate-100"
+                : ""
+            }`}
             aria-label="Open notifications"
             aria-expanded={openDropdown === "notifications"}
             aria-haspopup="menu"
@@ -110,18 +119,20 @@ export default function UserDashboardHeader() {
           </button>
 
           {openDropdown === "notifications" && (
-            <div className="absolute right-0 top-11 w-[min(84vw,20rem)] overflow-hidden rounded-xl border border-border-muted/70 bg-slate-950 shadow-2xl sm:right-12 sm:top-12 sm:w-72">
-              <div className="border-b border-border-muted/70 px-4 py-3">
-                <p className="text-sm font-semibold text-slate-100">Notifications</p>
+            <div className="absolute right-0 top-11 w-[min(84vw,20rem)] overflow-hidden rounded-2xl bg-gradient-to-b from-slate-900/95 to-slate-950/95 shadow-2xl backdrop-blur-sm sm:right-12 sm:top-12 sm:w-72 border border-slate-700/40">
+              <div className="px-4 py-4">
+                <p className="text-sm font-semibold text-slate-100">
+                  Notifications
+                </p>
               </div>
-              <ul className="divide-y divide-border-muted/50">
-                <li className="px-4 py-3 text-sm text-slate-300">
+              <ul className="divide-y divide-slate-700/30">
+                <li className="px-4 py-3 text-sm text-slate-300 hover:bg-slate-800/40 transition-colors duration-150">
                   Your report for bicycle frame #PS-1102 is under review.
                 </li>
-                <li className="px-4 py-3 text-sm text-slate-300">
+                <li className="px-4 py-3 text-sm text-slate-300 hover:bg-slate-800/40 transition-colors duration-150">
                   A nearby partner business viewed one of your report details.
                 </li>
-                <li className="px-4 py-3 text-sm text-slate-300">
+                <li className="px-4 py-3 text-sm text-slate-300 hover:bg-slate-800/40 transition-colors duration-150">
                   No critical alerts right now. You are all caught up.
                 </li>
               </ul>
@@ -131,7 +142,11 @@ export default function UserDashboardHeader() {
           <button
             type="button"
             onClick={() => toggleDropdown("profile")}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border-muted/70 bg-slate-900/45 text-slate-300 transition-all duration-200 ease-out hover:bg-slate-800/75 hover:text-slate-100 active:scale-[0.96] sm:h-10 sm:w-10"
+            className={`inline-flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-slate-700/40 to-slate-800/40 text-slate-300 transition-all duration-200 ease-out hover:from-slate-600/60 hover:to-slate-700/60 hover:text-slate-100 active:scale-[0.96] sm:h-10 sm:w-10 ${
+              openDropdown === "profile"
+                ? "from-slate-600/60 to-slate-700/60 text-slate-100"
+                : ""
+            }`}
             aria-label="Open profile menu"
             aria-expanded={openDropdown === "profile"}
             aria-haspopup="menu"
@@ -150,21 +165,21 @@ export default function UserDashboardHeader() {
           </button>
 
           {openDropdown === "profile" && (
-            <div className="absolute right-0 top-11 w-44 overflow-hidden rounded-xl border border-border-muted/70 bg-slate-950 shadow-2xl sm:top-12 sm:w-48">
+            <div className="absolute right-0 top-11 w-44 overflow-hidden rounded-2xl bg-gradient-to-b from-slate-900/95 to-slate-950/95 shadow-2xl backdrop-blur-sm sm:top-12 sm:w-48 border border-slate-700/40">
               <button
                 type="button"
                 onClick={() => {
                   setOpenDropdown(null);
                   router.push("/dashboard");
                 }}
-                className="w-full px-4 py-3 text-left text-sm text-slate-300 transition-all duration-200 ease-out hover:bg-slate-800/80 hover:text-slate-100 active:scale-[0.99]"
+                className="w-full px-4 py-3 text-left text-sm text-slate-300 transition-all duration-200 ease-out hover:bg-slate-800/50 hover:text-slate-100 active:scale-[0.99]"
               >
                 My Profile
               </button>
               <button
                 type="button"
                 onClick={handleLogout}
-                className="w-full border-t border-border-muted/60 px-4 py-3 text-left text-sm text-red-300 transition-all duration-200 ease-out hover:bg-red-500/15 active:scale-[0.99]"
+                className="w-full px-4 py-3 text-left text-sm text-red-300 transition-all duration-200 ease-out hover:bg-red-500/20 active:scale-[0.99] border-t border-slate-700/30"
               >
                 Logout
               </button>
