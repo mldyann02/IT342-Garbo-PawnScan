@@ -24,7 +24,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(BusinessProfileAlreadyExistsException.class)
-    public ResponseEntity<Map<String, Object>> handleBusinessProfileAlreadyExists(BusinessProfileAlreadyExistsException ex) {
+    public ResponseEntity<Map<String, Object>> handleBusinessProfileAlreadyExists(
+            BusinessProfileAlreadyExistsException ex) {
         return buildErrorResponse(HttpStatus.CONFLICT, ex.getMessage());
     }
 
@@ -58,6 +59,12 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
+    @ExceptionHandler(InvalidVerificationRequestException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidVerificationRequest(
+            InvalidVerificationRequestException ex) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
     @ExceptionHandler(FileStorageException.class)
     public ResponseEntity<Map<String, Object>> handleFileStorage(FileStorageException ex) {
         return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
@@ -77,6 +84,11 @@ public class GlobalExceptionHandler {
         body.put("errors", fieldErrors);
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, Object>> handleUnexpected(Exception ex) {
+        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
     }
 
     private ResponseEntity<Map<String, Object>> buildErrorResponse(HttpStatus status, String message) {
