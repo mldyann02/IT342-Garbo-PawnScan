@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { clearAuthSession, getAuthUser, getAuthRole, getJwt } from "@/lib/auth";
+import { getAuthUser, getAuthRole, getJwt } from "@/lib/auth";
+import UserDashboardHeader from "@/components/user-dashboard-header";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -32,73 +34,104 @@ export default function DashboardPage() {
     }
   }, [router]);
 
-  function handleLogout() {
-    clearAuthSession();
-    router.push("/login");
-  }
-
   return (
-    <main className="min-h-screen w-full px-4 py-6 sm:px-6 lg:px-8 flex items-center justify-center">
-      <section className="mx-auto grid min-h-[calc(100vh-3rem)] w-full max-w-6xl grid-cols-1 overflow-hidden md:grid-cols-1 lg:grid-cols-2">
-        <aside className="relative flex flex-col justify-center p-6 sm:p-8 lg:p-12">
-          <div
-            className="absolute inset-0 bg-gradient-to-br from-brand/15 via-transparent to-transparent"
-            aria-hidden="true"
-          />
-          <div className="relative">
-            <p className="mb-2 text-sm font-medium uppercase tracking-[0.12em] text-brand">
-              PawnScan
-            </p>
-            <h1 className="text-3xl font-semibold leading-tight text-slate-100 sm:text-4xl">
-              Dashboard
-            </h1>
-            <p className="mt-4 max-w-xl text-base leading-relaxed text-slate-300">
-              You are logged in and can now access PawnScan modules. This is a
-              temporary dashboard screen.
-            </p>
-            <div className="mt-6 inline-flex min-h-12 items-center gap-3 rounded-[10px] border border-border-muted bg-slate-950/70 px-4 py-3 text-slate-200">
-              <svg
-                aria-hidden="true"
-                viewBox="0 0 24 24"
-                className="h-6 w-6 text-status-clean"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path d="M12 3l8 4v6c0 5-3.4 8.6-8 10-4.6-1.4-8-5-8-10V7l8-4z" />
-                <path d="M9 12l2 2 4-4" />
-              </svg>
-              <p className="text-sm">Session active and secured.</p>
-            </div>
-          </div>
-        </aside>
+    <div className="min-h-screen bg-gradient-to-b from-bg-main to-[#071022] text-slate-200">
+      <UserDashboardHeader />
 
-        <section className="flex items-center p-4 sm:p-8 lg:p-12">
-          <div className="w-full glass-panel p-6 sm:p-8 rounded-md">
-            <h2 className="text-2xl font-semibold text-slate-100">Welcome</h2>
-            <p className="mt-2 text-sm text-slate-300">
-              {userRole === "ADMIN"
-                ? "Welcome, System Admin"
-                : userEmail
-                  ? `Logged in as ${userEmail}`
-                  : "You are authenticated."}
-            </p>
-            <div className="mt-6 rounded-md bg-slate-900/30 p-4 text-sm text-slate-300">
-              Temporary dashboard content goes here while the full module pages
-              are being built.
-            </div>
-
-            <button
-              type="button"
-              onClick={handleLogout}
-              aria-label="Logout"
-              className="mt-6 min-h-12 w-full rounded-md bg-slate-800/40 px-4 py-3 text-base font-semibold text-slate-100 transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+      <main className="mx-auto w-full max-w-6xl px-4 pb-16 pt-36 sm:px-6 sm:pt-40 md:pt-32 lg:px-8">
+        <section className="glass-panel rounded-2xl bg-slate-900/35 p-6 shadow-[0_18px_36px_rgba(0,0,0,0.28)] sm:p-8">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand/90">
+            User Dashboard
+          </p>
+          <h1 className="mt-2 text-3xl font-bold text-white sm:text-4xl">
+            Keep your reported items visible and protected.
+          </h1>
+          <p className="mt-4 max-w-2xl text-sm text-slate-300 sm:text-base">
+            Track your submitted reports, check updates from partner businesses,
+            and quickly file new incident details when you need urgent help.
+          </p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link
+              href="/reports/create"
+              className="w-full rounded-full bg-brand px-5 py-2.5 text-center text-sm font-semibold text-bg-main transition-all duration-200 ease-out hover:brightness-90 active:scale-[0.98] sm:w-auto"
             >
-              Logout
-            </button>
+              Report New Item
+            </Link>
+            <Link
+              href="/reports"
+              className="w-full rounded-full bg-slate-800/65 px-5 py-2.5 text-center text-sm font-semibold text-brand transition-all duration-200 ease-out hover:bg-slate-700/75 active:scale-[0.98] sm:w-auto"
+            >
+              View My Reports
+            </Link>
           </div>
         </section>
-      </section>
-    </main>
+
+        <section className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+          <article className="glass-panel rounded-xl bg-slate-900/45 p-5 shadow-[0_8px_22px_rgba(0,0,0,0.2)]">
+            <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
+              Active Reports
+            </p>
+            <p className="mt-2 text-3xl font-bold text-white">3</p>
+            <p className="mt-1 text-sm text-slate-300">
+              Cases currently under verification.
+            </p>
+          </article>
+          <article className="glass-panel rounded-xl bg-slate-900/45 p-5 shadow-[0_8px_22px_rgba(0,0,0,0.2)]">
+            <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
+              Matched Alerts
+            </p>
+            <p className="mt-2 text-3xl font-bold text-white">1</p>
+            <p className="mt-1 text-sm text-slate-300">
+              Item records similar to your reports.
+            </p>
+          </article>
+          <article className="glass-panel rounded-xl bg-slate-900/45 p-5 shadow-[0_8px_22px_rgba(0,0,0,0.2)]">
+            <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
+              Account
+            </p>
+            <p className="mt-2 text-lg font-semibold text-white">
+              {userRole === "ADMIN" ? "Admin" : "User"}
+            </p>
+            <p className="mt-1 text-sm text-slate-300 break-all">
+              {userEmail || "No user email found."}
+            </p>
+          </article>
+        </section>
+
+        <section className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <article className="glass-panel rounded-xl bg-slate-900/45 p-6 shadow-[0_8px_22px_rgba(0,0,0,0.2)]">
+            <h2 className="text-lg font-semibold text-white">Recent Activity</h2>
+            <ul className="mt-4 space-y-3 text-sm text-slate-300">
+              <li className="rounded-lg bg-slate-900/45 px-4 py-3">
+                April 10: Report PS-1102 was updated with new serial details.
+              </li>
+              <li className="rounded-lg bg-slate-900/45 px-4 py-3">
+                April 9: One business checked your bicycle report.
+              </li>
+              <li className="rounded-lg bg-slate-900/45 px-4 py-3">
+                April 8: Account verification completed successfully.
+              </li>
+            </ul>
+          </article>
+
+          <article className="glass-panel rounded-xl bg-slate-900/45 p-6 shadow-[0_8px_22px_rgba(0,0,0,0.2)]">
+            <h2 className="text-lg font-semibold text-white">Tips For Better Reports</h2>
+            <ul className="mt-4 space-y-3 text-sm text-slate-300">
+              <li className="rounded-lg bg-slate-900/45 px-4 py-3">
+                Include serial numbers and close-up item photos whenever
+                possible.
+              </li>
+              <li className="rounded-lg bg-slate-900/45 px-4 py-3">
+                Add the last known location and exact date to improve matching.
+              </li>
+              <li className="rounded-lg bg-slate-900/45 px-4 py-3">
+                Keep contact details updated so investigators can reach you
+                quickly.
+              </li>
+            </ul>
+          </article>
+        </section>
+      </main>
+    </div>
   );
 }
