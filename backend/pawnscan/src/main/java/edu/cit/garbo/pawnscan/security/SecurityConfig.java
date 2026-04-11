@@ -60,16 +60,15 @@ public class SecurityConfig {
         http.csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
-                    .requestMatchers("/uploads/**").permitAll()
+                        .requestMatchers("/uploads/**").permitAll()
+                        .requestMatchers("/api/verify/**").hasRole("BUSINESS")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .anyRequest().authenticated()
-                )
-            .exceptionHandling(ex -> ex
-                .authenticationEntryPoint((request, response, authException) ->
-                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized"))
-                .accessDeniedHandler((request, response, accessDeniedException) ->
-                    response.sendError(HttpServletResponse.SC_FORBIDDEN, "Forbidden"))
-            )
+                        .anyRequest().authenticated())
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) -> response
+                                .sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized"))
+                        .accessDeniedHandler((request, response, accessDeniedException) -> response
+                                .sendError(HttpServletResponse.SC_FORBIDDEN, "Forbidden")))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

@@ -1,11 +1,13 @@
 package edu.cit.garbo.pawnscan.repository;
 
 import edu.cit.garbo.pawnscan.entity.Report;
+import edu.cit.garbo.pawnscan.entity.ReportStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ReportRepository extends JpaRepository<Report, Long> {
 
@@ -15,4 +17,6 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
     boolean existsBySerialNumberIgnoreCase(String serialNumber);
 
     boolean existsBySerialNumberIgnoreCaseAndIdNot(String serialNumber, Long id);
+
+    Optional<Report> findFirstBySerialNumberIgnoreCaseAndStatus(String serialNumber, ReportStatus status);
 }
