@@ -168,7 +168,8 @@ export default function LoginForm() {
       });
 
       setTimeout(() => {
-        router.push("/dashboard");
+        const redirectUrl = role === "BUSINESS" ? "/business" : "/dashboard";
+        router.push(redirectUrl);
       }, 400);
     } catch {
       setApiMessage({
