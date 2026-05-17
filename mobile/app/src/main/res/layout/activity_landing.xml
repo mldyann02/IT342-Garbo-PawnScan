@@ -14,6 +14,7 @@
         android:paddingEnd="20dp"
         android:gravity="center_vertical">
 
+
         <!-- Brand Name - Left -->
         <TextView
             android:id="@+id/logo_container"
