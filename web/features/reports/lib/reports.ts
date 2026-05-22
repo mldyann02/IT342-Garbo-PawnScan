@@ -13,6 +13,7 @@ export type Report = {
   serialNumber: string;
   itemModel: string;
   description: string;
+  status?: "PENDING" | "APPROVED" | "REJECTED";
   createdAt: string;
   updatedAt?: string;
   files: ReportFile[];
