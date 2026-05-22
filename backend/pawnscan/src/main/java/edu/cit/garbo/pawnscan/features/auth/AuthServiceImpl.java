@@ -139,6 +139,25 @@ public class AuthServiceImpl implements AuthService {
                 && !isBlank(request.getPermitNumber());
     }
 
+    @Override
+    public AuthResponse getMe(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new InvalidCredentialsException("User not found"));
+
+        Optional<BusinessProfileSummaryResponse> businessProfileSummary = user.getRole() == UserRole.BUSINESS
+                ? businessProfileService.getSummaryByUserId(user.getUserId())
+                : Optional.empty();
+
+        return AuthResponse.builder()
+                .userId(user.getUserId())
+                .email(user.getEmail())
+                .fullName(user.getFullName())
+                .role(user.getRole().name())
+                .businessProfile(businessProfileSummary.orElse(null))
+                .message("User details retrieved successfully")
+                .build();
+    }
+
     private boolean isBlank(String value) {
         return value == null || value.trim().isEmpty();
     }
