@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import Header from "@/features/marketing/components/header";
+import Image from "next/image";
 
 export default function LandingPage() {
   const router = useRouter();
@@ -15,69 +15,61 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-bg-main to-[#071022] text-slate-200">
-      {/* Header */}
-      <Header />
-
+    <div className="relative min-h-screen text-slate-200 overflow-hidden">
+      {/* Background Decorative Elements */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-brand/10 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-[#071022]/80 blur-[150px] pointer-events-none" />
+      <div className="absolute top-[40%] right-[10%] w-[30%] h-[30%] rounded-full bg-brand/5 blur-[100px] pointer-events-none" />
+      
+      {/* Subtle Background Icons */}
+      <div className="absolute top-[10%] left-[2%] w-[20rem] h-[20rem] opacity-[0.03] pointer-events-none -rotate-12 mix-blend-screen">
+        <Image src="/lock.png" alt="Lock" fill className="object-contain" />
+      </div>
+      <div className="absolute top-[30%] right-[2%] w-[25rem] h-[25rem] opacity-[0.03] pointer-events-none rotate-12 mix-blend-screen">
+        <Image src="/secure.png" alt="Secure" fill className="object-contain" />
+      </div>
+      
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-6 pb-16 pt-32 md:pb-24 md:pt-36">
-        {/* Badge */}
-        <div className="flex justify-center mb-8">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-900/20 border border-brand/30 rounded-full">
-            <svg
-              className="w-4 h-4 text-brand"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path d="M9.5 2a1 1 0 011 1v1.057a7.002 7.002 0 015.192 10.876 1 1 0 11-1.414-1.414 5.002 5.002 0 10-3.71 8.247 1 1 0 11-.868 1.806A7.002 7.002 0 015.507 9.879V8.5a1 1 0 011-1h3a1 1 0 011 1v.179a1 1 0 11-2 0V8.5H7.5a1 1 0 11-2 0V7.443A7.002 7.002 0 019.5 2z" />
-            </svg>
-            <span className="text-brand text-xs font-bold uppercase tracking-widest">
-              Real-time Stolen Item Verification
-            </span>
-          </div>
-        </div>
-
+      <main className="relative z-10 max-w-5xl mx-auto px-6 pb-16 pt-40 md:pb-32 md:pt-48 flex flex-col items-center">
         {/* Headline */}
-        <div className="text-center mb-6">
-          <h1 className="text-5xl md:text-6xl font-bold leading-tight mb-3">
-            <span className="text-white">Stop stolen goods</span>
+        <div className="text-center mb-8 w-full max-w-3xl">
+          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight leading-[1.1] mb-6">
+            <span className="text-white drop-shadow-sm">Protect your assets,</span>
             <br />
-            <span className="text-white">before they</span>
+            <span className="text-white drop-shadow-sm">secure your</span>
             <br />
-            <span className="text-brand">sell.</span>
+            <span className="text-brand drop-shadow-[0_0_20px_rgba(0,211,127,0.3)]">business.</span>
           </h1>
         </div>
 
         {/* Subheadline */}
-        <p className="text-center text-slate-400 text-lg md:text-xl max-w-2xl mx-auto mb-12">
-          Connect victims, businesses, and law enforcement to prevent stolen
-          items from entering the market. Report, verify, and protect in
-          real-time.
+        <p className="text-center text-slate-400 text-lg md:text-2xl font-light max-w-2xl mx-auto mb-14 leading-relaxed">
+          Connect individuals and businesses to prevent stolen items from entering the market. Report, verify, and secure transactions with confidence.
         </p>
 
         {/* CTA Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-xl mx-auto">
+        <div className="flex flex-col sm:flex-row gap-5 justify-center w-full max-w-lg mx-auto">
           <button
             onClick={handleReportClick}
-            className="flex-1 px-8 py-4 bg-brand text-bg-main font-bold rounded-full hover:brightness-90 active:scale-95 active:brightness-85 transition-all text-center text-lg"
+            className="flex-1 px-8 py-4 bg-brand text-bg-main font-bold rounded-full transition-all duration-300 shadow-[0_0_30px_rgba(0,211,127,0.2)] hover:shadow-[0_0_40px_rgba(0,211,127,0.4)] hover:brightness-95 text-lg"
           >
-            Report a Stolen Item
+            <span>Report an Item</span>
           </button>
           <button
             onClick={handleBusinessClick}
-            className="flex-1 px-8 py-4 bg-transparent border-2 border-brand text-brand font-bold rounded-full hover:bg-brand/20 active:bg-brand/30 active:scale-95 transition-all text-center text-lg"
+            className="flex-1 px-8 py-4 bg-transparent border border-brand/50 text-white font-semibold rounded-full hover:bg-brand/10 hover:border-brand active:scale-95 transition-all duration-300 text-lg backdrop-blur-sm"
           >
-            Join as Business
+            Partner as Business
           </button>
         </div>
 
-        {/* Feature Highlights (Optional) */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-20 pt-16 border-t border-border-muted/30">
+        {/* Feature Highlights */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-32 w-full max-w-5xl">
           {/* Feature 1 */}
-          <div className="text-center">
-            <div className="w-12 h-12 mx-auto mb-4 rounded-lg bg-brand/10 flex items-center justify-center">
+          <div className="group p-8 rounded-3xl bg-slate-900/40 border border-slate-800/50 backdrop-blur-md hover:bg-slate-900/60 hover:border-brand/30 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_10px_40px_-10px_rgba(0,211,127,0.15)]">
+            <div className="w-14 h-14 mb-6 rounded-2xl bg-brand/10 border border-brand/20 flex items-center justify-center group-hover:scale-110 group-hover:bg-brand/20 transition-all duration-300">
               <svg
-                className="w-6 h-6 text-brand"
+                className="w-7 h-7 text-brand"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -90,18 +82,17 @@ export default function LandingPage() {
                 />
               </svg>
             </div>
-            <h3 className="text-white font-bold mb-2">Instantly Verified</h3>
-            <p className="text-slate-400 text-sm">
-              Real-time verification across databases to spot stolen items
-              immediately
+            <h3 className="text-white text-xl font-bold mb-3 tracking-wide">Instant Verification</h3>
+            <p className="text-slate-400 leading-relaxed font-light">
+              Seamlessly cross-reference items in real-time to identify potential risks before finalizing transactions.
             </p>
           </div>
 
           {/* Feature 2 */}
-          <div className="text-center">
-            <div className="w-12 h-12 mx-auto mb-4 rounded-lg bg-brand/10 flex items-center justify-center">
+          <div className="group p-8 rounded-3xl bg-slate-900/40 border border-slate-800/50 backdrop-blur-md hover:bg-slate-900/60 hover:border-brand/30 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_10px_40px_-10px_rgba(0,211,127,0.15)]">
+            <div className="w-14 h-14 mb-6 rounded-2xl bg-brand/10 border border-brand/20 flex items-center justify-center group-hover:scale-110 group-hover:bg-brand/20 transition-all duration-300">
               <svg
-                className="w-6 h-6 text-brand"
+                className="w-7 h-7 text-brand"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -114,18 +105,17 @@ export default function LandingPage() {
                 />
               </svg>
             </div>
-            <h3 className="text-white font-bold mb-2">Secure & Encrypted</h3>
-            <p className="text-slate-400 text-sm">
-              Your data is protected with enterprise-grade encryption and
-              security
+            <h3 className="text-white text-xl font-bold mb-3 tracking-wide">Enterprise Security</h3>
+            <p className="text-slate-400 leading-relaxed font-light">
+              Your data remains strictly confidential, protected by industry-leading encryption protocols.
             </p>
           </div>
 
           {/* Feature 3 */}
-          <div className="text-center">
-            <div className="w-12 h-12 mx-auto mb-4 rounded-lg bg-brand/10 flex items-center justify-center">
+          <div className="group p-8 rounded-3xl bg-slate-900/40 border border-slate-800/50 backdrop-blur-md hover:bg-slate-900/60 hover:border-brand/30 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_10px_40px_-10px_rgba(0,211,127,0.15)]">
+            <div className="w-14 h-14 mb-6 rounded-2xl bg-brand/10 border border-brand/20 flex items-center justify-center group-hover:scale-110 group-hover:bg-brand/20 transition-all duration-300">
               <svg
-                className="w-6 h-6 text-brand"
+                className="w-7 h-7 text-brand"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -138,19 +128,22 @@ export default function LandingPage() {
                 />
               </svg>
             </div>
-            <h3 className="text-white font-bold mb-2">Community Powered</h3>
-            <p className="text-slate-400 text-sm">
-              Join users, businesses, and law enforcement in the fight against
-              theft
+            <h3 className="text-white text-xl font-bold mb-3 tracking-wide">Community Integrity</h3>
+            <p className="text-slate-400 leading-relaxed font-light">
+              Collaborate with individuals and trusted partners to maintain a clean and reliable marketplace.
             </p>
           </div>
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border-muted mt-20">
-        <div className="max-w-7xl mx-auto px-6 py-8 text-center text-slate-400 text-sm">
-          <p>&copy; 2026 PawnScan. All rights reserved.</p>
+      <footer className="relative z-10 border-t border-slate-800/60 mt-10 bg-slate-900/20 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-6 py-10 flex flex-col md:flex-row items-center justify-between text-slate-500 text-sm">
+          <p>&copy; {new Date().getFullYear()} PawnScan. All rights reserved.</p>
+          <div className="flex gap-6 mt-4 md:mt-0">
+            <button className="hover:text-brand transition-colors">Privacy Policy</button>
+            <button className="hover:text-brand transition-colors">Terms of Service</button>
+          </div>
         </div>
       </footer>
     </div>

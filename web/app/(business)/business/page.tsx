@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { getAuthUser, getAuthRole, getJwt } from "@/shared/auth";
-import BusinessDashboardHeader from "@/features/business/components/business-dashboard-header";
 
 export default function BusinessDashboardPage() {
   const router = useRouter();
@@ -42,11 +41,9 @@ export default function BusinessDashboardPage() {
   }, [router]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-bg-main to-[#071022] text-slate-200">
-      <BusinessDashboardHeader />
-
-      <main className="mx-auto w-full max-w-6xl px-4 pb-16 pt-36 sm:px-6 sm:pt-40 md:pt-32 lg:px-8">
-        <section className="glass-panel rounded-2xl bg-slate-900/35 p-6 shadow-[0_18px_36px_rgba(0,0,0,0.28)] sm:p-8">
+    <div className="min-h-screen text-slate-200">
+      <main className="mx-auto w-full max-w-5xl px-4 pb-16 pt-36 sm:px-6 sm:pt-40 md:pt-32 lg:px-8">
+        <section className="glass-panel rounded-2xl bg-slate-900/35 p-6 shadow-[0_18px_36px_rgba(0,0,0,0.28)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_42px_rgba(0,0,0,0.35)] hover:bg-slate-900/40 sm:p-8">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand/90">
             Business Dashboard
           </p>
@@ -74,7 +71,7 @@ export default function BusinessDashboardPage() {
         </section>
 
         <section className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-          <article className="glass-panel rounded-xl bg-slate-900/45 p-5 shadow-[0_8px_22px_rgba(0,0,0,0.2)]">
+          <article className="glass-panel rounded-xl bg-slate-900/45 p-5 shadow-[0_8px_22px_rgba(0,0,0,0.2)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_28px_rgba(0,0,0,0.3)] hover:bg-slate-900/50">
             <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
               Items Verified
             </p>
@@ -83,7 +80,7 @@ export default function BusinessDashboardPage() {
               Items verified this month.
             </p>
           </article>
-          <article className="glass-panel rounded-xl bg-slate-900/45 p-5 shadow-[0_8px_22px_rgba(0,0,0,0.2)]">
+          <article className="glass-panel rounded-xl bg-slate-900/45 p-5 shadow-[0_8px_22px_rgba(0,0,0,0.2)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_28px_rgba(0,0,0,0.3)] hover:bg-slate-900/50">
             <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
               Matches Found
             </p>
@@ -92,7 +89,7 @@ export default function BusinessDashboardPage() {
               Items matching stolen registry.
             </p>
           </article>
-          <article className="glass-panel rounded-xl bg-slate-900/45 p-5 shadow-[0_8px_22px_rgba(0,0,0,0.2)]">
+          <article className="glass-panel rounded-xl bg-slate-900/45 p-5 shadow-[0_8px_22px_rgba(0,0,0,0.2)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_28px_rgba(0,0,0,0.3)] hover:bg-slate-900/50">
             <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
               Account
             </p>

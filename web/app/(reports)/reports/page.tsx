@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import UserDashboardHeader from "@/features/dashboard/components/user-dashboard-header";
 import { getAuthUser, getJwt } from "@/shared/auth";
 import {
   deleteReport,
@@ -210,16 +209,14 @@ function ReportsPageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-bg-main relative overflow-hidden text-slate-200">
+    <div className="min-h-screen relative overflow-hidden text-slate-200">
       {/* Decorative blurred background */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-brand/10 rounded-full blur-[120px]" />
         <div className="absolute bottom-1/4 right-1/4 w-[30rem] h-[30rem] bg-brand/5 rounded-full blur-[150px]" />
       </div>
 
-      <UserDashboardHeader />
-
-      <main className="relative z-10 mx-auto w-full max-w-6xl px-4 pb-16 pt-32 sm:px-6 lg:px-8">
+      <main className="relative z-10 mx-auto w-full max-w-5xl px-4 pb-16 pt-32 sm:px-6 lg:px-8">
         <div className="bg-[#0a1628]/80 backdrop-blur-xl border border-white/5 rounded-3xl p-6 sm:p-10 shadow-2xl">
           <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
             <div>
@@ -814,7 +811,7 @@ export default function ReportsPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-gradient-to-b from-bg-main to-[#071022]" />
+        <div className="min-h-screen" />
       }
     >
       <ReportsPageContent />
