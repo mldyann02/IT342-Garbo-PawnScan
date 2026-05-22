@@ -24,6 +24,7 @@ function ReportsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [reports, setReports] = useState<Report[]>(() => getCachedReports() || []);
+  const [statusFilter, setStatusFilter] = useState<"ALL" | "APPROVED" | "PENDING">("ALL");
   const [isLoading, setIsLoading] = useState(() => !getCachedReports());
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [selectedReportId, setSelectedReportId] = useState<number | null>(null);
@@ -50,12 +51,17 @@ function ReportsPageContent() {
   });
   const [isSaving, setIsSaving] = useState(false);
 
+  const filteredReports = useMemo(
+    () => reports.filter(r => statusFilter === "ALL" || (r.status || "APPROVED") === statusFilter),
+    [reports, statusFilter]
+  );
+
   const selectedReport = useMemo(
     () =>
       reports.find((report) => report.id === selectedReportId) ??
-      reports[0] ??
+      filteredReports[0] ??
       null,
-    [reports, selectedReportId],
+    [reports, selectedReportId, filteredReports],
   );
 
   const statusMessage = useMemo(() => {
@@ -311,24 +317,49 @@ function ReportsPageContent() {
           {!isLoading && reports.length > 0 && (
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.1fr_1.6fr] lg:items-start">
               <aside className="rounded-2xl border border-slate-700/50 bg-slate-800/40 p-4 shadow-xl flex flex-col lg:sticky lg:top-8 lg:max-h-[calc(100vh-6rem)]">
-                <h2 className="px-2 pb-4 text-sm font-semibold text-slate-300 flex items-center gap-2 shrink-0">
-                  <svg
-                    className="w-4 h-4 text-brand"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 6h16M4 10h16M4 14h16M4 18h16"
-                    />
-                  </svg>
-                  Previews
-                </h2>
-                <div className="space-y-2.5 overflow-y-auto pr-2 custom-scrollbar lg:max-h-[calc(100vh-12rem)]">
-                  {reports.map((report) => {
+                <div className="mb-4">
+                  <h2 className="px-2 pb-2 text-sm font-semibold text-slate-300 flex items-center gap-2">
+                    <svg
+                      className="w-4 h-4 text-brand"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 6h16M4 10h16M4 14h16M4 18h16"
+                      />
+                    </svg>
+                    Previews
+                  </h2>
+                  <div className="flex bg-slate-900/50 rounded-lg p-1 mx-2">
+                    <button
+                      type="button"
+                      onClick={() => setStatusFilter("ALL")}
+                      className={`flex-1 text-xs font-medium py-1.5 rounded-md transition-all ${statusFilter === "ALL" ? "bg-slate-700 text-white shadow-sm" : "text-slate-400 hover:text-slate-300 hover:bg-slate-800/50"}`}
+                    >
+                      All
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setStatusFilter("APPROVED")}
+                      className={`flex-1 text-xs font-medium py-1.5 rounded-md transition-all ${statusFilter === "APPROVED" ? "bg-emerald-500/20 text-emerald-400 shadow-sm" : "text-slate-400 hover:text-slate-300 hover:bg-slate-800/50"}`}
+                    >
+                      Approved
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setStatusFilter("PENDING")}
+                      className={`flex-1 text-xs font-medium py-1.5 rounded-md transition-all ${statusFilter === "PENDING" ? "bg-amber-500/20 text-amber-300 shadow-sm" : "text-slate-400 hover:text-slate-300 hover:bg-slate-800/50"}`}
+                    >
+                      Pending
+                    </button>
+                  </div>
+                </div>
+                <div className="space-y-2.5 overflow-y-auto pr-2 custom-scrollbar lg:max-h-[calc(100vh-14rem)]">
+                  {filteredReports.map((report) => {
                     const isActive = selectedReport?.id === report.id;
                     return (
                       <button
@@ -347,13 +378,15 @@ function ReportsPageContent() {
                           >
                             {report.serialNumber}
                           </p>
-                          <span className="text-xs text-slate-500 whitespace-nowrap mt-0.5">
-                            {formatDate(report.createdAt).split(",")[0]}
-                          </span>
                         </div>
-                        <p className="text-xs text-slate-400 line-clamp-1">
-                          {report.itemModel}
-                        </p>
+                        <div className="flex justify-between items-center mt-1">
+                           <p className="text-xs text-slate-400 line-clamp-1">
+                             {report.itemModel}
+                           </p>
+                           <span className="text-[10px] text-slate-500 whitespace-nowrap">
+                             {formatDate(report.createdAt).split(",")[0]}
+                           </span>
+                        </div>
                       </button>
                     );
                   })}
@@ -527,6 +560,15 @@ function ReportsPageContent() {
                             <span className="px-2.5 py-1 rounded-md bg-brand/10 text-brand text-xs font-medium tracking-wide">
                               Report Details
                             </span>
+                            {selectedReport.status && (
+                              <span className={`px-2.5 py-1 rounded-md text-xs font-medium tracking-wide border ${
+                                selectedReport.status === 'APPROVED' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 
+                                selectedReport.status === 'REJECTED' ? 'bg-red-500/10 text-red-400 border-red-500/20' : 
+                                'bg-amber-500/10 text-amber-300 border-amber-500/20'
+                              }`}>
+                                {selectedReport.status === 'PENDING' ? 'Pending Review' : selectedReport.status}
+                              </span>
+                            )}
                           </div>
                           <h2 className="mt-2 text-2xl font-bold text-white">
                             {selectedReport.serialNumber}

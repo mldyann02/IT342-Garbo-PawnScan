@@ -168,7 +168,7 @@ export default function LoginForm() {
       });
 
       setTimeout(() => {
-        const redirectUrl = role === "BUSINESS" ? "/business" : "/dashboard";
+        const redirectUrl = role === "ADMIN" ? "/admin/dashboard" : role === "BUSINESS" ? "/business" : "/dashboard";
         router.push(redirectUrl);
       }, 400);
     } catch {

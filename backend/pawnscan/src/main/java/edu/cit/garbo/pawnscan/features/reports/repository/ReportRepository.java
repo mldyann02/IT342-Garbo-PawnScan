@@ -19,6 +19,8 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
     boolean existsBySerialNumberIgnoreCaseAndIdNot(String serialNumber, Long id);
 
     Optional<Report> findFirstBySerialNumberIgnoreCaseAndStatus(String serialNumber, ReportStatus status);
+
+    List<Report> findByStatusOrderByCreatedAtDesc(ReportStatus status);
 }
 
 

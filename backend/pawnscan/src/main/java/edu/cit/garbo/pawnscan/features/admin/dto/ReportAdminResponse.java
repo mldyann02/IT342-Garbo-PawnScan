@@ -1,5 +1,7 @@
-package edu.cit.garbo.pawnscan.features.reports.dto;
+package edu.cit.garbo.pawnscan.features.admin.dto;
 
+import edu.cit.garbo.pawnscan.features.reports.dto.ReportFileResponse;
+import edu.cit.garbo.pawnscan.features.reports.entity.ReportStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -14,20 +16,14 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ReportResponse {
-
+public class ReportAdminResponse {
     private Long id;
     private String serialNumber;
     private String itemModel;
     private String description;
-    private edu.cit.garbo.pawnscan.features.reports.entity.ReportStatus status;
+    private ReportStatus status;
     private LocalDateTime createdAt;
+    private String ownerName;
+    private String ownerEmail;
     private List<ReportFileResponse> files;
 }
-
-
-
-
-
-
-
