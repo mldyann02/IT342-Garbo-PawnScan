@@ -143,6 +143,8 @@ export default function ModerationPage() {
             <Pagination 
               currentPage={currentPage} 
               totalPages={totalPages} 
+              totalItems={reports.length}
+              itemsPerPage={ITEMS_PER_PAGE}
               onPageChange={setCurrentPage} 
             />
           </div>

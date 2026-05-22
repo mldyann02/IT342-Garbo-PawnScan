@@ -124,18 +124,8 @@ export default function AdminHeader() {
             <div className="absolute right-0 top-11 w-44 overflow-hidden rounded-2xl bg-gradient-to-b from-slate-900/95 to-slate-950/95 shadow-2xl backdrop-blur-sm sm:top-12 sm:w-48 border border-slate-700/40">
               <button
                 type="button"
-                onClick={() => {
-                  setOpenDropdown(null);
-                  router.push("/admin/dashboard");
-                }}
-                className="w-full px-4 py-3 text-left text-sm text-slate-300 transition-all duration-200 ease-out hover:bg-slate-800/50 hover:text-slate-100 active:scale-[0.99]"
-              >
-                Dashboard
-              </button>
-              <button
-                type="button"
                 onClick={handleLogout}
-                className="w-full px-4 py-3 text-left text-sm text-red-300 transition-all duration-200 ease-out hover:bg-red-500/20 active:scale-[0.99] border-t border-slate-700/30"
+                className="w-full px-4 py-3 text-left text-sm text-red-300 transition-all duration-200 ease-out hover:bg-red-500/20 active:scale-[0.99]"
               >
                 Logout
               </button>

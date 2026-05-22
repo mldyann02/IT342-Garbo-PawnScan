@@ -224,6 +224,8 @@ export default function UsersPage() {
             <Pagination 
               currentPage={currentPage} 
               totalPages={totalPages} 
+              totalItems={filteredBusinesses.length}
+              itemsPerPage={ITEMS_PER_PAGE}
               onPageChange={setCurrentPage} 
             />
           </div>
