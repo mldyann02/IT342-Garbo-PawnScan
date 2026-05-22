@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { getAuthUser, getAuthRole, getJwt } from "@/shared/auth";
 import {
   SearchLog,
@@ -10,7 +10,7 @@ import {
   fetchStolenMatches,
 } from "@/features/verification/lib/verify";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 500;
 
 function formatDate(value: string): string {
   const parsed = new Date(value);
@@ -41,19 +41,60 @@ function inferEvidenceType(
 
 export default function SearchHistoryPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [history, setHistory] = useState<SearchLog[]>([]);
   const [matches, setMatches] = useState<StolenMatch[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [page, setPage] = useState(0);
   const [activeTab, setActiveTab] = useState<"searches" | "matches">(
-    "searches",
+    () => (searchParams.get("tab") === "matches" ? "matches" : "searches"),
   );
   const [selectedMatchId, setSelectedMatchId] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const [viewerFile, setViewerFile] = useState<{
     url: string;
     type: "IMAGE" | "PDF";
   } | null>(null);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageInput, setPageInput] = useState("1");
+
+  const filteredHistory = useMemo(() => {
+    let result = history;
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(item => 
+        (item.searchedSerial?.toLowerCase() || "").includes(q) ||
+        (item.itemModel?.toLowerCase() || "").includes(q)
+      );
+    }
+    return result;
+  }, [history, searchQuery]);
+
+  const filteredMatches = useMemo(() => {
+    let result = matches;
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(item => 
+        (item.searchedSerial?.toLowerCase() || "").includes(q) ||
+        (item.itemModel?.toLowerCase() || "").includes(q) ||
+        (item.victimName?.toLowerCase() || "").includes(q)
+      );
+    }
+    return result;
+  }, [matches, searchQuery]);
+
+  const activeDataLength = activeTab === "searches" ? filteredHistory.length : filteredMatches.length;
+  const totalPages = Math.max(1, Math.ceil(activeDataLength / 10));
+
+  useEffect(() => {
+    setCurrentPage(1);
+    setPageInput("1");
+  }, [activeTab, searchQuery]);
+
+  const displayedHistory = filteredHistory.slice((currentPage - 1) * 10, currentPage * 10);
+  const displayedMatches = filteredMatches.slice((currentPage - 1) * 10, currentPage * 10);
 
   const selectedMatch = useMemo(
     () =>
@@ -97,7 +138,18 @@ export default function SearchHistoryPage() {
 
         setHistory(historyResponse);
         setMatches(matchesResponse);
-        setSelectedMatchId(matchesResponse[0]?.matchedReportId ?? null);
+        
+        const matchIdParam = searchParams.get("matchId");
+        if (matchIdParam && !isNaN(parseInt(matchIdParam))) {
+          const parsedId = parseInt(matchIdParam);
+          if (matchesResponse.some(m => m.matchedReportId === parsedId)) {
+            setSelectedMatchId(parsedId);
+          } else {
+            setSelectedMatchId(matchesResponse[0]?.matchedReportId ?? null);
+          }
+        } else {
+          setSelectedMatchId(matchesResponse[0]?.matchedReportId ?? null);
+        }
       } catch (error) {
         setErrorMessage(
           error instanceof Error
@@ -133,24 +185,14 @@ export default function SearchHistoryPage() {
   return (
     <div className="min-h-screen text-slate-200">
       <main className="mx-auto w-full max-w-5xl px-4 pb-16 pt-36 sm:px-6 sm:pt-40 md:pt-32 lg:px-8">
-        <section className="glass-panel rounded-2xl bg-slate-900/35 p-6 shadow-[0_18px_36px_rgba(0,0,0,0.28)] sm:p-8">
-          <h1 className="mt-2 text-3xl font-bold text-white sm:text-4xl">
-            Business verification audit trail
-          </h1>
-          <p className="mt-4 max-w-3xl text-sm text-slate-300 sm:text-base">
-            Review all serial number searches performed by your business branch,
-            including timestamps and stolen matches.
-          </p>
+        {errorMessage && (
+          <div className="mb-8 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+            {errorMessage}
+          </div>
+        )}
 
-          {errorMessage && (
-            <div className="mt-4 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-              {errorMessage}
-            </div>
-          )}
-        </section>
-
-        <section className="mt-8 glass-panel rounded-2xl bg-slate-900/35 shadow-[0_8px_22px_rgba(0,0,0,0.2)]">
-          <div className="border-b border-slate-800">
+        <section className="glass-panel rounded-2xl bg-slate-900/35 shadow-[0_8px_22px_rgba(0,0,0,0.2)]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800 pr-6 sm:pr-8">
             <div className="flex gap-0 p-6 sm:p-8">
               <button
                 onClick={() => setActiveTab("searches")}
@@ -160,19 +202,6 @@ export default function SearchHistoryPage() {
                     : "border-transparent text-slate-400 hover:text-slate-200"
                 }`}
               >
-                <svg
-                  className="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
-                  />
-                </svg>
                 All Searches
               </button>
               <button
@@ -198,6 +227,20 @@ export default function SearchHistoryPage() {
                 </svg>
                 Stolen Matches
               </button>
+            </div>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 px-6 pb-6 sm:p-0 w-full sm:w-auto">
+              <div className="relative w-full sm:w-64">
+                <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <input 
+                  type="text"
+                  placeholder="Search serial, model, owner..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full rounded-lg border border-slate-700/60 bg-slate-900/40 py-1.5 pl-9 pr-3 text-sm text-slate-200 outline-none focus:border-brand"
+                />
+              </div>
             </div>
           </div>
 
@@ -229,7 +272,7 @@ export default function SearchHistoryPage() {
                       Loading records...
                     </p>
                   </div>
-                ) : history.length === 0 ? (
+                ) : displayedHistory.length === 0 ? (
                   <div className="flex flex-col items-center justify-center p-12 text-slate-500">
                     <svg
                       className="h-12 w-12 opacity-50"
@@ -251,25 +294,29 @@ export default function SearchHistoryPage() {
                 ) : (
                   <div className="overflow-hidden rounded-xl border border-slate-700/50 bg-slate-950/40">
                     <div className="overflow-x-auto">
-                      <table className="min-w-full text-left text-sm">
+                      <table className="min-w-full text-left text-sm table-fixed">
                         <thead className="bg-slate-900/60 border-b border-slate-700/60 text-xs font-semibold uppercase tracking-wider text-slate-400">
                           <tr>
-                            <th className="px-6 py-4">Item Serial</th>
-                            <th className="px-6 py-4">Status</th>
-                            <th className="px-6 py-4">Timestamp</th>
-                            <th className="px-6 py-4 text-right">
-                              Report Match
-                            </th>
+                            <th className="w-1/4 px-6 py-4">Item Serial</th>
+                            <th className="w-1/4 px-6 py-4">Item Model</th>
+                            <th className="w-1/4 px-6 py-4">Timestamp</th>
+                            <th className="w-1/4 px-6 py-4">Status</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-800/80">
-                          {history.map((item, index) => (
+                          {displayedHistory.map((item, index) => (
                             <tr
                               key={`${item.timestamp}-${item.searchedSerial}-${index}`}
                               className="transition-colors hover:bg-slate-800/40"
                             >
                               <td className="whitespace-nowrap px-6 py-4 font-medium text-slate-200">
                                 {item.searchedSerial}
+                              </td>
+                              <td className="whitespace-nowrap px-6 py-4 text-slate-300">
+                                {item.itemModel || <span className="opacity-50">-</span>}
+                              </td>
+                              <td className="whitespace-nowrap px-6 py-4 text-slate-400">
+                                {formatDate(item.timestamp)}
                               </td>
                               <td className="whitespace-nowrap px-6 py-4">
                                 <span
@@ -311,22 +358,57 @@ export default function SearchHistoryPage() {
                                   {item.result}
                                 </span>
                               </td>
-                              <td className="whitespace-nowrap px-6 py-4 text-slate-400">
-                                {formatDate(item.timestamp)}
-                              </td>
-                              <td className="whitespace-nowrap px-6 py-4 text-right text-slate-400">
-                                {item.matchedReportId ? (
-                                  <span className="rounded bg-slate-800 px-2 py-1 font-mono text-xs text-slate-300">
-                                    #{item.matchedReportId}
-                                  </span>
-                                ) : (
-                                  <span className="italic opacity-50">-</span>
-                                )}
-                              </td>
                             </tr>
                           ))}
                         </tbody>
                       </table>
+                    </div>
+                    {/* Pagination */}
+                    <div className="flex items-center justify-between p-4 sm:px-6 border-t border-slate-700/60 bg-slate-900/50">
+                      <span className="text-sm text-slate-400">
+                        Showing {activeDataLength === 0 ? 0 : (currentPage - 1) * 10 + 1} to {Math.min(currentPage * 10, activeDataLength)} of {activeDataLength}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <button 
+                          disabled={currentPage <= 1} 
+                          onClick={() => {
+                            setCurrentPage(p => p - 1);
+                            setPageInput((currentPage - 1).toString());
+                          }}
+                          className="px-2 py-1 text-sm font-semibold text-slate-300 disabled:opacity-50"
+                        >
+                          Prev
+                        </button>
+                        <input 
+                          type="text" 
+                          value={pageInput}
+                          onChange={(e) => setPageInput(e.target.value)}
+                          onBlur={() => {
+                            let p = parseInt(pageInput);
+                            if (isNaN(p) || p < 1) p = 1;
+                            if (p > totalPages) p = totalPages;
+                            setCurrentPage(p);
+                            setPageInput(p.toString());
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.currentTarget.blur();
+                            }
+                          }}
+                          className="w-12 rounded border border-slate-700 bg-slate-950/80 px-2 py-1 text-center text-sm text-slate-200 outline-none focus:border-brand"
+                        />
+                        <span className="text-sm text-slate-400">of {totalPages}</span>
+                        <button 
+                          disabled={currentPage >= totalPages} 
+                          onClick={() => {
+                            setCurrentPage(p => p + 1);
+                            setPageInput((currentPage + 1).toString());
+                          }}
+                          className="px-2 py-1 text-sm font-semibold text-slate-300 disabled:opacity-50"
+                        >
+                          Next
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -360,7 +442,7 @@ export default function SearchHistoryPage() {
                       Loading matches...
                     </p>
                   </div>
-                ) : matches.length === 0 ? (
+                ) : displayedMatches.length === 0 ? (
                   <div className="flex flex-col items-center justify-center p-12 text-slate-500">
                     <svg
                       className="h-12 w-12 opacity-50 text-emerald-500"
@@ -380,13 +462,13 @@ export default function SearchHistoryPage() {
                     </p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.05fr_1.75fr] lg:items-start">
-                    <aside className="rounded-2xl border border-red-500/20 bg-slate-900/40 p-4 shadow-xl flex flex-col lg:sticky lg:top-8 lg:max-h-[calc(100vh-8rem)]">
+                  <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.05fr_1.75fr] items-stretch lg:items-stretch">
+                    <aside className="rounded-2xl bg-slate-900/40 p-4 shadow-xl flex flex-col min-h-[400px]">
                       <h3 className="px-2 pb-3 text-sm font-semibold text-red-300 shrink-0">
                         Match Previews
                       </h3>
-                      <div className="space-y-2.5 overflow-y-auto pr-2 lg:max-h-[calc(100vh-14rem)]">
-                        {matches.map((item, index) => {
+                      <div className="space-y-2.5">
+                        {displayedMatches.map((item, index) => {
                           const isActive =
                             selectedMatch?.matchedReportId ===
                             item.matchedReportId;
@@ -414,10 +496,7 @@ export default function SearchHistoryPage() {
                                   ).toLocaleDateString()}
                                 </span>
                               </div>
-                              <p className="mt-1 text-xs text-red-300">
-                                Report #{item.matchedReportId ?? "N/A"}
-                              </p>
-                              <p className="mt-2 text-xs text-slate-400 line-clamp-1">
+                              <p className="mt-1 text-xs text-slate-400 line-clamp-1">
                                 {item.itemModel || "Unknown item model"}
                               </p>
                             </button>
@@ -427,7 +506,7 @@ export default function SearchHistoryPage() {
                     </aside>
 
                     {selectedMatch && (
-                      <article className="rounded-2xl border border-red-500/20 bg-slate-900/40 p-6 sm:p-8 shadow-xl">
+                      <article className="rounded-2xl bg-slate-900/40 p-6 sm:p-8 shadow-xl flex flex-col">
                         <div className="flex flex-wrap items-start justify-between gap-4 border-b border-red-500/20 pb-5">
                           <div>
                             <h3 className="text-2xl font-bold text-white">
@@ -438,9 +517,6 @@ export default function SearchHistoryPage() {
                               taking any action.
                             </p>
                           </div>
-                          <span className="inline-flex items-center rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-red-300">
-                            Report #{selectedMatch.matchedReportId ?? "N/A"}
-                          </span>
                         </div>
 
                         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -564,6 +640,55 @@ export default function SearchHistoryPage() {
                         </div>
                       </article>
                     )}
+                  </div>
+                )}
+                {/* Matches Pagination */}
+                {displayedMatches.length > 0 && (
+                  <div className="flex items-center justify-between mt-6 p-4 rounded-xl border border-slate-700/50 bg-slate-900/40">
+                    <span className="text-sm text-slate-400">
+                      Showing {activeDataLength === 0 ? 0 : (currentPage - 1) * 10 + 1} to {Math.min(currentPage * 10, activeDataLength)} of {activeDataLength}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <button 
+                        disabled={currentPage <= 1} 
+                        onClick={() => {
+                          setCurrentPage(p => p - 1);
+                          setPageInput((currentPage - 1).toString());
+                        }}
+                        className="px-2 py-1 text-sm font-semibold text-slate-300 disabled:opacity-50"
+                      >
+                        Prev
+                      </button>
+                      <input 
+                        type="text" 
+                        value={pageInput}
+                        onChange={(e) => setPageInput(e.target.value)}
+                        onBlur={() => {
+                          let p = parseInt(pageInput);
+                          if (isNaN(p) || p < 1) p = 1;
+                          if (p > totalPages) p = totalPages;
+                          setCurrentPage(p);
+                          setPageInput(p.toString());
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.currentTarget.blur();
+                          }
+                        }}
+                        className="w-12 rounded border border-slate-700 bg-slate-950/80 px-2 py-1 text-center text-sm text-slate-200 outline-none focus:border-brand"
+                      />
+                      <span className="text-sm text-slate-400">of {totalPages}</span>
+                      <button 
+                        disabled={currentPage >= totalPages} 
+                        onClick={() => {
+                          setCurrentPage(p => p + 1);
+                          setPageInput((currentPage + 1).toString());
+                        }}
+                        className="px-2 py-1 text-sm font-semibold text-slate-300 disabled:opacity-50"
+                      >
+                        Next
+                      </button>
+                    </div>
                   </div>
                 )}
               </>

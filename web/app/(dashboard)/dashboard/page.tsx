@@ -43,12 +43,12 @@ export default function DashboardPage() {
       return;
     }
 
-    fetchReports()
+      fetchReports()
       .then((data) => {
         const sorted = [...data].sort(
           (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
-        setRecentReports(sorted.slice(0, 5));
+        setRecentReports(sorted.slice(0, 6));
       })
       .catch(console.error)
       .finally(() => setIsLoadingReports(false));
