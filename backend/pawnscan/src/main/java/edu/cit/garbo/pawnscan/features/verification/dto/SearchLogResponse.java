@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 public class SearchLogResponse {
 
     private String searchedSerial;
+    private String itemModel;
     private VerificationResult result;
     private LocalDateTime timestamp;
     private Long matchedReportId;

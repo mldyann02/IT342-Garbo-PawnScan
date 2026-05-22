@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import UserDashboardHeader from "@/features/dashboard/components/user-dashboard-header";
 import { getAuthUser, getJwt } from "@/shared/auth";
 import { createReport } from "@/features/reports/lib/reports";
 
@@ -101,7 +100,7 @@ export default function CreateReportPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-bg-main via-slate-900/50 to-[#071022] text-slate-200 relative overflow-hidden">
+    <div className="min-h-screen text-slate-200 relative overflow-hidden">
       {/* Decorative background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 -left-48 w-96 h-96 bg-brand/15 rounded-full blur-3xl" />
@@ -109,9 +108,7 @@ export default function CreateReportPage() {
         <div className="absolute top-3/4 left-1/2 w-80 h-80 bg-brand/5 rounded-full blur-3xl" />
       </div>
 
-      <UserDashboardHeader />
-
-      <main className="relative z-10 mx-auto w-full max-w-6xl px-4 pb-16 pt-32 sm:px-6 lg:px-8">
+      <main className="relative z-10 mx-auto w-full max-w-5xl px-4 pb-16 pt-32 sm:px-6 lg:px-8">
         <section className="bg-[#0a1628]/80 backdrop-blur-xl border border-white/5 rounded-3xl p-6 sm:p-10 shadow-2xl">
           <div className="w-full mx-auto">
             {/* Header Section */}

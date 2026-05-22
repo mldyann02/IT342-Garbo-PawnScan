@@ -20,6 +20,9 @@ public class StolenReportSummaryResponse {
     private String itemModel;
     private String description;
     private LocalDateTime dateReported;
+    private String ownerName;
+    private String ownerEmail;
+    private String ownerPhoneNumber;
 }
 
 

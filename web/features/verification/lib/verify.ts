@@ -8,6 +8,10 @@ export type StolenReportSummary = {
   itemModel: string;
   description: string;
   dateReported: string;
+  ownerName?: string;
+  victimName?: string;
+  ownerEmail?: string;
+  ownerPhoneNumber?: string;
 };
 
 export type VerifySearchResponse = {
@@ -21,6 +25,7 @@ export type SearchLog = {
   result: VerificationResult;
   timestamp: string;
   matchedReportId: number | null;
+  itemModel?: string | null;
 };
 
 export type StolenMatch = {
