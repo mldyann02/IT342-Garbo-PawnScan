@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { fetchMe, getAuthRole, clearAuthSession } from "@/shared/auth";
+import { invalidateReportsCache } from "@/features/reports/lib/reports";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -83,6 +84,7 @@ export default function VerificationGuard({ children }: { children: React.ReactN
             <button 
               onClick={() => {
                 clearAuthSession();
+                invalidateReportsCache();
                 router.push("/login");
               }}
               className="inline-flex items-center justify-center rounded-xl bg-slate-800 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-slate-900/20 transition-all hover:scale-105 hover:bg-slate-700"
