@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { clearAuthSession } from "@/shared/auth";
+import { invalidateReportsCache } from "@/features/reports/lib/reports";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Home" },
@@ -50,6 +51,7 @@ export default function UserDashboardHeader() {
 
   function handleLogout() {
     clearAuthSession();
+    invalidateReportsCache();
     router.push("/login");
   }
 
