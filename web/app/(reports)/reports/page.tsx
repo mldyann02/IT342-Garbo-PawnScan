@@ -8,6 +8,7 @@ import {
   deleteReport,
   fetchReports,
   updateReport,
+  getCachedReports,
   Report,
 } from "@/features/reports/lib/reports";
 
@@ -22,8 +23,8 @@ function formatDate(value: string): string {
 function ReportsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [reports, setReports] = useState<Report[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [reports, setReports] = useState<Report[]>(() => getCachedReports() || []);
+  const [isLoading, setIsLoading] = useState(() => !getCachedReports());
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [selectedReportId, setSelectedReportId] = useState<number | null>(null);
   const [message, setMessage] = useState<{
@@ -78,11 +79,31 @@ function ReportsPageContent() {
     }
 
     async function loadReports() {
-      setIsLoading(true);
       try {
+        const cached = getCachedReports();
+        if (!cached) setIsLoading(true);
+        
         const data = await fetchReports();
         setReports(data);
-        setSelectedReportId(data[0]?.id ?? null);
+        
+        const paramId = searchParams.get("reportId");
+        if (paramId && !isNaN(parseInt(paramId))) {
+          const parsedId = parseInt(paramId);
+          if (data.some(r => r.id === parsedId)) {
+            setSelectedReportId(parsedId);
+          } else {
+            setSelectedReportId(data[0]?.id ?? null);
+          }
+        } else if (!cached) {
+          setSelectedReportId(data[0]?.id ?? null);
+        } else if (cached && selectedReportId === null) {
+          // If we had cache, we might not have set the selected id yet based on params
+          if (paramId && !isNaN(parseInt(paramId)) && cached.some(r => r.id === parseInt(paramId))) {
+             setSelectedReportId(parseInt(paramId));
+          } else {
+             setSelectedReportId(cached[0]?.id ?? null);
+          }
+        }
       } catch (error) {
         if (
           error instanceof Error &&
