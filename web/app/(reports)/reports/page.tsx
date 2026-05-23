@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import UserDashboardHeader from "@/features/dashboard/components/user-dashboard-header";
 import { getAuthUser, getJwt } from "@/shared/auth";
 import {
   deleteReport,
   fetchReports,
   updateReport,
+  getCachedReports,
   Report,
 } from "@/features/reports/lib/reports";
 
@@ -23,8 +23,9 @@ function formatDate(value: string): string {
 function ReportsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [reports, setReports] = useState<Report[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [reports, setReports] = useState<Report[]>(() => getCachedReports() || []);
+  const [statusFilter, setStatusFilter] = useState<"ALL" | "APPROVED" | "PENDING">("ALL");
+  const [isLoading, setIsLoading] = useState(() => !getCachedReports());
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [selectedReportId, setSelectedReportId] = useState<number | null>(null);
   const [message, setMessage] = useState<{
@@ -50,12 +51,17 @@ function ReportsPageContent() {
   });
   const [isSaving, setIsSaving] = useState(false);
 
+  const filteredReports = useMemo(
+    () => reports.filter(r => statusFilter === "ALL" || (r.status || "APPROVED") === statusFilter),
+    [reports, statusFilter]
+  );
+
   const selectedReport = useMemo(
     () =>
       reports.find((report) => report.id === selectedReportId) ??
-      reports[0] ??
+      filteredReports[0] ??
       null,
-    [reports, selectedReportId],
+    [reports, selectedReportId, filteredReports],
   );
 
   const statusMessage = useMemo(() => {
@@ -79,11 +85,31 @@ function ReportsPageContent() {
     }
 
     async function loadReports() {
-      setIsLoading(true);
       try {
+        const cached = getCachedReports();
+        if (!cached) setIsLoading(true);
+        
         const data = await fetchReports();
         setReports(data);
-        setSelectedReportId(data[0]?.id ?? null);
+        
+        const paramId = searchParams.get("reportId");
+        if (paramId && !isNaN(parseInt(paramId))) {
+          const parsedId = parseInt(paramId);
+          if (data.some(r => r.id === parsedId)) {
+            setSelectedReportId(parsedId);
+          } else {
+            setSelectedReportId(data[0]?.id ?? null);
+          }
+        } else if (!cached) {
+          setSelectedReportId(data[0]?.id ?? null);
+        } else if (cached && selectedReportId === null) {
+          // If we had cache, we might not have set the selected id yet based on params
+          if (paramId && !isNaN(parseInt(paramId)) && cached.some(r => r.id === parseInt(paramId))) {
+             setSelectedReportId(parseInt(paramId));
+          } else {
+             setSelectedReportId(cached[0]?.id ?? null);
+          }
+        }
       } catch (error) {
         if (
           error instanceof Error &&
@@ -210,16 +236,14 @@ function ReportsPageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-bg-main relative overflow-hidden text-slate-200">
+    <div className="min-h-screen relative overflow-hidden text-slate-200">
       {/* Decorative blurred background */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-brand/10 rounded-full blur-[120px]" />
         <div className="absolute bottom-1/4 right-1/4 w-[30rem] h-[30rem] bg-brand/5 rounded-full blur-[150px]" />
       </div>
 
-      <UserDashboardHeader />
-
-      <main className="relative z-10 mx-auto w-full max-w-6xl px-4 pb-16 pt-32 sm:px-6 lg:px-8">
+      <main className="relative z-10 mx-auto w-full max-w-5xl px-4 pb-16 pt-32 sm:px-6 lg:px-8">
         <div className="bg-[#0a1628]/80 backdrop-blur-xl border border-white/5 rounded-3xl p-6 sm:p-10 shadow-2xl">
           <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
             <div>
@@ -293,24 +317,49 @@ function ReportsPageContent() {
           {!isLoading && reports.length > 0 && (
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.1fr_1.6fr] lg:items-start">
               <aside className="rounded-2xl border border-slate-700/50 bg-slate-800/40 p-4 shadow-xl flex flex-col lg:sticky lg:top-8 lg:max-h-[calc(100vh-6rem)]">
-                <h2 className="px-2 pb-4 text-sm font-semibold text-slate-300 flex items-center gap-2 shrink-0">
-                  <svg
-                    className="w-4 h-4 text-brand"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 6h16M4 10h16M4 14h16M4 18h16"
-                    />
-                  </svg>
-                  Previews
-                </h2>
-                <div className="space-y-2.5 overflow-y-auto pr-2 custom-scrollbar lg:max-h-[calc(100vh-12rem)]">
-                  {reports.map((report) => {
+                <div className="mb-4">
+                  <h2 className="px-2 pb-2 text-sm font-semibold text-slate-300 flex items-center gap-2">
+                    <svg
+                      className="w-4 h-4 text-brand"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 6h16M4 10h16M4 14h16M4 18h16"
+                      />
+                    </svg>
+                    Previews
+                  </h2>
+                  <div className="flex bg-slate-900/50 rounded-lg p-1 mx-2">
+                    <button
+                      type="button"
+                      onClick={() => setStatusFilter("ALL")}
+                      className={`flex-1 text-xs font-medium py-1.5 rounded-md transition-all ${statusFilter === "ALL" ? "bg-slate-700 text-white shadow-sm" : "text-slate-400 hover:text-slate-300 hover:bg-slate-800/50"}`}
+                    >
+                      All
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setStatusFilter("APPROVED")}
+                      className={`flex-1 text-xs font-medium py-1.5 rounded-md transition-all ${statusFilter === "APPROVED" ? "bg-emerald-500/20 text-emerald-400 shadow-sm" : "text-slate-400 hover:text-slate-300 hover:bg-slate-800/50"}`}
+                    >
+                      Approved
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setStatusFilter("PENDING")}
+                      className={`flex-1 text-xs font-medium py-1.5 rounded-md transition-all ${statusFilter === "PENDING" ? "bg-amber-500/20 text-amber-300 shadow-sm" : "text-slate-400 hover:text-slate-300 hover:bg-slate-800/50"}`}
+                    >
+                      Pending
+                    </button>
+                  </div>
+                </div>
+                <div className="space-y-2.5 overflow-y-auto pr-2 custom-scrollbar lg:max-h-[calc(100vh-14rem)]">
+                  {filteredReports.map((report) => {
                     const isActive = selectedReport?.id === report.id;
                     return (
                       <button
@@ -329,13 +378,15 @@ function ReportsPageContent() {
                           >
                             {report.serialNumber}
                           </p>
-                          <span className="text-xs text-slate-500 whitespace-nowrap mt-0.5">
-                            {formatDate(report.createdAt).split(",")[0]}
-                          </span>
                         </div>
-                        <p className="text-xs text-slate-400 line-clamp-1">
-                          {report.itemModel}
-                        </p>
+                        <div className="flex justify-between items-center mt-1">
+                           <p className="text-xs text-slate-400 line-clamp-1">
+                             {report.itemModel}
+                           </p>
+                           <span className="text-[10px] text-slate-500 whitespace-nowrap">
+                             {formatDate(report.createdAt).split(",")[0]}
+                           </span>
+                        </div>
                       </button>
                     );
                   })}
@@ -509,6 +560,15 @@ function ReportsPageContent() {
                             <span className="px-2.5 py-1 rounded-md bg-brand/10 text-brand text-xs font-medium tracking-wide">
                               Report Details
                             </span>
+                            {selectedReport.status && (
+                              <span className={`px-2.5 py-1 rounded-md text-xs font-medium tracking-wide border ${
+                                selectedReport.status === 'APPROVED' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 
+                                selectedReport.status === 'REJECTED' ? 'bg-red-500/10 text-red-400 border-red-500/20' : 
+                                'bg-amber-500/10 text-amber-300 border-amber-500/20'
+                              }`}>
+                                {selectedReport.status === 'PENDING' ? 'Pending Review' : selectedReport.status}
+                              </span>
+                            )}
                           </div>
                           <h2 className="mt-2 text-2xl font-bold text-white">
                             {selectedReport.serialNumber}
@@ -814,7 +874,7 @@ export default function ReportsPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-gradient-to-b from-bg-main to-[#071022]" />
+        <div className="min-h-screen" />
       }
     >
       <ReportsPageContent />

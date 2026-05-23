@@ -13,6 +13,7 @@ export type Report = {
   serialNumber: string;
   itemModel: string;
   description: string;
+  status?: "PENDING" | "APPROVED" | "REJECTED";
   createdAt: string;
   updatedAt?: string;
   files: ReportFile[];
@@ -84,7 +85,40 @@ async function handleResponse<T>(response: Response): Promise<T> {
   return data;
 }
 
-export async function fetchReports(): Promise<Report[]> {
+let reportsCache: Report[] | null = null;
+let reportsCachePromise: Promise<Report[]> | null = null;
+
+export function getCachedReports(): Report[] | null {
+  return reportsCache;
+}
+
+export function invalidateReportsCache(): void {
+  reportsCache = null;
+  reportsCachePromise = null;
+}
+
+export async function fetchReports(force = false): Promise<Report[]> {
+  if (!force && reportsCache) {
+    // Refresh in background to keep data fresh
+    fetchReportsFromApi().then(data => { reportsCache = data; }).catch(console.error);
+    return reportsCache;
+  }
+  if (!force && reportsCachePromise) {
+    return reportsCachePromise;
+  }
+  
+  reportsCachePromise = fetchReportsFromApi();
+  try {
+    const data = await reportsCachePromise;
+    reportsCache = data;
+    return data;
+  } catch (error) {
+    reportsCachePromise = null;
+    throw error;
+  }
+}
+
+async function fetchReportsFromApi(): Promise<Report[]> {
   const response = await fetchWithTimeout("/api/reports", {
     method: "GET",
     headers: {
@@ -104,7 +138,9 @@ export async function createReport(payload: ReportPayload): Promise<Report> {
     body: buildFormData(payload),
   });
 
-  return handleResponse<Report>(response);
+  const data = await handleResponse<Report>(response);
+  invalidateReportsCache();
+  return data;
 }
 
 export async function updateReport(reportId: number, payload: ReportPayload): Promise<Report> {
@@ -116,7 +152,9 @@ export async function updateReport(reportId: number, payload: ReportPayload): Pr
     body: buildFormData(payload),
   });
 
-  return handleResponse<Report>(response);
+  const data = await handleResponse<Report>(response);
+  invalidateReportsCache();
+  return data;
 }
 
 export async function deleteReport(reportId: number): Promise<void> {
@@ -130,5 +168,6 @@ export async function deleteReport(reportId: number): Promise<void> {
   if (!response.ok) {
     await handleResponse<{ message?: string }>(response);
   }
+  invalidateReportsCache();
 }
 

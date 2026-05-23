@@ -59,7 +59,8 @@ public class SecurityConfig {
         public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
                 JwtAuthenticationFilter jwtFilter = new JwtAuthenticationFilter(jwtService);
 
-                http.csrf(AbstractHttpConfigurer::disable)
+                http.cors(org.springframework.security.config.Customizer.withDefaults())
+                                .csrf(AbstractHttpConfigurer::disable)
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers("/api/auth/**").permitAll()
                                                 .requestMatchers("/uploads/**").permitAll()

@@ -54,7 +54,7 @@ public class Report {
     @Builder.Default
     @jakarta.persistence.Enumerated(jakarta.persistence.EnumType.STRING)
     @Column(nullable = false, length = 32)
-    private ReportStatus status = ReportStatus.APPROVED;
+    private ReportStatus status = ReportStatus.PENDING;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

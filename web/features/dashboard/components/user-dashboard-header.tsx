@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { clearAuthSession } from "@/shared/auth";
+import { invalidateReportsCache } from "@/features/reports/lib/reports";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Home" },
@@ -50,12 +51,13 @@ export default function UserDashboardHeader() {
 
   function handleLogout() {
     clearAuthSession();
+    invalidateReportsCache();
     router.push("/login");
   }
 
   return (
-    <nav className="fixed left-1/2 top-3 z-50 w-[95%] max-w-6xl -translate-x-1/2 rounded-2xl bg-gradient-to-r from-slate-900/60 via-slate-900/50 to-slate-800/55 backdrop-blur-xl shadow-[0_18px_38px_rgba(0,0,0,0.35)] sm:top-5 md:rounded-full">
-      <div className="flex items-center justify-between px-3 py-3 sm:px-6 lg:px-8">
+    <nav className="fixed left-1/2 top-4 z-50 w-[92%] max-w-5xl -translate-x-1/2 rounded-full bg-slate-900/60 backdrop-blur-xl border border-slate-700/30 shadow-[0_8px_30px_rgba(0,0,0,0.12)] sm:top-6">
+      <div className="flex items-center justify-between px-6 py-3 sm:px-8">
         <Link
           href="/dashboard"
           className="text-brand font-bold text-lg tracking-wide transition-all duration-200 ease-out hover:text-brand/85 active:scale-[0.98] sm:text-xl"

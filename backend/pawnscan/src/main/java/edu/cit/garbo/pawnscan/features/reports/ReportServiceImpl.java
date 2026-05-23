@@ -190,6 +190,7 @@ public class ReportServiceImpl implements ReportService {
                 .serialNumber(report.getSerialNumber())
                 .itemModel(report.getItemModel())
                 .description(report.getDescription())
+                .status(report.getStatus())
                 .createdAt(report.getCreatedAt())
                 .files(files)
                 .build();

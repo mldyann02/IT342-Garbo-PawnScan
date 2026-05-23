@@ -5,6 +5,7 @@ import React from "react";
 import { useMemo, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { storeJwt } from "@/shared/auth";
+import GoogleAuthButton from "@/features/auth/components/google-auth-button";
 import {
   RegistrationFormValues,
   RegistrationRole,
@@ -264,35 +265,24 @@ export default function RegisterForm() {
             className="absolute inset-0 bg-gradient-to-br from-brand/15 via-transparent to-transparent"
             aria-hidden="true"
           />
-          <div className="relative">
-            <h1 className="text-3xl font-semibold leading-tight text-slate-100 sm:text-4xl">
-              Secure Your Transactions with PawnScan
+          <div className="relative z-10 max-w-xl">
+            <div className="inline-flex items-center gap-2 rounded-full border border-brand/30 bg-brand/10 px-3 py-1.5 mb-6 text-sm font-medium text-brand/90 backdrop-blur-sm">
+              <span className="h-1.5 w-1.5 rounded-full bg-brand animate-pulse" />
+              Join the Network
+            </div>
+            <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-[3.5rem] lg:leading-[1.1] text-transparent bg-clip-text bg-gradient-to-br from-white via-slate-200 to-slate-500 pb-2">
+              Secure Your Transactions
             </h1>
-            <p className="mt-4 max-w-xl text-base leading-relaxed text-slate-300">
+            <p className="mt-6 text-lg leading-relaxed text-slate-400 font-light max-w-md">
               PawnScan empowers individuals and businesses to verify high-value
               items instantly, preventing the circulation of stolen goods.
             </p>
-            <div className="mt-6 inline-flex min-h-12 items-center gap-3 rounded-[10px] border border-border-muted bg-slate-950/70 px-4 py-3 text-slate-200">
-              <svg
-                aria-hidden="true"
-                viewBox="0 0 24 24"
-                className="h-6 w-6 text-status-clean"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path d="M12 3l8 4v6c0 5-3.4 8.6-8 10-4.6-1.4-8-5-8-10V7l8-4z" />
-                <path d="M9 12l2 2 4-4" />
-              </svg>
-              <p className="text-sm">
-                Trusted verification for safer transactions.
-              </p>
-            </div>
           </div>
         </aside>
 
-        <section className="flex items-start p-4 sm:p-8 lg:p-12">
-          <div className="w-full glass-panel p-6 sm:p-8 rounded-md form-fixed thin-scrollbar">
+        <section className="flex items-start p-4 sm:p-8 lg:p-12 relative z-10">
+          <div className="w-full max-w-[32rem] mx-auto p-8 sm:p-10 rounded-3xl shadow-[0_24px_60px_rgba(0,0,0,0.4)] bg-slate-900/60 border border-slate-700/40 backdrop-blur-2xl relative overflow-hidden transition-all duration-300 hover:shadow-[0_24px_80px_rgba(0,0,0,0.5)] form-fixed thin-scrollbar">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-[2px] bg-gradient-to-r from-transparent via-brand/80 to-transparent" />
             <h2 className="text-2xl font-semibold text-slate-100">
               Create Your Account
             </h2>
@@ -632,7 +622,17 @@ export default function RegisterForm() {
               </button>
             </form>
 
-            <p className="mt-4 text-sm text-slate-300 text-center">
+            <div className="mt-6 flex items-center justify-center gap-4">
+              <div className="h-[1px] flex-1 bg-slate-700/50" />
+              <span className="text-sm font-medium text-slate-400">Or continue with</span>
+              <div className="h-[1px] flex-1 bg-slate-700/50" />
+            </div>
+
+            <div className="mt-6">
+              <GoogleAuthButton mode="register" />
+            </div>
+
+            <p className="mt-6 text-sm text-slate-300 text-center">
               Already registered?{" "}
               <Link
                 href="/login"

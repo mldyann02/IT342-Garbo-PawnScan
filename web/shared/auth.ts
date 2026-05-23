@@ -60,4 +60,22 @@ export function clearAuthSession(): void {
   sessionStorage.removeItem(AUTH_ROLE_KEY);
 }
 
+export async function fetchMe() {
+  const token = getJwt();
+  if (!token) return null;
+
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080"}/api/auth/me`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (err) {
+    console.error("Failed to fetch me:", err);
+    return null;
+  }
+}
+
 

@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import UserDashboardHeader from "@/features/dashboard/components/user-dashboard-header";
 import { getAuthUser, getJwt } from "@/shared/auth";
 import { fetchReports, updateReport } from "@/features/reports/lib/reports";
 
@@ -130,9 +129,8 @@ export default function EditReportPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-bg-main to-[#071022] text-slate-200">
-      <UserDashboardHeader />
-      <main className="mx-auto w-full max-w-4xl px-4 pb-16 pt-36 sm:px-6 sm:pt-40 md:pt-32 lg:px-8">
+    <div className="min-h-screen text-slate-200">
+      <main className="mx-auto w-full max-w-5xl px-4 pb-16 pt-36 sm:px-6 sm:pt-40 md:pt-32 lg:px-8">
         <section className="glass-panel rounded-2xl bg-slate-900/35 p-6 shadow-[0_18px_36px_rgba(0,0,0,0.28)] sm:p-8">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand/90">
             Edit Report

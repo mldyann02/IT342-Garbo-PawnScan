@@ -7,7 +7,7 @@ export default function Header() {
   const router = useRouter();
 
   return (
-    <nav className="fixed left-1/2 top-4 z-50 w-[92%] max-w-5xl -translate-x-1/2 rounded-full bg-gradient-to-r from-slate-900/55 via-slate-900/45 to-slate-800/50 backdrop-blur-xl shadow-[0_18px_38px_rgba(0,0,0,0.35)] sm:top-6">
+    <nav className="fixed left-1/2 top-4 z-50 w-[92%] max-w-5xl -translate-x-1/2 rounded-full bg-slate-900/60 backdrop-blur-xl border border-slate-700/30 shadow-[0_8px_30px_rgba(0,0,0,0.12)] sm:top-6">
       <div className="flex items-center justify-between px-6 py-3 sm:px-8">
         {/* Brand - Clickable to redirect to landing */}
         <button

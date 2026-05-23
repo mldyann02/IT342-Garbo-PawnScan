@@ -2,6 +2,7 @@ package edu.cit.garbo.pawnscan.shared.exception;
 
 import edu.cit.garbo.pawnscan.features.auth.exception.EmailAlreadyExistsException;
 import edu.cit.garbo.pawnscan.features.auth.exception.InvalidCredentialsException;
+import edu.cit.garbo.pawnscan.features.auth.exception.InvalidGoogleTokenException;
 import edu.cit.garbo.pawnscan.features.businessprofile.exception.BusinessProfileAlreadyExistsException;
 import edu.cit.garbo.pawnscan.features.businessprofile.exception.BusinessProfileNotFoundException;
 import edu.cit.garbo.pawnscan.features.businessprofile.exception.InvalidBusinessProfileException;
@@ -31,6 +32,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InvalidCredentialsException.class)
     public ResponseEntity<Map<String, Object>> handleInvalidCredentials(InvalidCredentialsException ex) {
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage());
+    }
+
+    @ExceptionHandler(InvalidGoogleTokenException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidGoogleToken(InvalidGoogleTokenException ex) {
         return buildErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage());
     }
 

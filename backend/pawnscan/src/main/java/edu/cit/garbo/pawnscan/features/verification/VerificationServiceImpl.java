@@ -187,6 +187,7 @@ public class VerificationServiceImpl implements VerificationService {
     private SearchLogResponse toSearchLogResponse(SearchLog log) {
         return SearchLogResponse.builder()
                 .searchedSerial(log.getSearchedSerial())
+                .itemModel(log.getMatchedReport() == null ? null : log.getMatchedReport().getItemModel())
                 .result(log.getResult())
                 .timestamp(log.getSearchedAt())
                 .matchedReportId(log.getMatchedReport() == null ? null : log.getMatchedReport().getId())
@@ -194,12 +195,16 @@ public class VerificationServiceImpl implements VerificationService {
     }
 
     private StolenReportSummaryResponse toStolenReportSummary(Report report) {
+        User victim = report.getUser();
         return StolenReportSummaryResponse.builder()
                 .reportId(report.getId())
                 .serialNumber(report.getSerialNumber())
                 .itemModel(report.getItemModel())
                 .description(report.getDescription())
                 .dateReported(report.getCreatedAt())
+                .ownerName(victim == null ? null : victim.getFullName())
+                .ownerEmail(victim == null ? null : victim.getEmail())
+                .ownerPhoneNumber(victim == null ? null : victim.getPhoneNumber())
                 .build();
     }
 

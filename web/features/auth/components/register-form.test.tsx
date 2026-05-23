@@ -5,11 +5,17 @@ import { vi } from 'vitest';
 import RegisterForm from './register-form';
 
 const pushMock = vi.fn();
+let mockSearchParams = new URLSearchParams();
+
+vi.mock('./google-auth-button', () => ({
+  default: () => null
+}));
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
     push: pushMock
-  })
+  }),
+  useSearchParams: () => mockSearchParams
 }));
 
 describe('RegisterForm', () => {
@@ -17,6 +23,7 @@ describe('RegisterForm', () => {
     vi.clearAllMocks();
     vi.stubGlobal('fetch', vi.fn());
     window.sessionStorage.clear();
+    mockSearchParams = new URLSearchParams();
   });
 
   it('submits individual registration successfully', async () => {
@@ -54,7 +61,7 @@ describe('RegisterForm', () => {
             fullName: 'Juan Dela Cruz',
             email: 'juan@example.com',
             password: 'Strong123',
-            phoneNumber: '09171234567',
+            phoneNumber: '+639171234567',
             role: 'INDIVIDUAL'
           })
         })
@@ -97,7 +104,7 @@ describe('RegisterForm', () => {
             fullName: 'Pawn Business Inc.',
             email: 'biz@example.com',
             password: 'Strong123',
-            phoneNumber: '09170000000',
+            phoneNumber: '+639170000000',
             role: 'BUSINESS',
             business_name: 'Pawn Business Inc.',
             business_address: 'Cebu City',
