@@ -7,6 +7,10 @@ import LoginForm from './login-form';
 const pushMock = vi.fn();
 let mockSearchParams = new URLSearchParams();
 
+vi.mock('./google-auth-button', () => ({
+  default: () => null
+}));
+
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
     push: pushMock

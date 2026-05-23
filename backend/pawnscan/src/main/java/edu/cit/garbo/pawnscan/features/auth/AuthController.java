@@ -1,6 +1,8 @@
 package edu.cit.garbo.pawnscan.features.auth;
 
 import edu.cit.garbo.pawnscan.features.auth.dto.AuthResponse;
+import edu.cit.garbo.pawnscan.features.auth.dto.GoogleAuthConfigResponse;
+import edu.cit.garbo.pawnscan.features.auth.dto.GoogleAuthRequest;
 import edu.cit.garbo.pawnscan.features.auth.dto.LoginRequest;
 import edu.cit.garbo.pawnscan.features.auth.dto.RegisterRequest;
 import edu.cit.garbo.pawnscan.features.auth.AuthService;
@@ -30,6 +32,17 @@ public class AuthController {
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         AuthResponse response = authService.login(request);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/google")
+    public ResponseEntity<AuthResponse> authenticateWithGoogle(@Valid @RequestBody GoogleAuthRequest request) {
+        AuthResponse response = authService.authenticateWithGoogle(request);
+        return ResponseEntity.ok(response);
+    }
+
+    @org.springframework.web.bind.annotation.GetMapping("/google/config")
+    public ResponseEntity<GoogleAuthConfigResponse> getGoogleAuthConfig() {
+        return ResponseEntity.ok(authService.getGoogleAuthConfig());
     }
 
     @org.springframework.web.bind.annotation.GetMapping("/me")

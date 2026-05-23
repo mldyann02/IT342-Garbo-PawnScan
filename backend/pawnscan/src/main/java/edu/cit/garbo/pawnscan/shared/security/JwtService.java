@@ -30,6 +30,7 @@ public class JwtService {
 
         return Jwts.builder()
                 .setSubject(user.getEmail())
+                .claim("user_id", user.getUserId())
                 .claim("role", user.getRole().name())
                 .claim("fullName", user.getFullName())
                 .setIssuedAt(now)
