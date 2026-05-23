@@ -5,6 +5,7 @@ import React from "react";
 import { useMemo, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { storeJwt } from "@/shared/auth";
+import GoogleAuthButton from "@/features/auth/components/google-auth-button";
 import {
   RegistrationFormValues,
   RegistrationRole,
@@ -621,7 +622,17 @@ export default function RegisterForm() {
               </button>
             </form>
 
-            <p className="mt-4 text-sm text-slate-300 text-center">
+            <div className="mt-6 flex items-center justify-center gap-4">
+              <div className="h-[1px] flex-1 bg-slate-700/50" />
+              <span className="text-sm font-medium text-slate-400">Or continue with</span>
+              <div className="h-[1px] flex-1 bg-slate-700/50" />
+            </div>
+
+            <div className="mt-6">
+              <GoogleAuthButton mode="register" />
+            </div>
+
+            <p className="mt-6 text-sm text-slate-300 text-center">
               Already registered?{" "}
               <Link
                 href="/login"

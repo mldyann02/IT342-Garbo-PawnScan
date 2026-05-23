@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { storeAuthUser, storeJwt, storeAuthRole } from "@/shared/auth";
 import { validateEmail, validatePassword } from "@/features/auth/lib/validation";
+import GoogleAuthButton from "@/features/auth/components/google-auth-button";
 
 type LoginValues = {
   email: string;
@@ -311,7 +312,17 @@ export default function LoginForm() {
               </button>
             </form>
 
-            <p className="mt-4 text-sm text-slate-300 text-center">
+            <div className="mt-6 flex items-center justify-center gap-4">
+              <div className="h-[1px] flex-1 bg-slate-700/50" />
+              <span className="text-sm font-medium text-slate-400">Or continue with</span>
+              <div className="h-[1px] flex-1 bg-slate-700/50" />
+            </div>
+
+            <div className="mt-6">
+              <GoogleAuthButton mode="login" />
+            </div>
+
+            <p className="mt-6 text-sm text-slate-300 text-center">
               No account yet?{" "}
               <Link
                 href="/register"
