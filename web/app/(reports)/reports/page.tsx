@@ -41,6 +41,8 @@ const REPORT_STATUS_OPTIONS: Array<{
   { value: "REJECTED", label: "Rejected" },
 ];
 
+const PREVIEW_PAGE_SIZE = 5;
+
 function resolveStatusFilter(value: string | null): ReportStatusFilter {
   return value === "APPROVED" || value === "PENDING" || value === "REJECTED"
     ? value
@@ -80,6 +82,86 @@ function hasReportChanges(report: Report, form: ReportEditForm): boolean {
   );
 }
 
+type PreviewPaginationProps = {
+  currentPage: number;
+  pageInput: string;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+  onInputChange: (value: string) => void;
+  onPageChange: (page: number) => void;
+};
+
+function PreviewPagination({
+  currentPage,
+  pageInput,
+  pageSize,
+  totalItems,
+  totalPages,
+  onInputChange,
+  onPageChange,
+}: PreviewPaginationProps) {
+  function commitPageInput() {
+    let nextPage = parseInt(pageInput);
+    if (Number.isNaN(nextPage) || nextPage < 1) {
+      nextPage = 1;
+    }
+    if (nextPage > totalPages) {
+      nextPage = totalPages;
+    }
+    onPageChange(nextPage);
+    onInputChange(nextPage.toString());
+  }
+
+  return (
+    <div className="mt-6 flex flex-col items-center justify-between gap-4 rounded-xl border border-slate-700/50 bg-slate-900/40 p-4 sm:flex-row sm:px-6">
+      <span className="text-sm text-slate-400">
+        Showing {totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1} to{" "}
+        {Math.min(currentPage * pageSize, totalItems)} of {totalItems}
+      </span>
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          disabled={currentPage <= 1}
+          onClick={() => {
+            const nextPage = currentPage - 1;
+            onPageChange(nextPage);
+            onInputChange(nextPage.toString());
+          }}
+          className="px-2 py-1 text-sm font-semibold text-slate-300 transition-colors hover:text-white disabled:opacity-50"
+        >
+          Prev
+        </button>
+        <input
+          type="text"
+          value={pageInput}
+          onChange={(event) => onInputChange(event.target.value)}
+          onBlur={commitPageInput}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.currentTarget.blur();
+            }
+          }}
+          className="w-12 rounded border border-slate-700 bg-slate-950/80 px-2 py-1 text-center text-sm text-slate-200 outline-none focus:border-brand"
+        />
+        <span className="text-sm text-slate-400">of {totalPages}</span>
+        <button
+          type="button"
+          disabled={currentPage >= totalPages}
+          onClick={() => {
+            const nextPage = currentPage + 1;
+            onPageChange(nextPage);
+            onInputChange(nextPage.toString());
+          }}
+          className="px-2 py-1 text-sm font-semibold text-slate-300 transition-colors hover:text-white disabled:opacity-50"
+        >
+          Next
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function ReportsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -92,6 +174,10 @@ function ReportsPageContent() {
     () => resolveStatusFilter(searchParams.get("status")),
   );
   const [isStatusMenuOpen, setIsStatusMenuOpen] = useState(false);
+  const [reportsPage, setReportsPage] = useState(1);
+  const [reportsPageInput, setReportsPageInput] = useState("1");
+  const [matchedReportsPage, setMatchedReportsPage] = useState(1);
+  const [matchedReportsPageInput, setMatchedReportsPageInput] = useState("1");
   const [isLoading, setIsLoading] = useState(() => !getCachedReports());
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
@@ -121,20 +207,41 @@ function ReportsPageContent() {
     [reports, statusFilter]
   );
 
+  const reportsTotalPages = Math.max(1, Math.ceil(filteredReports.length / PREVIEW_PAGE_SIZE));
+  const matchedReportsTotalPages = Math.max(1, Math.ceil(matchedReports.length / PREVIEW_PAGE_SIZE));
+
+  const paginatedReports = useMemo(
+    () =>
+      filteredReports.slice(
+        (reportsPage - 1) * PREVIEW_PAGE_SIZE,
+        reportsPage * PREVIEW_PAGE_SIZE,
+      ),
+    [filteredReports, reportsPage],
+  );
+
+  const paginatedMatchedReports = useMemo(
+    () =>
+      matchedReports.slice(
+        (matchedReportsPage - 1) * PREVIEW_PAGE_SIZE,
+        matchedReportsPage * PREVIEW_PAGE_SIZE,
+      ),
+    [matchedReports, matchedReportsPage],
+  );
+
   const selectedReport = useMemo(
     () =>
-      filteredReports.find((report) => report.id === selectedReportId) ??
-      filteredReports[0] ??
+      paginatedReports.find((report) => report.id === selectedReportId) ??
+      paginatedReports[0] ??
       null,
-    [filteredReports, selectedReportId],
+    [paginatedReports, selectedReportId],
   );
 
   const selectedMatchedReport = useMemo(
     () =>
-      matchedReports.find((report) => report.reportId === selectedMatchedReportId) ??
-      matchedReports[0] ??
+      paginatedMatchedReports.find((report) => report.reportId === selectedMatchedReportId) ??
+      paginatedMatchedReports[0] ??
       null,
-    [matchedReports, selectedMatchedReportId],
+    [paginatedMatchedReports, selectedMatchedReportId],
   );
 
   const pendingDeleteReport = useMemo(
@@ -229,6 +336,61 @@ function ReportsPageContent() {
   useEffect(() => {
     setIsEditing(false);
   }, [selectedReportId]);
+
+  useEffect(() => {
+    setReportsPage(1);
+    setReportsPageInput("1");
+  }, [statusFilter]);
+
+  useEffect(() => {
+    if (selectedReportId === null) {
+      return;
+    }
+
+    const selectedIndex = filteredReports.findIndex((report) => report.id === selectedReportId);
+    if (selectedIndex < 0) {
+      return;
+    }
+
+    const selectedPage = Math.floor(selectedIndex / PREVIEW_PAGE_SIZE) + 1;
+    if (selectedPage !== reportsPage) {
+      setReportsPage(selectedPage);
+      setReportsPageInput(selectedPage.toString());
+    }
+  }, [filteredReports, reportsPage, selectedReportId]);
+
+  useEffect(() => {
+    if (selectedMatchedReportId === null) {
+      return;
+    }
+
+    const selectedIndex = matchedReports.findIndex(
+      (report) => report.reportId === selectedMatchedReportId,
+    );
+    if (selectedIndex < 0) {
+      return;
+    }
+
+    const selectedPage = Math.floor(selectedIndex / PREVIEW_PAGE_SIZE) + 1;
+    if (selectedPage !== matchedReportsPage) {
+      setMatchedReportsPage(selectedPage);
+      setMatchedReportsPageInput(selectedPage.toString());
+    }
+  }, [matchedReports, matchedReportsPage, selectedMatchedReportId]);
+
+  useEffect(() => {
+    if (reportsPage > reportsTotalPages) {
+      setReportsPage(reportsTotalPages);
+      setReportsPageInput(reportsTotalPages.toString());
+    }
+  }, [reportsPage, reportsTotalPages]);
+
+  useEffect(() => {
+    if (matchedReportsPage > matchedReportsTotalPages) {
+      setMatchedReportsPage(matchedReportsTotalPages);
+      setMatchedReportsPageInput(matchedReportsTotalPages.toString());
+    }
+  }, [matchedReportsPage, matchedReportsTotalPages]);
 
   useEffect(() => {
     function handleEscape(event: KeyboardEvent) {
@@ -355,6 +517,26 @@ function ReportsPageContent() {
     handleSaveEdit();
   }
 
+  function handleReportsPageChange(nextPage: number) {
+    setReportsPage(nextPage);
+    setReportsPageInput(nextPage.toString());
+    const nextReport = filteredReports.slice(
+      (nextPage - 1) * PREVIEW_PAGE_SIZE,
+      nextPage * PREVIEW_PAGE_SIZE,
+    )[0];
+    setSelectedReportId(nextReport?.id ?? null);
+  }
+
+  function handleMatchedReportsPageChange(nextPage: number) {
+    setMatchedReportsPage(nextPage);
+    setMatchedReportsPageInput(nextPage.toString());
+    const nextReport = matchedReports.slice(
+      (nextPage - 1) * PREVIEW_PAGE_SIZE,
+      nextPage * PREVIEW_PAGE_SIZE,
+    )[0];
+    setSelectedMatchedReportId(nextReport?.reportId ?? null);
+  }
+
   return (
     <div className="min-h-screen relative overflow-hidden text-slate-200">
       {/* Decorative blurred background */}
@@ -472,8 +654,9 @@ function ReportsPageContent() {
           )}
 
           {!isLoading && activeTab === "reports" && reports.length > 0 && (
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(300px,0.95fr)_minmax(0,1.7fr)] lg:items-start">
-              <aside className="flex flex-col rounded-2xl border border-slate-700/50 bg-slate-800/40 p-4 shadow-xl lg:sticky lg:top-8 lg:max-h-[calc(100vh-6rem)]">
+            <div>
+              <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-[minmax(300px,0.95fr)_minmax(0,1.7fr)]">
+              <aside className="flex h-full min-h-[640px] flex-col rounded-2xl border border-slate-700/50 bg-slate-800/40 p-4 shadow-xl lg:sticky lg:top-8">
                 <div className="mb-4 space-y-4">
                   <div className="px-1">
                     <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-200">
@@ -580,7 +763,7 @@ function ReportsPageContent() {
                   </div>
                 </div>
 
-                <div className="space-y-2.5 overflow-y-auto pr-2 custom-scrollbar lg:max-h-[calc(100vh-14rem)]">
+                <div className="min-h-0 flex-1 space-y-2.5 overflow-y-auto pr-2 custom-scrollbar">
                   {filteredReports.length === 0 && (
                     <div className="rounded-xl border border-dashed border-slate-700/50 bg-slate-900/30 p-6 text-center">
                       <p className="text-sm font-medium text-slate-300">
@@ -592,7 +775,7 @@ function ReportsPageContent() {
                     </div>
                   )}
 
-                  {filteredReports.map((report) => {
+                  {paginatedReports.map((report) => {
                     const reportStatus = getReportStatus(report);
                     const isActive = selectedReport?.id === report.id;
                     return (
@@ -612,7 +795,7 @@ function ReportsPageContent() {
                           >
                             {report.serialNumber}
                           </p>
-                          <span className={`shrink-0 rounded-md border px-2 py-0.5 text-[10px] font-semibold ${getStatusBadgeClass(reportStatus)}`}>
+                          <span className={`inline-flex w-20 shrink-0 justify-center rounded-md border px-2 py-0.5 text-[10px] font-semibold ${getStatusBadgeClass(reportStatus)}`}>
                             {reportStatus === "PENDING" ? "Pending" : getStatusLabel(reportStatus)}
                           </span>
                         </div>
@@ -631,7 +814,7 @@ function ReportsPageContent() {
               </aside>
 
               {selectedReport ? (
-                <article className="rounded-2xl border border-slate-700/50 bg-slate-800/40 p-6 sm:p-8 shadow-xl flex flex-col relative w-full">
+                <article className="relative flex h-full min-h-[640px] w-full flex-col rounded-2xl border border-slate-700/50 bg-slate-800/40 p-6 shadow-xl sm:p-8">
                   {isEditing ? (
                     <div className="flex flex-col animate-in fade-in zoom-in-95 duration-200">
                       <div className="flex flex-wrap items-start justify-between gap-4 mb-6 pb-6 border-b border-slate-700/50 shrink-0">
@@ -834,7 +1017,7 @@ function ReportsPageContent() {
                             <span className="px-2.5 py-1 rounded-md bg-brand/10 text-brand text-xs font-medium tracking-wide">
                               Report Details
                             </span>
-                            <span className={`px-2.5 py-1 rounded-md text-xs font-medium tracking-wide border ${getStatusBadgeClass(getReportStatus(selectedReport))}`}>
+                            <span className={`inline-flex w-28 justify-center px-2.5 py-1 rounded-md text-xs font-medium tracking-wide border ${getStatusBadgeClass(getReportStatus(selectedReport))}`}>
                               {getStatusLabel(getReportStatus(selectedReport))}
                             </span>
                           </div>
@@ -1089,7 +1272,7 @@ function ReportsPageContent() {
                   )}
                 </article>
               ) : (
-                <article className="flex min-h-[360px] items-center justify-center rounded-2xl border border-dashed border-slate-700/50 bg-slate-800/30 p-8 text-center shadow-xl">
+                <article className="flex h-full min-h-[640px] items-center justify-center rounded-2xl border border-dashed border-slate-700/50 bg-slate-800/30 p-8 text-center shadow-xl">
                   <div className="max-w-sm">
                     <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-slate-700/50 bg-slate-900/50 text-slate-500">
                       <svg
@@ -1115,12 +1298,23 @@ function ReportsPageContent() {
                   </div>
                 </article>
               )}
+              </div>
+              <PreviewPagination
+                currentPage={reportsPage}
+                pageInput={reportsPageInput}
+                pageSize={PREVIEW_PAGE_SIZE}
+                totalItems={filteredReports.length}
+                totalPages={reportsTotalPages}
+                onInputChange={setReportsPageInput}
+                onPageChange={handleReportsPageChange}
+              />
             </div>
           )}
 
           {!isLoading && activeTab === "matched" && matchedReports.length > 0 && (
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.1fr_1.6fr] lg:items-start">
-              <aside className="rounded-2xl border border-slate-700/50 bg-slate-800/40 p-4 shadow-xl flex flex-col lg:sticky lg:top-8 lg:max-h-[calc(100vh-6rem)]">
+            <div>
+              <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-[minmax(300px,0.95fr)_minmax(0,1.7fr)]">
+              <aside className="flex h-full min-h-[640px] flex-col rounded-2xl border border-slate-700/50 bg-slate-800/40 p-4 shadow-xl lg:sticky lg:top-8">
                 <div className="mb-4 px-2">
                   <h2 className="pb-2 text-sm font-semibold text-slate-300 flex items-center gap-2">
                     <svg className="w-4 h-4 text-status-stolen" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1129,8 +1323,8 @@ function ReportsPageContent() {
                     Matched stolen reports
                   </h2>
                 </div>
-                <div className="space-y-2.5 overflow-y-auto pr-2 custom-scrollbar lg:max-h-[calc(100vh-12rem)]">
-                  {matchedReports.map((report) => {
+                <div className="min-h-0 flex-1 space-y-2.5 overflow-y-auto pr-2 custom-scrollbar">
+                  {paginatedMatchedReports.map((report) => {
                     const isActive = selectedMatchedReport?.reportId === report.reportId;
                     return (
                       <button
@@ -1159,7 +1353,7 @@ function ReportsPageContent() {
               </aside>
 
               {selectedMatchedReport && (
-                <article className="rounded-2xl border border-status-stolen/30 bg-slate-800/40 p-6 sm:p-8 shadow-xl flex flex-col relative w-full">
+                <article className="relative flex h-full min-h-[640px] w-full flex-col rounded-2xl border border-status-stolen/30 bg-slate-800/40 p-6 shadow-xl sm:p-8">
                   <div className="flex flex-wrap items-start justify-between gap-4 mb-6 pb-6 border-b border-slate-700/50 shrink-0">
                     <div>
                       <div className="-ml-3 flex items-center gap-2 mb-2">
@@ -1167,7 +1361,7 @@ function ReportsPageContent() {
                           Stolen Match
                         </span>
                         {selectedMatchedReport.status && (
-                          <span className="px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-400 text-xs font-medium tracking-wide border border-emerald-500/20">
+                          <span className="inline-flex w-28 justify-center px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-400 text-xs font-medium tracking-wide border border-emerald-500/20">
                             {selectedMatchedReport.status}
                           </span>
                         )}
@@ -1249,6 +1443,16 @@ function ReportsPageContent() {
                   </div>
                 </article>
               )}
+              </div>
+              <PreviewPagination
+                currentPage={matchedReportsPage}
+                pageInput={matchedReportsPageInput}
+                pageSize={PREVIEW_PAGE_SIZE}
+                totalItems={matchedReports.length}
+                totalPages={matchedReportsTotalPages}
+                onInputChange={setMatchedReportsPageInput}
+                onPageChange={handleMatchedReportsPageChange}
+              />
             </div>
           )}
         </div>
