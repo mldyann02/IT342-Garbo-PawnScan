@@ -41,7 +41,7 @@ const REPORT_STATUS_OPTIONS: Array<{
   { value: "REJECTED", label: "Rejected" },
 ];
 
-const PREVIEW_PAGE_SIZE = 5;
+const PREVIEW_PAGE_SIZE = 10;
 
 function resolveStatusFilter(value: string | null): ReportStatusFilter {
   return value === "APPROVED" || value === "PENDING" || value === "REJECTED"
@@ -182,6 +182,7 @@ function ReportsPageContent() {
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
   const [isResubmitConfirmOpen, setIsResubmitConfirmOpen] = useState(false);
+  const [isMatchedDetailsOpen, setIsMatchedDetailsOpen] = useState(false);
   const [selectedReportId, setSelectedReportId] = useState<number | null>(null);
   const [selectedMatchedReportId, setSelectedMatchedReportId] = useState<number | null>(null);
   const [message, setMessage] = useState<{
@@ -286,15 +287,28 @@ function ReportsPageContent() {
         
         const paramId = searchParams.get("reportId");
         const nextTab = searchParams.get("tab") === "matched" ? "matched" : "reports";
-        setStatusFilter(resolveStatusFilter(searchParams.get("status")));
+        const nextStatusFilter = resolveStatusFilter(searchParams.get("status"));
+        setStatusFilter(nextStatusFilter);
         setActiveTab(nextTab);
 
         if (paramId && !isNaN(parseInt(paramId))) {
           const parsedId = parseInt(paramId);
-          if (nextTab === "matched" && matchedData.some(r => r.reportId === parsedId)) {
+          const matchedIndex = matchedData.findIndex(r => r.reportId === parsedId);
+          const visibleReports = data.filter(
+            r => nextStatusFilter === "ALL" || getReportStatus(r) === nextStatusFilter,
+          );
+          const reportIndex = visibleReports.findIndex(r => r.id === parsedId);
+
+          if (nextTab === "matched" && matchedIndex >= 0) {
             setSelectedMatchedReportId(parsedId);
-          } else if (data.some(r => r.id === parsedId)) {
+            const page = Math.floor(matchedIndex / PREVIEW_PAGE_SIZE) + 1;
+            setMatchedReportsPage(page);
+            setMatchedReportsPageInput(page.toString());
+          } else if (reportIndex >= 0) {
             setSelectedReportId(parsedId);
+            const page = Math.floor(reportIndex / PREVIEW_PAGE_SIZE) + 1;
+            setReportsPage(page);
+            setReportsPageInput(page.toString());
           } else {
             setSelectedReportId(data[0]?.id ?? null);
             setSelectedMatchedReportId(matchedData[0]?.reportId ?? null);
@@ -341,42 +355,6 @@ function ReportsPageContent() {
     setReportsPage(1);
     setReportsPageInput("1");
   }, [statusFilter]);
-
-  useEffect(() => {
-    if (selectedReportId === null) {
-      return;
-    }
-
-    const selectedIndex = filteredReports.findIndex((report) => report.id === selectedReportId);
-    if (selectedIndex < 0) {
-      return;
-    }
-
-    const selectedPage = Math.floor(selectedIndex / PREVIEW_PAGE_SIZE) + 1;
-    if (selectedPage !== reportsPage) {
-      setReportsPage(selectedPage);
-      setReportsPageInput(selectedPage.toString());
-    }
-  }, [filteredReports, reportsPage, selectedReportId]);
-
-  useEffect(() => {
-    if (selectedMatchedReportId === null) {
-      return;
-    }
-
-    const selectedIndex = matchedReports.findIndex(
-      (report) => report.reportId === selectedMatchedReportId,
-    );
-    if (selectedIndex < 0) {
-      return;
-    }
-
-    const selectedPage = Math.floor(selectedIndex / PREVIEW_PAGE_SIZE) + 1;
-    if (selectedPage !== matchedReportsPage) {
-      setMatchedReportsPage(selectedPage);
-      setMatchedReportsPageInput(selectedPage.toString());
-    }
-  }, [matchedReports, matchedReportsPage, selectedMatchedReportId]);
 
   useEffect(() => {
     if (reportsPage > reportsTotalPages) {
@@ -607,7 +585,7 @@ function ReportsPageContent() {
               onClick={() => setActiveTab("matched")}
               className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all ${
                 activeTab === "matched"
-                  ? "bg-status-stolen/15 text-status-stolen shadow-sm"
+                  ? "bg-slate-700 text-white shadow-sm"
                   : "text-slate-400 hover:bg-slate-800/70 hover:text-slate-200"
               }`}
             >
@@ -656,7 +634,7 @@ function ReportsPageContent() {
           {!isLoading && activeTab === "reports" && reports.length > 0 && (
             <div>
               <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-[minmax(300px,0.95fr)_minmax(0,1.7fr)]">
-              <aside className="flex h-full min-h-[640px] flex-col rounded-2xl border border-slate-700/50 bg-slate-800/40 p-4 shadow-xl lg:sticky lg:top-8">
+              <aside className="flex h-[640px] min-h-0 flex-col rounded-2xl border border-slate-700/50 bg-slate-800/40 p-4 shadow-xl lg:sticky lg:top-8">
                 <div className="mb-4 space-y-4">
                   <div className="px-1">
                     <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-200">
@@ -763,7 +741,7 @@ function ReportsPageContent() {
                   </div>
                 </div>
 
-                <div className="min-h-0 flex-1 space-y-2.5 overflow-y-auto pr-2 custom-scrollbar">
+                <div className="min-h-0 flex-1 space-y-2.5 overflow-y-auto pr-2 thin-scrollbar">
                   {filteredReports.length === 0 && (
                     <div className="rounded-xl border border-dashed border-slate-700/50 bg-slate-900/30 p-6 text-center">
                       <p className="text-sm font-medium text-slate-300">
@@ -814,7 +792,7 @@ function ReportsPageContent() {
               </aside>
 
               {selectedReport ? (
-                <article className="relative flex h-full min-h-[640px] w-full flex-col rounded-2xl border border-slate-700/50 bg-slate-800/40 p-6 shadow-xl sm:p-8">
+                <article className="relative flex h-[640px] min-h-0 w-full flex-col overflow-y-auto rounded-2xl border border-slate-700/50 bg-slate-800/40 p-6 shadow-xl thin-scrollbar sm:p-8">
                   {isEditing ? (
                     <div className="flex flex-col animate-in fade-in zoom-in-95 duration-200">
                       <div className="flex flex-wrap items-start justify-between gap-4 mb-6 pb-6 border-b border-slate-700/50 shrink-0">
@@ -1018,7 +996,9 @@ function ReportsPageContent() {
                               Report Details
                             </span>
                             <span className={`inline-flex w-28 justify-center px-2.5 py-1 rounded-md text-xs font-medium tracking-wide border ${getStatusBadgeClass(getReportStatus(selectedReport))}`}>
-                              {getStatusLabel(getReportStatus(selectedReport))}
+                              {getReportStatus(selectedReport) === "PENDING"
+                                ? "Pending"
+                                : getStatusLabel(getReportStatus(selectedReport))}
                             </span>
                           </div>
                           <h2 className="mt-2 text-2xl font-bold text-white">
@@ -1272,7 +1252,7 @@ function ReportsPageContent() {
                   )}
                 </article>
               ) : (
-                <article className="flex h-full min-h-[640px] items-center justify-center rounded-2xl border border-dashed border-slate-700/50 bg-slate-800/30 p-8 text-center shadow-xl">
+                <article className="flex h-[640px] min-h-0 items-center justify-center rounded-2xl border border-dashed border-slate-700/50 bg-slate-800/30 p-8 text-center shadow-xl">
                   <div className="max-w-sm">
                     <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-slate-700/50 bg-slate-900/50 text-slate-500">
                       <svg
@@ -1313,136 +1293,65 @@ function ReportsPageContent() {
 
           {!isLoading && activeTab === "matched" && matchedReports.length > 0 && (
             <div>
-              <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-[minmax(300px,0.95fr)_minmax(0,1.7fr)]">
-              <aside className="flex h-full min-h-[640px] flex-col rounded-2xl border border-slate-700/50 bg-slate-800/40 p-4 shadow-xl lg:sticky lg:top-8">
-                <div className="mb-4 px-2">
-                  <h2 className="pb-2 text-sm font-semibold text-slate-300 flex items-center gap-2">
-                    <svg className="w-4 h-4 text-status-stolen" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="overflow-hidden rounded-2xl border border-slate-700/50 bg-slate-950/40 shadow-xl">
+                <div className="border-b border-slate-700/60 bg-slate-900/50 px-5 py-4">
+                  <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-200">
+                    <svg className="h-4 w-4 text-status-stolen" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M4.93 19h14.14c1.54 0 2.5-1.667 1.73-3L13.73 4c-.77-1.333-2.69-1.333-3.46 0L3.2 16c-.77 1.333.19 3 1.73 3z" />
                     </svg>
                     Matched stolen reports
                   </h2>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Businesses that matched one of your reported stolen items.
+                  </p>
                 </div>
-                <div className="min-h-0 flex-1 space-y-2.5 overflow-y-auto pr-2 custom-scrollbar">
-                  {paginatedMatchedReports.map((report) => {
-                    const isActive = selectedMatchedReport?.reportId === report.reportId;
-                    return (
-                      <button
-                        key={report.matchId}
-                        type="button"
-                        onClick={() => setSelectedMatchedReportId(report.reportId)}
-                        className={`w-full group rounded-xl border p-4 text-left transition-all duration-200 ${
-                          isActive
-                            ? "border-status-stolen/40 bg-status-stolen/10"
-                            : "border-slate-700/50 bg-slate-900/40 hover:border-slate-500/50 hover:bg-slate-800/60"
-                        }`}
-                      >
-                        <div className="flex justify-between items-start mb-2">
-                          <p className={`text-sm font-bold truncate pr-3 ${isActive ? "text-status-stolen" : "text-slate-200 group-hover:text-white"}`}>
-                            {report.serialNumber}
-                          </p>
-                        </div>
-                        <p className="text-xs text-slate-400 line-clamp-1">{report.itemModel}</p>
-                        <p className="mt-2 text-[10px] uppercase tracking-widest text-slate-500">
-                          Matched {formatDate(report.matchedAt)}
-                        </p>
-                      </button>
-                    );
-                  })}
+                <div className="overflow-x-auto">
+                  <table className="min-w-full table-fixed text-left text-sm">
+                    <thead className="border-b border-slate-700/60 bg-slate-900/60 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                      <tr>
+                        <th className="w-[30%] px-5 py-4">Matched Item</th>
+                        <th className="w-[30%] px-5 py-4">Business</th>
+                        <th className="w-[24%] px-5 py-4">Matched Date</th>
+                        <th className="w-[16%] px-5 py-4 text-right">
+                          <span className="sr-only">Actions</span>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/90">
+                      {paginatedMatchedReports.map((report) => (
+                        <tr key={report.matchId} className="transition-colors hover:bg-slate-900/45">
+                          <td className="px-5 py-4 align-middle">
+                            <p className="font-medium text-slate-200">{report.itemModel}</p>
+                            <p className="mt-1 font-mono text-xs text-slate-500">{report.serialNumber}</p>
+                          </td>
+                          <td className="px-5 py-4 align-middle">
+                            <p className="font-semibold text-white">
+                              {report.matchedByBusinessName || "Verified business"}
+                            </p>
+                            <p className="mt-1 truncate text-xs text-slate-400">
+                              {report.matchedByBusinessEmail || "No email provided"}
+                            </p>
+                          </td>
+                          <td className="px-5 py-4 align-middle text-slate-300">
+                            {formatDate(report.matchedAt)}
+                          </td>
+                          <td className="px-5 py-4 text-right align-middle">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedMatchedReportId(report.reportId);
+                                setIsMatchedDetailsOpen(true);
+                              }}
+                              className="whitespace-nowrap rounded-lg border border-slate-600/60 bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-200 transition hover:border-slate-500 hover:bg-slate-700 hover:text-white"
+                            >
+                              View Details
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-              </aside>
-
-              {selectedMatchedReport && (
-                <article className="relative flex h-full min-h-[640px] w-full flex-col rounded-2xl border border-status-stolen/30 bg-slate-800/40 p-6 shadow-xl sm:p-8">
-                  <div className="flex flex-wrap items-start justify-between gap-4 mb-6 pb-6 border-b border-slate-700/50 shrink-0">
-                    <div>
-                      <div className="-ml-3 flex items-center gap-2 mb-2">
-                        <span className="px-2.5 py-1 rounded-md bg-status-stolen/10 text-status-stolen text-xs font-medium tracking-wide">
-                          Stolen Match
-                        </span>
-                        {selectedMatchedReport.status && (
-                          <span className="inline-flex w-28 justify-center px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-400 text-xs font-medium tracking-wide border border-emerald-500/20">
-                            {selectedMatchedReport.status}
-                          </span>
-                        )}
-                      </div>
-                      <h2 className="mt-2 text-2xl font-bold text-white">
-                        {selectedMatchedReport.serialNumber}
-                      </h2>
-                      <p className="mt-1.5 text-base text-slate-300">
-                        {selectedMatchedReport.itemModel}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs font-medium text-slate-500">
-                        Matched: <span className="text-slate-400">{formatDate(selectedMatchedReport.matchedAt)}</span>
-                      </p>
-                      <p className="mt-1 text-xs font-medium text-slate-500">
-                        Reported: <span className="text-slate-400">{formatDate(selectedMatchedReport.reportCreatedAt)}</span>
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-6">
-                    <div className="rounded-xl border border-status-stolen/20 bg-status-stolen/5 p-4">
-                      <h3 className="mb-2 text-sm font-semibold text-status-stolen">Matched by</h3>
-                      <p className="text-sm font-medium text-slate-200">
-                        {selectedMatchedReport.matchedByBusinessName || "Verified business"}
-                      </p>
-                      {selectedMatchedReport.matchedByBusinessEmail && (
-                        <p className="mt-1 text-xs text-slate-400">{selectedMatchedReport.matchedByBusinessEmail}</p>
-                      )}
-                    </div>
-
-                    <div>
-                      <h3 className="text-sm font-semibold text-slate-400 mb-3">Description</h3>
-                      <div className="rounded-xl border border-slate-700/30 bg-slate-900/30 p-4">
-                        <p className="text-sm text-slate-300 leading-relaxed break-words whitespace-pre-wrap">
-                          {selectedMatchedReport.description}
-                        </p>
-                      </div>
-                    </div>
-
-                    {selectedMatchedReport.files?.length ? (
-                      <div>
-                        <h3 className="text-sm font-semibold text-slate-400 mb-3">Evidence / Uploaded File</h3>
-                        <div className="grid grid-cols-1 gap-4">
-                          {selectedMatchedReport.files.map((file) => {
-                            const fileUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080"}${file.fileUrl}`;
-                            const token = getJwt();
-                            const previewUrl =
-                              file.fileType === "PDF"
-                                ? `/api/reports/file?path=${encodeURIComponent(file.fileUrl)}${token ? `&token=${encodeURIComponent(token)}` : ""}`
-                                : fileUrl;
-                            return (
-                              <div key={file.id} className="group relative rounded-xl border border-slate-700/50 bg-slate-900/40 overflow-hidden">
-                                {file.fileType === "IMAGE" ? (
-                                  <div className="aspect-video w-full">
-                                    <img src={fileUrl} alt="Uploaded evidence" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                                  </div>
-                                ) : (
-                                  <div className="aspect-video w-full bg-slate-800">
-                                    <iframe title={`PDF first page ${file.id}`} src={`${previewUrl}#page=1&view=FitH&toolbar=0&navpanes=0&scrollbar=0`} className="h-full w-full" />
-                                  </div>
-                                )}
-                                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                  <button
-                                    type="button"
-                                    onClick={() => setViewerFile({ url: previewUrl, type: file.fileType })}
-                                    className="rounded-lg bg-slate-900/90 backdrop-blur-md px-4 py-2.5 text-sm font-semibold text-white shadow-xl hover:bg-black transition-colors"
-                                  >
-                                    Preview
-                                  </button>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ) : null}
-                  </div>
-                </article>
-              )}
               </div>
               <PreviewPagination
                 currentPage={matchedReportsPage}
@@ -1457,6 +1366,100 @@ function ReportsPageContent() {
           )}
         </div>
       </main>
+
+      <Modal
+        isOpen={isMatchedDetailsOpen && !!selectedMatchedReport}
+        onClose={() => setIsMatchedDetailsOpen(false)}
+        title="Matched report details"
+        maxWidth="max-w-3xl"
+        footer={
+          <button
+            type="button"
+            onClick={() => setIsMatchedDetailsOpen(false)}
+            className="rounded-xl border border-slate-600/50 bg-slate-800 px-5 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-slate-700 hover:border-slate-500"
+          >
+            Close
+          </button>
+        }
+      >
+        {selectedMatchedReport && (
+          <div className="space-y-6">
+            <div className="rounded-2xl border border-status-stolen/20 bg-status-stolen/5 p-5">
+              <p className="text-xs font-semibold uppercase tracking-wider text-status-stolen">
+                Stolen item matched
+              </p>
+              <div className="mt-3 flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <h3 className="text-2xl font-bold text-white">
+                    {selectedMatchedReport.serialNumber}
+                  </h3>
+                  <p className="mt-1 text-sm text-slate-300">
+                    {selectedMatchedReport.itemModel}
+                  </p>
+                </div>
+                <div className="text-left sm:text-right">
+                  <p className="text-xs font-medium text-slate-500">
+                    Matched
+                  </p>
+                  <p className="mt-1 text-sm text-slate-300">
+                    {formatDate(selectedMatchedReport.matchedAt)}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="rounded-xl border border-slate-700/50 bg-slate-900/35 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  Business name
+                </p>
+                <p className="mt-2 text-base font-semibold text-white">
+                  {selectedMatchedReport.matchedByBusinessName || "Verified business"}
+                </p>
+                <p className="mt-1 text-sm text-slate-400">
+                  {selectedMatchedReport.matchedByBusinessEmail || "No email provided"}
+                </p>
+              </div>
+              <div className="rounded-xl border border-slate-700/50 bg-slate-900/35 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  Business registration
+                </p>
+                <p className="mt-1 text-sm text-slate-400">
+                  Registered{" "}
+                  {selectedMatchedReport.matchedByBusinessRegisteredAt
+                    ? formatDate(selectedMatchedReport.matchedByBusinessRegisteredAt)
+                    : "date unavailable"}
+                </p>
+              </div>
+              <div className="rounded-xl border border-slate-700/50 bg-slate-900/35 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  Contact number
+                </p>
+                <p className="mt-2 text-sm text-slate-200">
+                  {selectedMatchedReport.matchedByBusinessPhone || "Not provided"}
+                </p>
+              </div>
+              <div className="rounded-xl border border-slate-700/50 bg-slate-900/35 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  Original report date
+                </p>
+                <p className="mt-2 text-sm text-slate-200">
+                  {formatDate(selectedMatchedReport.reportCreatedAt)}
+                </p>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-slate-700/50 bg-slate-900/35 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Business address
+              </p>
+              <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-300">
+                {selectedMatchedReport.matchedByBusinessAddress || "No address provided"}
+              </p>
+            </div>
+          </div>
+        )}
+      </Modal>
 
       <Modal
         isOpen={!!pendingDeleteReport}

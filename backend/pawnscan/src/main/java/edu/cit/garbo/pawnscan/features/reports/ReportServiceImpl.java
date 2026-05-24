@@ -4,6 +4,7 @@ import edu.cit.garbo.pawnscan.features.reports.dto.MatchedReportResponse;
 import edu.cit.garbo.pawnscan.features.reports.dto.ReportFileResponse;
 import edu.cit.garbo.pawnscan.features.reports.dto.ReportResponse;
 import edu.cit.garbo.pawnscan.features.reports.dto.ReportUpsertRequest;
+import edu.cit.garbo.pawnscan.features.businessprofile.entity.BusinessProfile;
 import edu.cit.garbo.pawnscan.features.reports.entity.Report;
 import edu.cit.garbo.pawnscan.features.reports.entity.ReportFile;
 import edu.cit.garbo.pawnscan.features.reports.entity.ReportFileType;
@@ -233,6 +234,7 @@ public class ReportServiceImpl implements ReportService {
     private MatchedReportResponse toMatchedReportResponse(SearchLog searchLog) {
         Report report = searchLog.getMatchedReport();
         User businessUser = searchLog.getBusinessUser();
+        BusinessProfile businessProfile = businessUser == null ? null : businessUser.getBusinessProfile();
 
         List<ReportFileResponse> files = report.getFiles().stream()
                 .sorted(Comparator.comparing(ReportFile::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder()))
@@ -253,8 +255,14 @@ public class ReportServiceImpl implements ReportService {
                 .status(report.getStatus())
                 .reportCreatedAt(report.getCreatedAt())
                 .matchedAt(searchLog.getSearchedAt())
-                .matchedByBusinessName(businessUser == null ? null : businessUser.getFullName())
+                .matchedByBusinessName(businessProfile == null
+                        ? (businessUser == null ? null : businessUser.getFullName())
+                        : businessProfile.getBusinessName())
                 .matchedByBusinessEmail(businessUser == null ? null : businessUser.getEmail())
+                .matchedByBusinessPhone(businessUser == null ? null : businessUser.getPhoneNumber())
+                .matchedByBusinessPermitNumber(businessProfile == null ? null : businessProfile.getPermitNumber())
+                .matchedByBusinessAddress(businessProfile == null ? null : businessProfile.getBusinessAddress())
+                .matchedByBusinessRegisteredAt(businessProfile == null ? null : businessProfile.getCreatedAt())
                 .files(files)
                 .build();
     }

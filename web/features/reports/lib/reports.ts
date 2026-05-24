@@ -31,6 +31,9 @@ export type MatchedReport = {
   matchedAt: string;
   matchedByBusinessName?: string | null;
   matchedByBusinessEmail?: string | null;
+  matchedByBusinessPhone?: string | null;
+  matchedByBusinessAddress?: string | null;
+  matchedByBusinessRegisteredAt?: string | null;
   files: ReportFile[];
 };
 

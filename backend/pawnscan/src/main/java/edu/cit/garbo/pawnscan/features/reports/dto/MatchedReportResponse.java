@@ -27,5 +27,9 @@ public class MatchedReportResponse {
     private LocalDateTime matchedAt;
     private String matchedByBusinessName;
     private String matchedByBusinessEmail;
+    private String matchedByBusinessPhone;
+    private String matchedByBusinessPermitNumber;
+    private String matchedByBusinessAddress;
+    private LocalDateTime matchedByBusinessRegisteredAt;
     private List<ReportFileResponse> files;
 }
