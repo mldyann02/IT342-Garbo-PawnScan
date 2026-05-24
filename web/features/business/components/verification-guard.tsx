@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 
 export default function VerificationGuard({ children }: { children: React.ReactNode }) {
   const [isVerified, setIsVerified] = useState<boolean | null>(null);
+  const [rejectionReason, setRejectionReason] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -25,7 +26,11 @@ export default function VerificationGuard({ children }: { children: React.ReactN
         const isVerifiedStatus = me.businessProfile.verified !== undefined 
           ? me.businessProfile.verified 
           : me.businessProfile.isVerified;
+        const isRejectedStatus = me.businessProfile.rejected !== undefined
+          ? me.businessProfile.rejected
+          : me.businessProfile.isRejected;
         setIsVerified(!!isVerifiedStatus);
+        setRejectionReason(isRejectedStatus ? me.businessProfile.rejectionReason || "No reason was provided." : null);
       } else {
         // Fallback or error fetching profile
         setIsVerified(false);
@@ -51,6 +56,8 @@ export default function VerificationGuard({ children }: { children: React.ReactN
     return <>{children}</>;
   }
 
+  const isRejected = !!rejectionReason;
+
   // Unverified State UI
   return (
     <div className="min-h-screen relative overflow-hidden text-slate-200 flex flex-col pt-32 px-4">
@@ -68,10 +75,12 @@ export default function VerificationGuard({ children }: { children: React.ReactN
           </div>
           
           <h1 className="text-3xl font-extrabold tracking-tight text-white mb-4">
-            Pending Admin Approval
+            {isRejected ? "Business Account Rejected" : "Pending Admin Approval"}
           </h1>
           <p className="text-lg text-slate-400 leading-relaxed max-w-lg mb-8">
-            Your business account is currently under review. Our administrators are verifying your provided credentials and permit number. You will gain full access to the business portal once approved.
+            {isRejected
+              ? `Your business account was rejected. Reason: ${rejectionReason}`
+              : "Your business account is currently under review. Our administrators are verifying your provided credentials and permit number. You will gain full access to the business portal once approved."}
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">

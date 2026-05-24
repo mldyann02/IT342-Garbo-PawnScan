@@ -21,6 +21,7 @@ export default function ModerationPage() {
   // Modal state
   const [selectedReport, setSelectedReport] = useState<ReportAdmin | null>(null);
   const [confirmAction, setConfirmAction] = useState<{ id: number; status: "APPROVED" | "REJECTED" } | null>(null);
+  const [rejectionReason, setRejectionReason] = useState("");
 
   useEffect(() => {
     const token = getJwt();
@@ -47,11 +48,18 @@ export default function ModerationPage() {
   }
 
   async function handleStatusChange(id: number, status: "APPROVED" | "REJECTED") {
+    const trimmedReason = rejectionReason.trim();
+    if (status === "REJECTED" && !trimmedReason) {
+      return;
+    }
+
     setActionLoading(id);
     try {
-      await updateReportStatus(id, status);
+      await updateReportStatus(id, status, status === "REJECTED" ? trimmedReason : undefined);
       setReports((prev) => prev.filter((r) => r.id !== id));
       setSelectedReport(null);
+      setConfirmAction(null);
+      setRejectionReason("");
       // Adjust pagination if needed
       const remainingOnPage = paginatedReports.length - 1;
       if (remainingOnPage === 0 && currentPage > 1) {
@@ -229,17 +237,39 @@ export default function ModerationPage() {
         {/* Confirmation Modal */}
         <Modal
           isOpen={!!confirmAction}
-          onClose={() => setConfirmAction(null)}
+          onClose={() => {
+            setConfirmAction(null);
+            setRejectionReason("");
+          }}
           title="Confirm Action"
-          maxWidth="max-w-sm"
+          maxWidth="max-w-md"
         >
           <div className="space-y-6">
             <p className="text-sm text-slate-300">
               Are you sure you want to <strong className={confirmAction?.status === "APPROVED" ? "text-emerald-400" : "text-red-400"}>{confirmAction?.status === "APPROVED" ? "approve" : "reject"}</strong> this report? This action cannot be undone.
             </p>
+            {confirmAction?.status === "REJECTED" && (
+              <div>
+                <label htmlFor="report-rejection-reason" className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  Rejection reason
+                </label>
+                <textarea
+                  id="report-rejection-reason"
+                  value={rejectionReason}
+                  onChange={(event) => setRejectionReason(event.target.value)}
+                  disabled={actionLoading !== null}
+                  rows={4}
+                  className="w-full resize-none rounded-xl border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-200 outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20 disabled:opacity-50"
+                  placeholder="Explain why this report is being rejected..."
+                />
+              </div>
+            )}
             <div className="flex gap-3">
               <button
-                onClick={() => setConfirmAction(null)}
+                onClick={() => {
+                  setConfirmAction(null);
+                  setRejectionReason("");
+                }}
                 disabled={actionLoading !== null}
                 className="flex-1 rounded-xl bg-slate-800 px-4 py-2.5 text-sm font-semibold text-slate-300 hover:bg-slate-700 active:scale-95 transition-all border border-slate-700 disabled:opacity-50"
               >
@@ -247,7 +277,7 @@ export default function ModerationPage() {
               </button>
               <button
                 onClick={() => confirmAction && handleStatusChange(confirmAction.id, confirmAction.status)}
-                disabled={actionLoading !== null}
+                disabled={actionLoading !== null || (confirmAction?.status === "REJECTED" && !rejectionReason.trim())}
                 className={`flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-lg active:scale-95 transition-all disabled:opacity-50 ${
                   confirmAction?.status === "APPROVED" 
                     ? "bg-emerald-600 hover:bg-emerald-500 shadow-emerald-900/20" 

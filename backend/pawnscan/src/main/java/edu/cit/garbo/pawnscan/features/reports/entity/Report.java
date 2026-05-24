@@ -56,6 +56,9 @@ public class Report {
     @Column(nullable = false, length = 32)
     private ReportStatus status = ReportStatus.PENDING;
 
+    @Column(name = "rejection_reason", columnDefinition = "TEXT")
+    private String rejectionReason;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

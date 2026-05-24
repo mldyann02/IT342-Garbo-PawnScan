@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { getAuthRole, getJwt } from "@/shared/auth";
-import { fetchAllBusinesses, BusinessProfileAdmin, verifyBusiness } from "@/features/admin/lib/admin";
+import { fetchAllBusinesses, BusinessProfileAdmin, rejectBusiness, verifyBusiness } from "@/features/admin/lib/admin";
 import { Pagination } from "@/features/shared/components/pagination";
 import { Modal } from "@/features/shared/components/modal";
 
@@ -25,7 +25,8 @@ export default function UsersPage() {
 
   // Modal
   const [selectedBusiness, setSelectedBusiness] = useState<BusinessProfileAdmin | null>(null);
-  const [confirmVerifyId, setConfirmVerifyId] = useState<number | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{ id: number; action: "APPROVE" | "REJECT" } | null>(null);
+  const [rejectionReason, setRejectionReason] = useState("");
 
   useEffect(() => {
     const token = getJwt();
@@ -64,6 +65,7 @@ export default function UsersPage() {
         prev.map(b => b.userId === id ? { ...b, isVerified: true } : b)
       );
       setSelectedBusiness(null);
+      setConfirmAction(null);
     } catch (error) {
       console.error(error);
       alert("Failed to verify business");
@@ -72,10 +74,33 @@ export default function UsersPage() {
     }
   }
 
+  async function handleReject(id: number) {
+    const trimmedReason = rejectionReason.trim();
+    if (!trimmedReason) {
+      return;
+    }
+
+    setActionLoading(id);
+    try {
+      await rejectBusiness(id, trimmedReason);
+      setBusinesses((prev) =>
+        prev.map(b => b.userId === id ? { ...b, isVerified: false, isRejected: true, rejectionReason: trimmedReason } : b)
+      );
+      setSelectedBusiness(null);
+      setConfirmAction(null);
+      setRejectionReason("");
+    } catch (error) {
+      console.error(error);
+      alert("Failed to reject business");
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
   // Filter Data
   const filteredBusinesses = useMemo(() => {
     let filtered = businesses.filter(b => 
-      activeTab === "VERIFIED" ? b.isVerified : !b.isVerified
+      activeTab === "VERIFIED" ? b.isVerified : !b.isVerified && !b.isRejected
     );
 
     if (searchQuery.trim()) {
@@ -97,7 +122,7 @@ export default function UsersPage() {
     return filteredBusinesses.slice(startIndex, startIndex + ITEMS_PER_PAGE);
   }, [filteredBusinesses, currentPage]);
 
-  const unverifiedCount = businesses.filter(b => !b.isVerified).length;
+  const unverifiedCount = businesses.filter(b => !b.isVerified && !b.isRejected).length;
   const verifiedCount = businesses.filter(b => b.isVerified).length;
 
   return (
@@ -233,7 +258,7 @@ export default function UsersPage() {
 
         {/* Details Modal */}
         <Modal
-          isOpen={!!selectedBusiness && !confirmVerifyId}
+          isOpen={!!selectedBusiness && !confirmAction}
           onClose={() => setSelectedBusiness(null)}
           title="Business Details"
         >
@@ -252,9 +277,14 @@ export default function UsersPage() {
                           Verified
                         </span>
                       )}
-                      {!selectedBusiness.isVerified && (
+                      {!selectedBusiness.isVerified && !selectedBusiness.isRejected && (
                         <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-400 border border-amber-500/20">
                           Pending Verification
+                        </span>
+                      )}
+                      {selectedBusiness.isRejected && (
+                        <span className="inline-flex items-center rounded-full bg-red-500/10 px-2 py-0.5 text-xs font-medium text-red-400 border border-red-500/20">
+                          Rejected
                         </span>
                       )}
                     </h3>
@@ -279,10 +309,17 @@ export default function UsersPage() {
                  <p className="text-sm text-slate-300 leading-relaxed">{selectedBusiness.businessAddress}</p>
               </div>
 
-              {!selectedBusiness.isVerified && (
-                <div className="pt-4 mt-6 border-t border-slate-700/50 flex justify-end">
+              {!selectedBusiness.isVerified && !selectedBusiness.isRejected && (
+                <div className="pt-4 mt-6 border-t border-slate-700/50 flex flex-col gap-3 sm:flex-row sm:justify-end">
                   <button
-                    onClick={() => setConfirmVerifyId(selectedBusiness.userId)}
+                    onClick={() => setConfirmAction({ id: selectedBusiness.userId, action: "REJECT" })}
+                    disabled={actionLoading !== null}
+                    className="rounded-xl bg-red-500/20 px-6 py-2.5 text-sm font-semibold text-red-400 transition-all hover:bg-red-500/30 active:scale-95 disabled:opacity-50 border border-red-500/30"
+                  >
+                    Reject Business
+                  </button>
+                  <button
+                    onClick={() => setConfirmAction({ id: selectedBusiness.userId, action: "APPROVE" })}
                     disabled={actionLoading !== null}
                     className="rounded-xl bg-brand px-6 py-2.5 text-sm font-semibold text-slate-900 shadow-lg shadow-brand/20 transition-all hover:bg-brand/80 active:scale-95 disabled:opacity-50 flex items-center gap-2"
                   >
@@ -296,18 +333,42 @@ export default function UsersPage() {
 
         {/* Confirmation Modal */}
         <Modal
-          isOpen={!!confirmVerifyId}
-          onClose={() => setConfirmVerifyId(null)}
-          title="Confirm Verification"
-          maxWidth="max-w-sm"
+          isOpen={!!confirmAction}
+          onClose={() => {
+            setConfirmAction(null);
+            setRejectionReason("");
+          }}
+          title={confirmAction?.action === "REJECT" ? "Confirm Rejection" : "Confirm Verification"}
+          maxWidth="max-w-md"
         >
           <div className="space-y-6">
             <p className="text-sm text-slate-300">
-              Are you sure you want to verify and grant platform access to this business?
+              {confirmAction?.action === "REJECT"
+                ? "Are you sure you want to reject this business account? This action cannot be undone."
+                : "Are you sure you want to verify and grant platform access to this business?"}
             </p>
+            {confirmAction?.action === "REJECT" && (
+              <div>
+                <label htmlFor="business-rejection-reason" className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  Rejection reason
+                </label>
+                <textarea
+                  id="business-rejection-reason"
+                  value={rejectionReason}
+                  onChange={(event) => setRejectionReason(event.target.value)}
+                  disabled={actionLoading !== null}
+                  rows={4}
+                  className="w-full resize-none rounded-xl border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-200 outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20 disabled:opacity-50"
+                  placeholder="Explain why this business account is being rejected..."
+                />
+              </div>
+            )}
             <div className="flex gap-3">
               <button
-                onClick={() => setConfirmVerifyId(null)}
+                onClick={() => {
+                  setConfirmAction(null);
+                  setRejectionReason("");
+                }}
                 disabled={actionLoading !== null}
                 className="flex-1 rounded-xl bg-slate-800 px-4 py-2.5 text-sm font-semibold text-slate-300 hover:bg-slate-700 active:scale-95 transition-all border border-slate-700 disabled:opacity-50"
               >
@@ -315,15 +376,20 @@ export default function UsersPage() {
               </button>
               <button
                 onClick={() => {
-                  if (confirmVerifyId) {
-                    handleVerify(confirmVerifyId);
-                    setConfirmVerifyId(null);
+                  if (confirmAction?.action === "APPROVE") {
+                    handleVerify(confirmAction.id);
+                  } else if (confirmAction?.action === "REJECT") {
+                    handleReject(confirmAction.id);
                   }
                 }}
-                disabled={actionLoading !== null}
-                className="flex-1 rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-lg shadow-brand/20 active:scale-95 transition-all hover:bg-brand/80 disabled:opacity-50"
+                disabled={actionLoading !== null || (confirmAction?.action === "REJECT" && !rejectionReason.trim())}
+                className={`flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold shadow-lg active:scale-95 transition-all disabled:opacity-50 ${
+                  confirmAction?.action === "REJECT"
+                    ? "bg-red-600 text-white hover:bg-red-500 shadow-red-900/20"
+                    : "bg-brand text-slate-900 hover:bg-brand/80 shadow-brand/20"
+                }`}
               >
-                {actionLoading !== null ? "Verifying..." : "Confirm"}
+                {actionLoading !== null ? "Processing..." : "Confirm"}
               </button>
             </div>
           </div>

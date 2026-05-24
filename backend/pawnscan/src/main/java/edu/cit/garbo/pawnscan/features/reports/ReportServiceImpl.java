@@ -219,6 +219,7 @@ public class ReportServiceImpl implements ReportService {
                 .itemModel(report.getItemModel())
                 .description(report.getDescription())
                 .status(report.getStatus())
+                .rejectionReason(report.getRejectionReason())
                 .createdAt(report.getCreatedAt())
                 .files(files)
                 .build();

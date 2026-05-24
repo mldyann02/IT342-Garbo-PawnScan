@@ -21,6 +21,7 @@ public class ReportResponse {
     private String itemModel;
     private String description;
     private edu.cit.garbo.pawnscan.features.reports.entity.ReportStatus status;
+    private String rejectionReason;
     private LocalDateTime createdAt;
     private List<ReportFileResponse> files;
 }

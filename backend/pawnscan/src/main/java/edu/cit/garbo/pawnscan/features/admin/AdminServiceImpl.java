@@ -42,13 +42,15 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     @Transactional
-    public ReportAdminResponse updateReportStatus(Long reportId, ReportStatus status) {
+    public ReportAdminResponse updateReportStatus(Long reportId, ReportStatus status, String rejectionReason) {
         Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new ReportNotFoundException("Report not found"));
-        
+
+        String normalizedReason = normalizeRequiredReason(status, rejectionReason);
         report.setStatus(status);
+        report.setRejectionReason(status == ReportStatus.REJECTED ? normalizedReason : null);
         Report savedReport = reportRepository.save(report);
-        notifyReportOwner(savedReport);
+        notifyReportOwner(savedReport, normalizedReason);
         
         return toReportAdminResponse(savedReport);
     }
@@ -58,6 +60,7 @@ public class AdminServiceImpl implements AdminService {
     public List<BusinessProfileAdminResponse> getPendingBusinesses() {
         return businessProfileRepository.findByIsVerified(false)
                 .stream()
+                .filter(profile -> !Boolean.TRUE.equals(profile.getIsRejected()))
                 .map(this::toBusinessProfileAdminResponse)
                 .collect(Collectors.toList());
     }
@@ -79,9 +82,27 @@ public class AdminServiceImpl implements AdminService {
                 .orElseThrow(() -> new IllegalArgumentException("Business Profile not found"));
         
         profile.setIsVerified(true);
+        profile.setIsRejected(false);
+        profile.setRejectionReason(null);
         BusinessProfile savedProfile = businessProfileRepository.save(profile);
         notifyBusinessOwner(savedProfile);
         
+        return toBusinessProfileAdminResponse(savedProfile);
+    }
+
+    @Override
+    @Transactional
+    public BusinessProfileAdminResponse rejectBusiness(Long userId, String rejectionReason) {
+        BusinessProfile profile = businessProfileRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Business Profile not found"));
+
+        String normalizedReason = normalizeRequiredReason(ReportStatus.REJECTED, rejectionReason);
+        profile.setIsVerified(false);
+        profile.setIsRejected(true);
+        profile.setRejectionReason(normalizedReason);
+        BusinessProfile savedProfile = businessProfileRepository.save(profile);
+        notifyBusinessOwnerRejected(savedProfile, normalizedReason);
+
         return toBusinessProfileAdminResponse(savedProfile);
     }
 
@@ -93,7 +114,9 @@ public class AdminServiceImpl implements AdminService {
         
         // In-memory filter or count query. A custom count query would be better, but this works for now.
         long pendingReports = reportRepository.findByStatusOrderByCreatedAtDesc(ReportStatus.PENDING).size();
-        long pendingBusinesses = businessProfileRepository.findByIsVerified(false).size();
+        long pendingBusinesses = businessProfileRepository.findByIsVerified(false).stream()
+                .filter(profile -> !Boolean.TRUE.equals(profile.getIsRejected()))
+                .count();
 
         return AdminStatsResponse.builder()
                 .totalUsers(totalUsers)
@@ -121,6 +144,7 @@ public class AdminServiceImpl implements AdminService {
                 .itemModel(report.getItemModel())
                 .description(report.getDescription())
                 .status(report.getStatus())
+                .rejectionReason(report.getRejectionReason())
                 .createdAt(report.getCreatedAt())
                 .ownerName(user != null ? user.getFullName() : null)
                 .ownerEmail(user != null ? user.getEmail() : null)
@@ -128,7 +152,7 @@ public class AdminServiceImpl implements AdminService {
                 .build();
     }
 
-    private void notifyReportOwner(Report report) {
+    private void notifyReportOwner(Report report, String rejectionReason) {
         User owner = report.getUser();
         if (owner == null) {
             return;
@@ -138,11 +162,14 @@ public class AdminServiceImpl implements AdminService {
                 ? "Your report"
                 : report.getItemModel();
         String status = report.getStatus() == null ? "updated" : report.getStatus().name().toLowerCase();
+        String reasonSuffix = report.getStatus() == ReportStatus.REJECTED && rejectionReason != null
+                ? " Reason: " + rejectionReason
+                : "";
 
         notificationService.createNotification(
                 owner,
                 "Report status updated",
-                itemModel + " has been marked " + status + ".",
+                itemModel + " has been marked " + status + "." + reasonSuffix,
                 "/reports?status=" + report.getStatus().name() + "&reportId=" + report.getId());
     }
 
@@ -163,6 +190,35 @@ public class AdminServiceImpl implements AdminService {
                 "/business");
     }
 
+    private void notifyBusinessOwnerRejected(BusinessProfile profile, String rejectionReason) {
+        User owner = profile.getUser();
+        if (owner == null) {
+            return;
+        }
+
+        String businessName = profile.getBusinessName() == null || profile.getBusinessName().isBlank()
+                ? "Your business account"
+                : profile.getBusinessName();
+
+        notificationService.createNotification(
+                owner,
+                "Business account rejected",
+                businessName + " was rejected by an administrator. Reason: " + rejectionReason,
+                "/profile");
+    }
+
+    private String normalizeRequiredReason(ReportStatus status, String rejectionReason) {
+        if (status != ReportStatus.REJECTED) {
+            return null;
+        }
+
+        if (rejectionReason == null || rejectionReason.isBlank()) {
+            throw new IllegalArgumentException("Rejection reason is required");
+        }
+
+        return rejectionReason.trim();
+    }
+
     private BusinessProfileAdminResponse toBusinessProfileAdminResponse(BusinessProfile profile) {
         User user = profile.getUser();
         
@@ -172,6 +228,8 @@ public class AdminServiceImpl implements AdminService {
                 .businessAddress(profile.getBusinessAddress())
                 .permitNumber(profile.getPermitNumber())
                 .isVerified(profile.getIsVerified())
+                .isRejected(profile.getIsRejected())
+                .rejectionReason(profile.getRejectionReason())
                 .ownerName(user != null ? user.getFullName() : null)
                 .ownerEmail(user != null ? user.getEmail() : null)
                 .createdAt(profile.getCreatedAt())

@@ -7,6 +7,9 @@ export type BusinessProfileDetails = {
   permitNumber: string;
   verified?: boolean;
   isVerified?: boolean;
+  rejected?: boolean;
+  isRejected?: boolean;
+  rejectionReason?: string | null;
   createdAt?: string;
   updatedAt?: string;
 };

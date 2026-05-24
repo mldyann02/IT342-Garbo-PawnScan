@@ -57,6 +57,13 @@ public class BusinessProfile {
     @Builder.Default
     private Boolean isVerified = false;
 
+    @Column(name = "is_rejected", nullable = false, columnDefinition = "boolean default false")
+    @Builder.Default
+    private Boolean isRejected = false;
+
+    @Column(name = "rejection_reason", columnDefinition = "TEXT")
+    private String rejectionReason;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
