@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getAuthUser, getJwt } from "@/shared/auth";
+import { Modal } from "@/features/shared/components/modal";
+import { getJwt } from "@/shared/auth";
 import {
   deleteReport,
   fetchMatchedReports,
@@ -23,11 +24,142 @@ function formatDate(value: string): string {
 }
 
 type ReportStatusFilter = "ALL" | "APPROVED" | "PENDING" | "REJECTED";
+type ReportEditForm = {
+  serialNumber: string;
+  itemModel: string;
+  description: string;
+  file: File | null;
+};
+
+const REPORT_STATUS_OPTIONS: Array<{
+  value: ReportStatusFilter;
+  label: string;
+}> = [
+  { value: "ALL", label: "All reports" },
+  { value: "APPROVED", label: "Approved" },
+  { value: "PENDING", label: "Pending" },
+  { value: "REJECTED", label: "Rejected" },
+];
+
+const PREVIEW_PAGE_SIZE = 10;
 
 function resolveStatusFilter(value: string | null): ReportStatusFilter {
   return value === "APPROVED" || value === "PENDING" || value === "REJECTED"
     ? value
     : "ALL";
+}
+
+function getReportStatus(report: Report): Exclude<ReportStatusFilter, "ALL"> {
+  return report.status || "APPROVED";
+}
+
+function getStatusLabel(status: ReportStatusFilter): string {
+  if (status === "ALL") {
+    return "All reports";
+  }
+  if (status === "PENDING") {
+    return "Pending Review";
+  }
+  return status.charAt(0) + status.slice(1).toLowerCase();
+}
+
+function getStatusBadgeClass(status: Exclude<ReportStatusFilter, "ALL">): string {
+  if (status === "APPROVED") {
+    return "border-emerald-500/20 bg-emerald-500/10 text-emerald-400";
+  }
+  if (status === "REJECTED") {
+    return "border-red-500/20 bg-red-500/10 text-red-400";
+  }
+  return "border-amber-500/20 bg-amber-500/10 text-amber-300";
+}
+
+function hasReportChanges(report: Report, form: ReportEditForm): boolean {
+  return (
+    form.serialNumber.trim() !== report.serialNumber.trim() ||
+    form.itemModel.trim() !== report.itemModel.trim() ||
+    form.description.trim() !== report.description.trim() ||
+    form.file !== null
+  );
+}
+
+type PreviewPaginationProps = {
+  currentPage: number;
+  pageInput: string;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+  onInputChange: (value: string) => void;
+  onPageChange: (page: number) => void;
+};
+
+function PreviewPagination({
+  currentPage,
+  pageInput,
+  pageSize,
+  totalItems,
+  totalPages,
+  onInputChange,
+  onPageChange,
+}: PreviewPaginationProps) {
+  function commitPageInput() {
+    let nextPage = parseInt(pageInput);
+    if (Number.isNaN(nextPage) || nextPage < 1) {
+      nextPage = 1;
+    }
+    if (nextPage > totalPages) {
+      nextPage = totalPages;
+    }
+    onPageChange(nextPage);
+    onInputChange(nextPage.toString());
+  }
+
+  return (
+    <div className="mt-6 flex flex-col items-center justify-between gap-4 rounded-xl border border-slate-700/50 bg-slate-900/40 p-4 sm:flex-row sm:px-6">
+      <span className="text-sm text-slate-400">
+        Showing {totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1} to{" "}
+        {Math.min(currentPage * pageSize, totalItems)} of {totalItems}
+      </span>
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          disabled={currentPage <= 1}
+          onClick={() => {
+            const nextPage = currentPage - 1;
+            onPageChange(nextPage);
+            onInputChange(nextPage.toString());
+          }}
+          className="px-2 py-1 text-sm font-semibold text-slate-300 transition-colors hover:text-white disabled:opacity-50"
+        >
+          Prev
+        </button>
+        <input
+          type="text"
+          value={pageInput}
+          onChange={(event) => onInputChange(event.target.value)}
+          onBlur={commitPageInput}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.currentTarget.blur();
+            }
+          }}
+          className="w-12 rounded border border-slate-700 bg-slate-950/80 px-2 py-1 text-center text-sm text-slate-200 outline-none focus:border-brand"
+        />
+        <span className="text-sm text-slate-400">of {totalPages}</span>
+        <button
+          type="button"
+          disabled={currentPage >= totalPages}
+          onClick={() => {
+            const nextPage = currentPage + 1;
+            onPageChange(nextPage);
+            onInputChange(nextPage.toString());
+          }}
+          className="px-2 py-1 text-sm font-semibold text-slate-300 transition-colors hover:text-white disabled:opacity-50"
+        >
+          Next
+        </button>
+      </div>
+    </div>
+  );
 }
 
 function ReportsPageContent() {
@@ -41,8 +173,16 @@ function ReportsPageContent() {
   const [statusFilter, setStatusFilter] = useState<ReportStatusFilter>(
     () => resolveStatusFilter(searchParams.get("status")),
   );
+  const [isStatusMenuOpen, setIsStatusMenuOpen] = useState(false);
+  const [reportsPage, setReportsPage] = useState(1);
+  const [reportsPageInput, setReportsPageInput] = useState("1");
+  const [matchedReportsPage, setMatchedReportsPage] = useState(1);
+  const [matchedReportsPageInput, setMatchedReportsPageInput] = useState("1");
   const [isLoading, setIsLoading] = useState(() => !getCachedReports());
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
+  const [isResubmitConfirmOpen, setIsResubmitConfirmOpen] = useState(false);
+  const [isMatchedDetailsOpen, setIsMatchedDetailsOpen] = useState(false);
   const [selectedReportId, setSelectedReportId] = useState<number | null>(null);
   const [selectedMatchedReportId, setSelectedMatchedReportId] = useState<number | null>(null);
   const [message, setMessage] = useState<{
@@ -55,12 +195,7 @@ function ReportsPageContent() {
   } | null>(null);
 
   const [isEditing, setIsEditing] = useState(false);
-  const [editForm, setEditForm] = useState<{
-    serialNumber: string;
-    itemModel: string;
-    description: string;
-    file: File | null;
-  }>({
+  const [editForm, setEditForm] = useState<ReportEditForm>({
     serialNumber: "",
     itemModel: "",
     description: "",
@@ -69,25 +204,57 @@ function ReportsPageContent() {
   const [isSaving, setIsSaving] = useState(false);
 
   const filteredReports = useMemo(
-    () => reports.filter(r => statusFilter === "ALL" || (r.status || "APPROVED") === statusFilter),
+    () => reports.filter(r => statusFilter === "ALL" || getReportStatus(r) === statusFilter),
     [reports, statusFilter]
+  );
+
+  const reportsTotalPages = Math.max(1, Math.ceil(filteredReports.length / PREVIEW_PAGE_SIZE));
+  const matchedReportsTotalPages = Math.max(1, Math.ceil(matchedReports.length / PREVIEW_PAGE_SIZE));
+
+  const paginatedReports = useMemo(
+    () =>
+      filteredReports.slice(
+        (reportsPage - 1) * PREVIEW_PAGE_SIZE,
+        reportsPage * PREVIEW_PAGE_SIZE,
+      ),
+    [filteredReports, reportsPage],
+  );
+
+  const paginatedMatchedReports = useMemo(
+    () =>
+      matchedReports.slice(
+        (matchedReportsPage - 1) * PREVIEW_PAGE_SIZE,
+        matchedReportsPage * PREVIEW_PAGE_SIZE,
+      ),
+    [matchedReports, matchedReportsPage],
   );
 
   const selectedReport = useMemo(
     () =>
-      reports.find((report) => report.id === selectedReportId) ??
-      filteredReports[0] ??
+      paginatedReports.find((report) => report.id === selectedReportId) ??
+      paginatedReports[0] ??
       null,
-    [reports, selectedReportId, filteredReports],
+    [paginatedReports, selectedReportId],
   );
 
   const selectedMatchedReport = useMemo(
     () =>
-      matchedReports.find((report) => report.reportId === selectedMatchedReportId) ??
-      matchedReports[0] ??
+      paginatedMatchedReports.find((report) => report.reportId === selectedMatchedReportId) ??
+      paginatedMatchedReports[0] ??
       null,
-    [matchedReports, selectedMatchedReportId],
+    [paginatedMatchedReports, selectedMatchedReportId],
   );
+
+  const pendingDeleteReport = useMemo(
+    () => reports.find((report) => report.id === pendingDeleteId) ?? null,
+    [pendingDeleteId, reports],
+  );
+
+  const selectedReportStatus = selectedReport ? getReportStatus(selectedReport) : null;
+  const isSelectedReportRejected = selectedReportStatus === "REJECTED";
+  const editFormHasChanges = selectedReport
+    ? hasReportChanges(selectedReport, editForm)
+    : false;
 
   const statusMessage = useMemo(() => {
     if (searchParams.get("created") === "1") {
@@ -101,7 +268,6 @@ function ReportsPageContent() {
 
   useEffect(() => {
     const token = getJwt();
-    const authenticatedEmail = getAuthUser();
 
     if (!token) {
       setIsLoading(false);
@@ -121,15 +287,28 @@ function ReportsPageContent() {
         
         const paramId = searchParams.get("reportId");
         const nextTab = searchParams.get("tab") === "matched" ? "matched" : "reports";
-        setStatusFilter(resolveStatusFilter(searchParams.get("status")));
+        const nextStatusFilter = resolveStatusFilter(searchParams.get("status"));
+        setStatusFilter(nextStatusFilter);
         setActiveTab(nextTab);
 
         if (paramId && !isNaN(parseInt(paramId))) {
           const parsedId = parseInt(paramId);
-          if (nextTab === "matched" && matchedData.some(r => r.reportId === parsedId)) {
+          const matchedIndex = matchedData.findIndex(r => r.reportId === parsedId);
+          const visibleReports = data.filter(
+            r => nextStatusFilter === "ALL" || getReportStatus(r) === nextStatusFilter,
+          );
+          const reportIndex = visibleReports.findIndex(r => r.id === parsedId);
+
+          if (nextTab === "matched" && matchedIndex >= 0) {
             setSelectedMatchedReportId(parsedId);
-          } else if (data.some(r => r.id === parsedId)) {
+            const page = Math.floor(matchedIndex / PREVIEW_PAGE_SIZE) + 1;
+            setMatchedReportsPage(page);
+            setMatchedReportsPageInput(page.toString());
+          } else if (reportIndex >= 0) {
             setSelectedReportId(parsedId);
+            const page = Math.floor(reportIndex / PREVIEW_PAGE_SIZE) + 1;
+            setReportsPage(page);
+            setReportsPageInput(page.toString());
           } else {
             setSelectedReportId(data[0]?.id ?? null);
             setSelectedMatchedReportId(matchedData[0]?.reportId ?? null);
@@ -173,6 +352,25 @@ function ReportsPageContent() {
   }, [selectedReportId]);
 
   useEffect(() => {
+    setReportsPage(1);
+    setReportsPageInput("1");
+  }, [statusFilter]);
+
+  useEffect(() => {
+    if (reportsPage > reportsTotalPages) {
+      setReportsPage(reportsTotalPages);
+      setReportsPageInput(reportsTotalPages.toString());
+    }
+  }, [reportsPage, reportsTotalPages]);
+
+  useEffect(() => {
+    if (matchedReportsPage > matchedReportsTotalPages) {
+      setMatchedReportsPage(matchedReportsTotalPages);
+      setMatchedReportsPageInput(matchedReportsTotalPages.toString());
+    }
+  }, [matchedReportsPage, matchedReportsTotalPages]);
+
+  useEffect(() => {
     function handleEscape(event: KeyboardEvent) {
       if (event.key === "Escape") {
         setViewerFile(null);
@@ -191,13 +389,9 @@ function ReportsPageContent() {
   }, [viewerFile]);
 
   async function handleDelete(reportId: number) {
-    const shouldDelete = window.confirm("Delete this report permanently?");
-    if (!shouldDelete) {
-      return;
-    }
-
     setMessage(null);
     setDeletingId(reportId);
+    setPendingDeleteId(null);
 
     try {
       await deleteReport(reportId);
@@ -233,6 +427,15 @@ function ReportsPageContent() {
 
   async function handleSaveEdit() {
     if (!selectedReport) return;
+    const isResubmittingRejectedReport = getReportStatus(selectedReport) === "REJECTED";
+    if (isResubmittingRejectedReport && !hasReportChanges(selectedReport, editForm)) {
+      setMessage({
+        type: "error",
+        text: "Make at least one change before resubmitting this report.",
+      });
+      return;
+    }
+
     if (
       !editForm.serialNumber.trim() ||
       !editForm.itemModel.trim() ||
@@ -259,7 +462,12 @@ function ReportsPageContent() {
         current.map((r) => (r.id === updated.id ? updated : r)),
       );
       setIsEditing(false);
-      setMessage({ type: "success", text: "Report updated successfully." });
+      setMessage({
+        type: "success",
+        text: isResubmittingRejectedReport
+          ? "Report resubmitted for review."
+          : "Report updated successfully.",
+      });
     } catch (error) {
       setMessage({
         type: "error",
@@ -269,6 +477,42 @@ function ReportsPageContent() {
     } finally {
       setIsSaving(false);
     }
+  }
+
+  function handleSaveButtonClick() {
+    if (isSelectedReportRejected) {
+      if (!editFormHasChanges) {
+        setMessage({
+          type: "error",
+          text: "Make at least one change before resubmitting this report.",
+        });
+        return;
+      }
+      setIsResubmitConfirmOpen(true);
+      return;
+    }
+
+    handleSaveEdit();
+  }
+
+  function handleReportsPageChange(nextPage: number) {
+    setReportsPage(nextPage);
+    setReportsPageInput(nextPage.toString());
+    const nextReport = filteredReports.slice(
+      (nextPage - 1) * PREVIEW_PAGE_SIZE,
+      nextPage * PREVIEW_PAGE_SIZE,
+    )[0];
+    setSelectedReportId(nextReport?.id ?? null);
+  }
+
+  function handleMatchedReportsPageChange(nextPage: number) {
+    setMatchedReportsPage(nextPage);
+    setMatchedReportsPageInput(nextPage.toString());
+    const nextReport = matchedReports.slice(
+      (nextPage - 1) * PREVIEW_PAGE_SIZE,
+      nextPage * PREVIEW_PAGE_SIZE,
+    )[0];
+    setSelectedMatchedReportId(nextReport?.reportId ?? null);
   }
 
   return (
@@ -341,7 +585,7 @@ function ReportsPageContent() {
               onClick={() => setActiveTab("matched")}
               className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all ${
                 activeTab === "matched"
-                  ? "bg-status-stolen/15 text-status-stolen shadow-sm"
+                  ? "bg-slate-700 text-white shadow-sm"
                   : "text-slate-400 hover:bg-slate-800/70 hover:text-slate-200"
               }`}
             >
@@ -388,58 +632,129 @@ function ReportsPageContent() {
           )}
 
           {!isLoading && activeTab === "reports" && reports.length > 0 && (
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.1fr_1.6fr] lg:items-start">
-              <aside className="rounded-2xl border border-slate-700/50 bg-slate-800/40 p-4 shadow-xl flex flex-col lg:sticky lg:top-8 lg:max-h-[calc(100vh-6rem)]">
-                <div className="mb-4">
-                  <h2 className="px-2 pb-2 text-sm font-semibold text-slate-300 flex items-center gap-2">
-                    <svg
-                      className="w-4 h-4 text-brand"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 6h16M4 10h16M4 14h16M4 18h16"
-                      />
-                    </svg>
-                    Previews
-                  </h2>
-                  <div className="flex bg-slate-900/50 rounded-lg p-1 mx-2">
+            <div>
+              <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-[minmax(300px,0.95fr)_minmax(0,1.7fr)]">
+              <aside className="flex h-[640px] min-h-0 flex-col rounded-2xl border border-slate-700/50 bg-slate-800/40 p-4 shadow-xl lg:sticky lg:top-8">
+                <div className="mb-4 space-y-4">
+                  <div className="px-1">
+                    <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-200">
+                      <svg
+                        className="h-4 w-4 text-brand"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 6h16M4 10h16M4 14h16M4 18h16"
+                        />
+                      </svg>
+                      Report list
+                    </h2>
+                  </div>
+
+                  <div
+                    className="relative px-1"
+                    onBlur={(event) => {
+                      if (!event.currentTarget.contains(event.relatedTarget)) {
+                        setIsStatusMenuOpen(false);
+                      }
+                    }}
+                  >
+                    <span className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500">
+                      Status
+                    </span>
                     <button
                       type="button"
-                      onClick={() => setStatusFilter("ALL")}
-                      className={`flex-1 text-xs font-medium py-1.5 rounded-md transition-all ${statusFilter === "ALL" ? "bg-slate-700 text-white shadow-sm" : "text-slate-400 hover:text-slate-300 hover:bg-slate-800/50"}`}
+                      onClick={() => setIsStatusMenuOpen((current) => !current)}
+                      className={`flex h-11 w-full items-center justify-between rounded-xl border bg-slate-950/70 px-3.5 text-left text-sm font-semibold text-slate-100 outline-none transition ${
+                        isStatusMenuOpen
+                          ? "border-brand/60 ring-2 ring-brand/20"
+                          : "border-slate-700/60 hover:border-slate-600/80 hover:bg-slate-950"
+                      }`}
+                      aria-expanded={isStatusMenuOpen}
+                      aria-haspopup="listbox"
+                      aria-label="Filter reports by status"
                     >
-                      All
+                      <span>{getStatusLabel(statusFilter)}</span>
+                      <svg
+                        className={`h-4 w-4 text-slate-400 transition-transform ${
+                          isStatusMenuOpen ? "rotate-180" : ""
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => setStatusFilter("APPROVED")}
-                      className={`flex-1 text-xs font-medium py-1.5 rounded-md transition-all ${statusFilter === "APPROVED" ? "bg-emerald-500/20 text-emerald-400 shadow-sm" : "text-slate-400 hover:text-slate-300 hover:bg-slate-800/50"}`}
-                    >
-                      Approved
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setStatusFilter("PENDING")}
-                      className={`flex-1 text-xs font-medium py-1.5 rounded-md transition-all ${statusFilter === "PENDING" ? "bg-amber-500/20 text-amber-300 shadow-sm" : "text-slate-400 hover:text-slate-300 hover:bg-slate-800/50"}`}
-                    >
-                      Pending
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setStatusFilter("REJECTED")}
-                      className={`flex-1 text-xs font-medium py-1.5 rounded-md transition-all ${statusFilter === "REJECTED" ? "bg-red-500/20 text-red-400 shadow-sm" : "text-slate-400 hover:text-slate-300 hover:bg-slate-800/50"}`}
-                    >
-                      Rejected
-                    </button>
+
+                    {isStatusMenuOpen && (
+                      <div
+                        className="absolute left-1 right-1 top-[4.5rem] z-20 overflow-hidden rounded-xl border border-slate-700/70 bg-slate-950 shadow-2xl shadow-black/30"
+                        role="listbox"
+                        aria-label="Report status options"
+                      >
+                        {REPORT_STATUS_OPTIONS.map((option) => {
+                          const isSelected = statusFilter === option.value;
+
+                          return (
+                            <button
+                              key={option.value}
+                              type="button"
+                              onMouseDown={(event) => event.preventDefault()}
+                              onClick={() => {
+                                setStatusFilter(option.value);
+                                setIsStatusMenuOpen(false);
+                              }}
+                              className={`flex w-full items-center justify-between px-3.5 py-3 text-left text-sm transition ${
+                                isSelected
+                                  ? "bg-brand/15 text-white"
+                                  : "text-slate-300 hover:bg-slate-800/80 hover:text-white"
+                              }`}
+                              role="option"
+                              aria-selected={isSelected}
+                            >
+                              <span className="font-medium">{option.label}</span>
+                              {isSelected && (
+                                <svg
+                                  className="h-4 w-4 text-brand"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M5 13l4 4L19 7"
+                                  />
+                                </svg>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 </div>
-                <div className="space-y-2.5 overflow-y-auto pr-2 custom-scrollbar lg:max-h-[calc(100vh-14rem)]">
-                  {filteredReports.map((report) => {
+
+                <div className="min-h-0 flex-1 space-y-2.5 overflow-y-auto pr-2 thin-scrollbar">
+                  {filteredReports.length === 0 && (
+                    <div className="rounded-xl border border-dashed border-slate-700/50 bg-slate-900/30 p-6 text-center">
+                      <p className="text-sm font-medium text-slate-300">
+                        No {getStatusLabel(statusFilter).toLowerCase()} yet
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        Choose another status to view more reports.
+                      </p>
+                    </div>
+                  )}
+
+                  {paginatedReports.map((report) => {
+                    const reportStatus = getReportStatus(report);
                     const isActive = selectedReport?.id === report.id;
                     return (
                       <button
@@ -458,6 +773,9 @@ function ReportsPageContent() {
                           >
                             {report.serialNumber}
                           </p>
+                          <span className={`inline-flex w-20 shrink-0 justify-center rounded-md border px-2 py-0.5 text-[10px] font-semibold ${getStatusBadgeClass(reportStatus)}`}>
+                            {reportStatus === "PENDING" ? "Pending" : getStatusLabel(reportStatus)}
+                          </span>
                         </div>
                         <div className="flex justify-between items-center mt-1">
                            <p className="text-xs text-slate-400 line-clamp-1">
@@ -473,24 +791,48 @@ function ReportsPageContent() {
                 </div>
               </aside>
 
-              {selectedReport && (
-                <article className="rounded-2xl border border-slate-700/50 bg-slate-800/40 p-6 sm:p-8 shadow-xl flex flex-col relative w-full">
+              {selectedReport ? (
+                <article className="relative flex h-[640px] min-h-0 w-full flex-col overflow-y-auto rounded-2xl border border-slate-700/50 bg-slate-800/40 p-6 shadow-xl thin-scrollbar sm:p-8">
                   {isEditing ? (
                     <div className="flex flex-col animate-in fade-in zoom-in-95 duration-200">
                       <div className="flex flex-wrap items-start justify-between gap-4 mb-6 pb-6 border-b border-slate-700/50 shrink-0">
                         <div>
                           <div className="-ml-1 flex items-center gap-2 mb-2">
-                            <span className="-ml-2 px-2.5 py-1 rounded-md bg-brand/10 text-brand text-xs font-medium tracking-wide">
-                              Edit mode
+                            <span className={`-ml-2 px-2.5 py-1 rounded-md text-xs font-medium tracking-wide ${
+                              isSelectedReportRejected
+                                ? "bg-red-500/10 text-red-400"
+                                : "bg-brand/10 text-brand"
+                            }`}>
+                              {isSelectedReportRejected ? "Resubmit mode" : "Edit mode"}
                             </span>
                           </div>
                           <h2 className="mt-2 text-2xl font-bold text-white">
-                            Editing Report
+                            {isSelectedReportRejected ? "Resubmit Report" : "Editing Report"}
                           </h2>
                         </div>
                       </div>
 
                       <div className="space-y-6">
+                        {isSelectedReportRejected && (
+                          <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4">
+                            <h3 className="text-sm font-semibold text-red-300">
+                              Rejection details
+                            </h3>
+                            <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-red-100/90">
+                              {selectedReport.rejectionReason ||
+                                "No specific rejection reason was provided."}
+                            </p>
+                            <div className="mt-4 rounded-lg border border-red-500/20 bg-slate-950/35 p-3">
+                              <p className="text-xs font-semibold uppercase tracking-wider text-red-300">
+                                Recommended changes
+                              </p>
+                              <p className="mt-2 text-sm leading-6 text-slate-300">
+                                Update the fields that address the rejection reason, clarify the item details, correct any serial or model issues, and upload stronger evidence when the current file may not support the report.
+                              </p>
+                            </div>
+                          </div>
+                        )}
+
                         <label className="flex flex-col gap-2">
                           <span className="text-sm font-semibold text-slate-400">
                             Serial Number
@@ -617,17 +959,30 @@ function ReportsPageContent() {
                         </button>
                         <button
                           type="button"
-                          onClick={handleSaveEdit}
-                          disabled={isSaving}
-                          className="rounded-xl border border-brand/30 bg-brand/10 px-6 py-2.5 text-sm font-semibold text-brand transition-all hover:bg-brand/20 hover:border-brand/50 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 flex items-center gap-2"
+                          onClick={handleSaveButtonClick}
+                          disabled={isSaving || (isSelectedReportRejected && !editFormHasChanges)}
+                          className={`rounded-xl border px-6 py-2.5 text-sm font-semibold transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 flex items-center gap-2 ${
+                            isSelectedReportRejected
+                              ? "border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20 hover:border-red-500/50"
+                              : "border-brand/30 bg-brand/10 text-brand hover:bg-brand/20 hover:border-brand/50"
+                          }`}
+                          title={
+                            isSelectedReportRejected && !editFormHasChanges
+                              ? "Make at least one change before resubmitting"
+                              : undefined
+                          }
                         >
                           {isSaving ? (
                             <>
-                              <div className="w-4 h-4 border-2 border-brand/30 border-t-brand rounded-full animate-spin" />
-                              Saving...
+                              <div className={`w-4 h-4 rounded-full border-2 animate-spin ${
+                                isSelectedReportRejected
+                                  ? "border-red-300/30 border-t-red-300"
+                                  : "border-brand/30 border-t-brand"
+                              }`} />
+                              {isSelectedReportRejected ? "Resubmitting..." : "Saving..."}
                             </>
                           ) : (
-                            "Save Changes"
+                            isSelectedReportRejected ? "Resubmit Report" : "Save Changes"
                           )}
                         </button>
                       </div>
@@ -640,15 +995,11 @@ function ReportsPageContent() {
                             <span className="px-2.5 py-1 rounded-md bg-brand/10 text-brand text-xs font-medium tracking-wide">
                               Report Details
                             </span>
-                            {selectedReport.status && (
-                              <span className={`px-2.5 py-1 rounded-md text-xs font-medium tracking-wide border ${
-                                selectedReport.status === 'APPROVED' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 
-                                selectedReport.status === 'REJECTED' ? 'bg-red-500/10 text-red-400 border-red-500/20' : 
-                                'bg-amber-500/10 text-amber-300 border-amber-500/20'
-                              }`}>
-                                {selectedReport.status === 'PENDING' ? 'Pending Review' : selectedReport.status}
-                              </span>
-                            )}
+                            <span className={`inline-flex w-28 justify-center px-2.5 py-1 rounded-md text-xs font-medium tracking-wide border ${getStatusBadgeClass(getReportStatus(selectedReport))}`}>
+                              {getReportStatus(selectedReport) === "PENDING"
+                                ? "Pending"
+                                : getStatusLabel(getReportStatus(selectedReport))}
+                            </span>
                           </div>
                           <h2 className="mt-2 text-2xl font-bold text-white">
                             {selectedReport.serialNumber}
@@ -678,6 +1029,31 @@ function ReportsPageContent() {
                       </div>
 
                       <div className="space-y-6">
+                        {isSelectedReportRejected && (
+                          <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4">
+                            <h3 className="flex items-center gap-2 text-sm font-semibold text-red-300">
+                              <svg
+                                className="h-4 w-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M12 9v2m0 4h.01M4.93 19h14.14c1.54 0 2.5-1.667 1.73-3L13.73 4c-.77-1.333-2.69-1.333-3.46 0L3.2 16c-.77 1.333.19 3 1.73 3z"
+                                />
+                              </svg>
+                              Rejection reason
+                            </h3>
+                            <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-red-100/90">
+                              {selectedReport.rejectionReason ||
+                                "No specific rejection reason was provided."}
+                            </p>
+                          </div>
+                        )}
+
                         <div>
                           <h3 className="text-sm font-semibold text-slate-400 flex items-center gap-2 mb-3">
                             <svg
@@ -815,27 +1191,7 @@ function ReportsPageContent() {
                       <div className="mt-8 pt-6 border-t border-slate-700/50 flex flex-wrap gap-4 items-center justify-end">
                         <button
                           type="button"
-                          onClick={handleEditClick}
-                          className="rounded-xl bg-slate-800 border border-slate-600/50 px-6 py-2.5 text-sm font-semibold text-slate-200 transition-all hover:bg-slate-700 hover:border-slate-500 active:scale-95 flex flex-row items-center justify-center gap-2"
-                        >
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                            />
-                          </svg>
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(selectedReport.id)}
+                          onClick={() => setPendingDeleteId(selectedReport.id)}
                           disabled={deletingId === selectedReport.id}
                           className="rounded-xl border border-red-500/20 bg-red-500/10 px-6 py-2.5 text-sm font-semibold text-red-500 transition-all hover:bg-red-500/20 hover:border-red-500/30 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2"
                         >
@@ -863,149 +1219,364 @@ function ReportsPageContent() {
                             </>
                           )}
                         </button>
+                        <button
+                          type="button"
+                          onClick={handleEditClick}
+                          className={`rounded-xl border px-6 py-2.5 text-sm font-semibold transition-all active:scale-95 flex flex-row items-center justify-center gap-2 ${
+                            isSelectedReportRejected
+                              ? "border-brand/30 bg-brand/10 text-brand hover:bg-brand/20 hover:border-brand/50"
+                              : "border-slate-600/50 bg-slate-800 text-slate-200 hover:bg-slate-700 hover:border-slate-500"
+                          }`}
+                        >
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d={
+                                isSelectedReportRejected
+                                  ? "M4 4v6h6M20 20v-6h-6M5 19A9 9 0 0119 5l1 1M19 5h-6v6"
+                                  : "M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                              }
+                            />
+                          </svg>
+                          {isSelectedReportRejected ? "Resubmit Report" : "Edit"}
+                        </button>
                       </div>
                     </>
                   )}
                 </article>
+              ) : (
+                <article className="flex h-[640px] min-h-0 items-center justify-center rounded-2xl border border-dashed border-slate-700/50 bg-slate-800/30 p-8 text-center shadow-xl">
+                  <div className="max-w-sm">
+                    <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-slate-700/50 bg-slate-900/50 text-slate-500">
+                      <svg
+                        className="h-6 w-6"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.5}
+                          d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+                        />
+                      </svg>
+                    </div>
+                    <h3 className="text-base font-semibold text-slate-200">
+                      No reports in this status
+                    </h3>
+                    <p className="mt-2 text-sm leading-6 text-slate-500">
+                      Try a different status filter or create a new report when you have another stolen item to track.
+                    </p>
+                  </div>
+                </article>
               )}
+              </div>
+              <PreviewPagination
+                currentPage={reportsPage}
+                pageInput={reportsPageInput}
+                pageSize={PREVIEW_PAGE_SIZE}
+                totalItems={filteredReports.length}
+                totalPages={reportsTotalPages}
+                onInputChange={setReportsPageInput}
+                onPageChange={handleReportsPageChange}
+              />
             </div>
           )}
 
           {!isLoading && activeTab === "matched" && matchedReports.length > 0 && (
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.1fr_1.6fr] lg:items-start">
-              <aside className="rounded-2xl border border-slate-700/50 bg-slate-800/40 p-4 shadow-xl flex flex-col lg:sticky lg:top-8 lg:max-h-[calc(100vh-6rem)]">
-                <div className="mb-4 px-2">
-                  <h2 className="pb-2 text-sm font-semibold text-slate-300 flex items-center gap-2">
-                    <svg className="w-4 h-4 text-status-stolen" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div>
+              <div className="overflow-hidden rounded-2xl border border-slate-700/50 bg-slate-950/40 shadow-xl">
+                <div className="border-b border-slate-700/60 bg-slate-900/50 px-5 py-4">
+                  <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-200">
+                    <svg className="h-4 w-4 text-status-stolen" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M4.93 19h14.14c1.54 0 2.5-1.667 1.73-3L13.73 4c-.77-1.333-2.69-1.333-3.46 0L3.2 16c-.77 1.333.19 3 1.73 3z" />
                     </svg>
                     Matched stolen reports
                   </h2>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Businesses that matched one of your reported stolen items.
+                  </p>
                 </div>
-                <div className="space-y-2.5 overflow-y-auto pr-2 custom-scrollbar lg:max-h-[calc(100vh-12rem)]">
-                  {matchedReports.map((report) => {
-                    const isActive = selectedMatchedReport?.reportId === report.reportId;
-                    return (
-                      <button
-                        key={report.matchId}
-                        type="button"
-                        onClick={() => setSelectedMatchedReportId(report.reportId)}
-                        className={`w-full group rounded-xl border p-4 text-left transition-all duration-200 ${
-                          isActive
-                            ? "border-status-stolen/40 bg-status-stolen/10"
-                            : "border-slate-700/50 bg-slate-900/40 hover:border-slate-500/50 hover:bg-slate-800/60"
-                        }`}
-                      >
-                        <div className="flex justify-between items-start mb-2">
-                          <p className={`text-sm font-bold truncate pr-3 ${isActive ? "text-status-stolen" : "text-slate-200 group-hover:text-white"}`}>
-                            {report.serialNumber}
-                          </p>
-                        </div>
-                        <p className="text-xs text-slate-400 line-clamp-1">{report.itemModel}</p>
-                        <p className="mt-2 text-[10px] uppercase tracking-widest text-slate-500">
-                          Matched {formatDate(report.matchedAt)}
-                        </p>
-                      </button>
-                    );
-                  })}
+                <div className="overflow-x-auto">
+                  <table className="min-w-full table-fixed text-left text-sm">
+                    <thead className="border-b border-slate-700/60 bg-slate-900/60 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                      <tr>
+                        <th className="w-[30%] px-5 py-4">Matched Item</th>
+                        <th className="w-[30%] px-5 py-4">Business</th>
+                        <th className="w-[24%] px-5 py-4">Matched Date</th>
+                        <th className="w-[16%] px-5 py-4 text-right">
+                          <span className="sr-only">Actions</span>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/90">
+                      {paginatedMatchedReports.map((report) => (
+                        <tr key={report.matchId} className="transition-colors hover:bg-slate-900/45">
+                          <td className="px-5 py-4 align-middle">
+                            <p className="font-medium text-slate-200">{report.itemModel}</p>
+                            <p className="mt-1 font-mono text-xs text-slate-500">{report.serialNumber}</p>
+                          </td>
+                          <td className="px-5 py-4 align-middle">
+                            <p className="font-semibold text-white">
+                              {report.matchedByBusinessName || "Verified business"}
+                            </p>
+                            <p className="mt-1 truncate text-xs text-slate-400">
+                              {report.matchedByBusinessEmail || "No email provided"}
+                            </p>
+                          </td>
+                          <td className="px-5 py-4 align-middle text-slate-300">
+                            {formatDate(report.matchedAt)}
+                          </td>
+                          <td className="px-5 py-4 text-right align-middle">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedMatchedReportId(report.reportId);
+                                setIsMatchedDetailsOpen(true);
+                              }}
+                              className="whitespace-nowrap rounded-lg border border-slate-600/60 bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-200 transition hover:border-slate-500 hover:bg-slate-700 hover:text-white"
+                            >
+                              View Details
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-              </aside>
-
-              {selectedMatchedReport && (
-                <article className="rounded-2xl border border-status-stolen/30 bg-slate-800/40 p-6 sm:p-8 shadow-xl flex flex-col relative w-full">
-                  <div className="flex flex-wrap items-start justify-between gap-4 mb-6 pb-6 border-b border-slate-700/50 shrink-0">
-                    <div>
-                      <div className="-ml-3 flex items-center gap-2 mb-2">
-                        <span className="px-2.5 py-1 rounded-md bg-status-stolen/10 text-status-stolen text-xs font-medium tracking-wide">
-                          Stolen Match
-                        </span>
-                        {selectedMatchedReport.status && (
-                          <span className="px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-400 text-xs font-medium tracking-wide border border-emerald-500/20">
-                            {selectedMatchedReport.status}
-                          </span>
-                        )}
-                      </div>
-                      <h2 className="mt-2 text-2xl font-bold text-white">
-                        {selectedMatchedReport.serialNumber}
-                      </h2>
-                      <p className="mt-1.5 text-base text-slate-300">
-                        {selectedMatchedReport.itemModel}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs font-medium text-slate-500">
-                        Matched: <span className="text-slate-400">{formatDate(selectedMatchedReport.matchedAt)}</span>
-                      </p>
-                      <p className="mt-1 text-xs font-medium text-slate-500">
-                        Reported: <span className="text-slate-400">{formatDate(selectedMatchedReport.reportCreatedAt)}</span>
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-6">
-                    <div className="rounded-xl border border-status-stolen/20 bg-status-stolen/5 p-4">
-                      <h3 className="mb-2 text-sm font-semibold text-status-stolen">Matched by</h3>
-                      <p className="text-sm font-medium text-slate-200">
-                        {selectedMatchedReport.matchedByBusinessName || "Verified business"}
-                      </p>
-                      {selectedMatchedReport.matchedByBusinessEmail && (
-                        <p className="mt-1 text-xs text-slate-400">{selectedMatchedReport.matchedByBusinessEmail}</p>
-                      )}
-                    </div>
-
-                    <div>
-                      <h3 className="text-sm font-semibold text-slate-400 mb-3">Description</h3>
-                      <div className="rounded-xl border border-slate-700/30 bg-slate-900/30 p-4">
-                        <p className="text-sm text-slate-300 leading-relaxed break-words whitespace-pre-wrap">
-                          {selectedMatchedReport.description}
-                        </p>
-                      </div>
-                    </div>
-
-                    {selectedMatchedReport.files?.length ? (
-                      <div>
-                        <h3 className="text-sm font-semibold text-slate-400 mb-3">Evidence / Uploaded File</h3>
-                        <div className="grid grid-cols-1 gap-4">
-                          {selectedMatchedReport.files.map((file) => {
-                            const fileUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080"}${file.fileUrl}`;
-                            const token = getJwt();
-                            const previewUrl =
-                              file.fileType === "PDF"
-                                ? `/api/reports/file?path=${encodeURIComponent(file.fileUrl)}${token ? `&token=${encodeURIComponent(token)}` : ""}`
-                                : fileUrl;
-                            return (
-                              <div key={file.id} className="group relative rounded-xl border border-slate-700/50 bg-slate-900/40 overflow-hidden">
-                                {file.fileType === "IMAGE" ? (
-                                  <div className="aspect-video w-full">
-                                    <img src={fileUrl} alt="Uploaded evidence" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                                  </div>
-                                ) : (
-                                  <div className="aspect-video w-full bg-slate-800">
-                                    <iframe title={`PDF first page ${file.id}`} src={`${previewUrl}#page=1&view=FitH&toolbar=0&navpanes=0&scrollbar=0`} className="h-full w-full" />
-                                  </div>
-                                )}
-                                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                  <button
-                                    type="button"
-                                    onClick={() => setViewerFile({ url: previewUrl, type: file.fileType })}
-                                    className="rounded-lg bg-slate-900/90 backdrop-blur-md px-4 py-2.5 text-sm font-semibold text-white shadow-xl hover:bg-black transition-colors"
-                                  >
-                                    Preview
-                                  </button>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ) : null}
-                  </div>
-                </article>
-              )}
+              </div>
+              <PreviewPagination
+                currentPage={matchedReportsPage}
+                pageInput={matchedReportsPageInput}
+                pageSize={PREVIEW_PAGE_SIZE}
+                totalItems={matchedReports.length}
+                totalPages={matchedReportsTotalPages}
+                onInputChange={setMatchedReportsPageInput}
+                onPageChange={handleMatchedReportsPageChange}
+              />
             </div>
           )}
         </div>
       </main>
+
+      <Modal
+        isOpen={isMatchedDetailsOpen && !!selectedMatchedReport}
+        onClose={() => setIsMatchedDetailsOpen(false)}
+        title="Matched report details"
+        maxWidth="max-w-3xl"
+        footer={
+          <button
+            type="button"
+            onClick={() => setIsMatchedDetailsOpen(false)}
+            className="rounded-xl border border-slate-600/50 bg-slate-800 px-5 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-slate-700 hover:border-slate-500"
+          >
+            Close
+          </button>
+        }
+      >
+        {selectedMatchedReport && (
+          <div className="space-y-6">
+            <div className="rounded-2xl border border-status-stolen/20 bg-status-stolen/5 p-5">
+              <p className="text-xs font-semibold uppercase tracking-wider text-status-stolen">
+                Stolen item matched
+              </p>
+              <div className="mt-3 flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <h3 className="text-2xl font-bold text-white">
+                    {selectedMatchedReport.serialNumber}
+                  </h3>
+                  <p className="mt-1 text-sm text-slate-300">
+                    {selectedMatchedReport.itemModel}
+                  </p>
+                </div>
+                <div className="text-left sm:text-right">
+                  <p className="text-xs font-medium text-slate-500">
+                    Matched
+                  </p>
+                  <p className="mt-1 text-sm text-slate-300">
+                    {formatDate(selectedMatchedReport.matchedAt)}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="rounded-xl border border-slate-700/50 bg-slate-900/35 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  Business name
+                </p>
+                <p className="mt-2 text-base font-semibold text-white">
+                  {selectedMatchedReport.matchedByBusinessName || "Verified business"}
+                </p>
+                <p className="mt-1 text-sm text-slate-400">
+                  {selectedMatchedReport.matchedByBusinessEmail || "No email provided"}
+                </p>
+              </div>
+              <div className="rounded-xl border border-slate-700/50 bg-slate-900/35 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  Business registration
+                </p>
+                <p className="mt-1 text-sm text-slate-400">
+                  Registered{" "}
+                  {selectedMatchedReport.matchedByBusinessRegisteredAt
+                    ? formatDate(selectedMatchedReport.matchedByBusinessRegisteredAt)
+                    : "date unavailable"}
+                </p>
+              </div>
+              <div className="rounded-xl border border-slate-700/50 bg-slate-900/35 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  Contact number
+                </p>
+                <p className="mt-2 text-sm text-slate-200">
+                  {selectedMatchedReport.matchedByBusinessPhone || "Not provided"}
+                </p>
+              </div>
+              <div className="rounded-xl border border-slate-700/50 bg-slate-900/35 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  Original report date
+                </p>
+                <p className="mt-2 text-sm text-slate-200">
+                  {formatDate(selectedMatchedReport.reportCreatedAt)}
+                </p>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-slate-700/50 bg-slate-900/35 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Business address
+              </p>
+              <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-300">
+                {selectedMatchedReport.matchedByBusinessAddress || "No address provided"}
+              </p>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      <Modal
+        isOpen={!!pendingDeleteReport}
+        onClose={() => {
+          if (deletingId === null) {
+            setPendingDeleteId(null);
+          }
+        }}
+        title="Delete report?"
+        maxWidth="max-w-lg"
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setPendingDeleteId(null)}
+              disabled={deletingId !== null}
+              className="rounded-xl border border-slate-600/50 bg-slate-800 px-5 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-slate-700 hover:border-slate-500 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => pendingDeleteId !== null && handleDelete(pendingDeleteId)}
+              disabled={deletingId !== null}
+              className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-5 py-2.5 text-sm font-semibold text-red-300 transition hover:bg-red-500/20 hover:border-red-500/50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {deletingId !== null ? (
+                <>
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-300/30 border-t-red-300" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete Report"
+              )}
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <p className="text-sm leading-6 text-slate-300">
+            This will permanently delete this report and its uploaded evidence from your records.
+          </p>
+          {pendingDeleteReport && (
+            <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4">
+              <p className="text-sm font-semibold text-red-200">
+                {pendingDeleteReport.serialNumber}
+              </p>
+              <p className="mt-1 text-sm text-red-100/80">
+                {pendingDeleteReport.itemModel}
+              </p>
+            </div>
+          )}
+          <p className="text-xs leading-5 text-slate-500">
+            This action cannot be undone.
+          </p>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={isResubmitConfirmOpen}
+        onClose={() => {
+          if (!isSaving) {
+            setIsResubmitConfirmOpen(false);
+          }
+        }}
+        title="Resubmit report?"
+        maxWidth="max-w-lg"
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setIsResubmitConfirmOpen(false)}
+              disabled={isSaving}
+              className="rounded-xl border border-slate-600/50 bg-slate-800 px-5 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-slate-700 hover:border-slate-500 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Keep Editing
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setIsResubmitConfirmOpen(false);
+                handleSaveEdit();
+              }}
+              disabled={isSaving || !editFormHasChanges}
+              className="flex items-center gap-2 rounded-xl border border-brand/30 bg-brand/10 px-5 py-2.5 text-sm font-semibold text-brand transition hover:bg-brand/20 hover:border-brand/50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isSaving ? (
+                <>
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-brand/30 border-t-brand" />
+                  Resubmitting...
+                </>
+              ) : (
+                "Confirm Resubmit"
+              )}
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <p className="text-sm leading-6 text-slate-300">
+            Your updated report will be sent back to pending review. Please confirm that the changes address the rejection details.
+          </p>
+          {selectedReport?.rejectionReason && (
+            <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-red-300">
+                Rejection reason
+              </p>
+              <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-red-100/90">
+                {selectedReport.rejectionReason}
+              </p>
+            </div>
+          )}
+          <p className="text-xs leading-5 text-slate-500">
+            After resubmitting, the report status will change to Pending Review.
+          </p>
+        </div>
+      </Modal>
 
       {/* Viewer Modal overlay */}
       {viewerFile && (
