@@ -12,6 +12,11 @@ export type StolenReportSummary = {
   victimName?: string;
   ownerEmail?: string;
   ownerPhoneNumber?: string;
+  files?: {
+    id: number;
+    fileUrl: string;
+    fileType: string;
+  }[];
 };
 
 export type VerifySearchResponse = {
@@ -43,8 +48,11 @@ export type StolenMatch = {
   victimName?: string | null;
   victimEmail?: string | null;
   victimPhoneNumber?: string | null;
-  evidenceFileUrl?: string | null;
-  evidenceFileType?: "IMAGE" | "PDF" | null;
+  files?: {
+    id: number;
+    fileUrl: string;
+    fileType: string;
+  }[];
 };
 
 type ApiErrorPayload = {

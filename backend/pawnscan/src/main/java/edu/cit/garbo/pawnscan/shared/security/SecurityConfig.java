@@ -62,6 +62,7 @@ public class SecurityConfig {
 
                 http.cors(org.springframework.security.config.Customizer.withDefaults())
                                 .csrf(AbstractHttpConfigurer::disable)
+                                .headers(headers -> headers.frameOptions(org.springframework.security.config.annotation.web.configurers.HeadersConfigurer.FrameOptionsConfig::disable))
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers("/api/auth/**").permitAll()
                                                 .requestMatchers("/uploads/**").permitAll()

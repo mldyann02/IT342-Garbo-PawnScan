@@ -17,6 +17,16 @@ function formatDate(value: string): string {
   return parsed.toLocaleString();
 }
 
+function inferEvidenceType(
+  fileType: string | null | undefined,
+  fileUrl?: string | null,
+): "IMAGE" | "PDF" {
+  if (fileType === "PDF") return "PDF";
+  if (fileType === "IMAGE") return "IMAGE";
+  if (fileUrl && /\.pdf(\?|$)/i.test(fileUrl)) return "PDF";
+  return "IMAGE";
+}
+
 async function fetchAndFilterRecentSearches() {
   try {
     const history = await fetchSearchHistory(0, 20);
@@ -46,6 +56,27 @@ export default function VerifyItemPage() {
       timestamp: string;
     }>
   >([]);
+
+  const [viewerFile, setViewerFile] = useState<{
+    url: string;
+    type: "IMAGE" | "PDF";
+  } | null>(null);
+
+  useEffect(() => {
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setViewerFile(null);
+      }
+    }
+    if (viewerFile) {
+      document.body.style.overflow = "hidden";
+      document.addEventListener("keydown", handleEscape);
+    }
+    return () => {
+      document.body.style.overflow = "";
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [viewerFile]);
 
   const userRole = useMemo(() => {
     if (typeof window === "undefined") {
@@ -240,6 +271,46 @@ export default function VerifyItemPage() {
                         {result.report.description || "No additional description provided."}
                       </p>
                     </div>
+
+                    <div className="space-y-1 sm:col-span-2">
+                      <p className="text-xs uppercase tracking-widest text-slate-500 font-semibold mb-2">Uploaded Evidence</p>
+                      {!result.report.files || result.report.files.length === 0 ? (
+                        <p className="text-sm text-slate-400 italic">No evidence file was uploaded for this report.</p>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+                          {result.report.files.map((file, idx) => {
+                            const type = inferEvidenceType(file.fileType, file.fileUrl);
+                            const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080";
+                            const fullUrl = `${backendUrl}${file.fileUrl}`;
+                            
+                            return (
+                              <button
+                                key={file.id || idx}
+                                type="button"
+                                onClick={() => setViewerFile({ url: fullUrl, type })}
+                                className="group relative flex h-32 w-full flex-col items-center justify-center overflow-hidden rounded-xl border border-slate-700/60 bg-slate-900/50 transition-all hover:border-brand/40 hover:bg-slate-800"
+                              >
+                                {type === "PDF" ? (
+                                  <div className="flex flex-col items-center gap-2 text-slate-400 group-hover:text-slate-200 transition-colors">
+                                    <svg className="h-8 w-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                    </svg>
+                                    <span className="text-xs font-semibold">View PDF Document</span>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <img src={fullUrl} alt="Evidence preview" className="absolute inset-0 h-full w-full object-cover opacity-60 transition-opacity group-hover:opacity-40" />
+                                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 transition-opacity group-hover:opacity-100">
+                                      <span className="rounded-lg bg-black/60 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-sm shadow-lg border border-white/10">View Image</span>
+                                    </div>
+                                  </>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
@@ -335,6 +406,48 @@ export default function VerifyItemPage() {
           )}
         </section>
       </main>
+
+      {viewerFile && (
+        <div
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/85 p-4 backdrop-blur"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setViewerFile(null)}
+        >
+          <div
+            className="relative w-full max-w-5xl rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-slate-700 px-4 py-3">
+              <h3 className="text-sm font-semibold uppercase tracking-[0.15em] text-slate-200">
+                Evidence Viewer
+              </h3>
+              <button
+                type="button"
+                onClick={() => setViewerFile(null)}
+                className="rounded-md border border-slate-600 px-2.5 py-1 text-xs font-semibold text-slate-300 hover:bg-slate-800"
+              >
+                Close
+              </button>
+            </div>
+            <div className="max-h-[80vh] overflow-auto p-4">
+              {viewerFile.type === "PDF" ? (
+                <iframe
+                  src={viewerFile.url}
+                  title="Evidence PDF"
+                  className="h-[75vh] w-full rounded-lg border border-slate-700"
+                />
+              ) : (
+                <img
+                  src={viewerFile.url}
+                  alt="Evidence"
+                  className="mx-auto h-auto max-h-[75vh] w-auto rounded-lg border border-slate-700"
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

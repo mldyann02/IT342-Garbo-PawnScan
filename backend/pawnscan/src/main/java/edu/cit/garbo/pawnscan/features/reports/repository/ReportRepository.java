@@ -20,7 +20,7 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
 
     Optional<Report> findFirstBySerialNumberIgnoreCaseAndStatus(String serialNumber, ReportStatus status);
 
-    @Query("SELECT r FROM Report r JOIN FETCH r.user WHERE UPPER(r.serialNumber) = UPPER(:serialNumber) AND r.status = :status")
+    @Query("SELECT r FROM Report r JOIN FETCH r.user LEFT JOIN FETCH r.files WHERE UPPER(r.serialNumber) = UPPER(:serialNumber) AND r.status = :status")
     Optional<Report> findFirstBySerialNumberIgnoreCaseAndStatusWithUser(
             @Param("serialNumber") String serialNumber,
             @Param("status") ReportStatus status);
