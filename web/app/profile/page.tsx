@@ -361,7 +361,7 @@ export default function ProfilePage() {
                           onChange={(event) =>
                             updateField("permitNumber", event.target.value)
                           }
-                          disabled={!isEditing || isSaving}
+                          disabled={true}
                           className="w-full rounded-xl border border-slate-700/70 bg-slate-950/40 px-4 py-3 text-sm text-white outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20 disabled:cursor-not-allowed disabled:text-slate-400"
                         />
                       </label>

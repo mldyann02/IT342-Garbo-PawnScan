@@ -9,6 +9,7 @@ import {
   fetchSearchHistory,
   fetchStolenMatches,
 } from "@/features/verification/lib/verify";
+import VerificationGuard from "@/features/business/components/verification-guard";
 
 const PAGE_SIZE = 500;
 
@@ -183,7 +184,8 @@ export default function SearchHistoryPage() {
   }, [viewerFile]);
 
   return (
-    <div className="min-h-screen text-slate-200">
+    <VerificationGuard>
+      <div className="min-h-screen text-slate-200">
       <main className="mx-auto w-full max-w-5xl px-4 pb-16 pt-36 sm:px-6 sm:pt-40 md:pt-32 lg:px-8">
         {errorMessage && (
           <div className="mb-8 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
@@ -729,6 +731,7 @@ export default function SearchHistoryPage() {
         </div>
       )}
     </div>
+    </VerificationGuard>
   );
 }
 

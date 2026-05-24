@@ -8,6 +8,7 @@ import {
   fetchSearchHistory,
   verifySerialNumber,
 } from "@/features/verification/lib/verify";
+import VerificationGuard from "@/features/business/components/verification-guard";
 
 function formatDate(value: string): string {
   const parsed = new Date(value);
@@ -131,7 +132,8 @@ export default function VerifyItemPage() {
   }
 
   return (
-    <div className="min-h-screen text-slate-200">
+    <VerificationGuard>
+      <div className="min-h-screen text-slate-200">
       <main className="mx-auto w-full max-w-5xl px-4 pb-16 pt-36 sm:px-6 sm:pt-40 md:pt-32 lg:px-8">
         <section className="glass-panel rounded-2xl bg-slate-900/35 p-6 shadow-[0_18px_36px_rgba(0,0,0,0.28)] sm:p-8">
           <h1 className="mt-2 text-3xl font-bold text-white sm:text-4xl">
@@ -449,6 +451,7 @@ export default function VerifyItemPage() {
         </div>
       )}
     </div>
+    </VerificationGuard>
   );
 }
 
