@@ -9,6 +9,16 @@ import { Modal } from "@/features/shared/components/modal";
 
 const ITEMS_PER_PAGE = 8;
 
+function inferEvidenceType(
+  fileType: string | null | undefined,
+  fileUrl?: string | null,
+): "IMAGE" | "PDF" {
+  if (fileType === "PDF") return "PDF";
+  if (fileType === "IMAGE") return "IMAGE";
+  if (fileUrl && /\.pdf(\?|$)/i.test(fileUrl)) return "PDF";
+  return "IMAGE";
+}
+
 export default function ModerationPage() {
   const router = useRouter();
   const [reports, setReports] = useState<ReportAdmin[]>([]);
@@ -22,6 +32,26 @@ export default function ModerationPage() {
   const [selectedReport, setSelectedReport] = useState<ReportAdmin | null>(null);
   const [confirmAction, setConfirmAction] = useState<{ id: number; status: "APPROVED" | "REJECTED" } | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
+  const [viewerFile, setViewerFile] = useState<{
+    url: string;
+    type: "IMAGE" | "PDF";
+  } | null>(null);
+
+  useEffect(() => {
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setViewerFile(null);
+      }
+    }
+    if (viewerFile) {
+      document.body.style.overflow = "hidden";
+      document.addEventListener("keydown", handleEscape);
+    }
+    return () => {
+      document.body.style.overflow = "";
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [viewerFile]);
 
   useEffect(() => {
     const token = getJwt();
@@ -165,22 +195,51 @@ export default function ModerationPage() {
           title="Review Report"
         >
           {selectedReport && (() => {
-            const imageFile = selectedReport.files.find(f => f.fileType === "IMAGE");
-            const fileUrl = imageFile ? `${backendUrl}${imageFile.fileUrl}` : null;
-            
             return (
               <div className="space-y-6">
                 <div className="flex gap-6 flex-col md:flex-row">
-                  {/* Image section */}
-                  <div className="w-full md:w-1/2 rounded-2xl overflow-hidden bg-black flex items-center justify-center border border-slate-700/50 aspect-square">
-                    {fileUrl ? (
-                      <img src={fileUrl} alt={selectedReport.itemModel} className="w-full h-full object-contain" />
-                    ) : (
-                      <div className="text-slate-600 flex flex-col items-center gap-2">
-                        <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  {/* Evidence section */}
+                  <div className="w-full md:w-1/2 flex flex-col gap-3">
+                    <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Uploaded Evidence</p>
+                    {!selectedReport.files || selectedReport.files.length === 0 ? (
+                      <div className="rounded-2xl bg-black/40 flex flex-col items-center justify-center border border-slate-700/50 p-10 h-full min-h-[200px]">
+                        <svg className="h-10 w-10 text-slate-600 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
-                        <span className="text-xs font-medium uppercase tracking-widest">No Image</span>
+                        <span className="text-xs font-medium uppercase tracking-widest text-slate-500">No Evidence</span>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-3 h-full max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                        {selectedReport.files.map((file, idx) => {
+                          const type = inferEvidenceType(file.fileType, file.fileUrl);
+                          const fullUrl = `${backendUrl}${file.fileUrl}`;
+                          return (
+                            <button
+                              key={file.id || idx}
+                              type="button"
+                              onClick={() => setViewerFile({ url: fullUrl, type })}
+                              className={`group relative flex flex-col items-center justify-center overflow-hidden rounded-xl border border-slate-700/60 bg-slate-900/50 transition-all hover:border-brand/40 hover:bg-slate-800 ${
+                                selectedReport.files.length === 1 ? 'col-span-2 aspect-square' : 'aspect-square'
+                              }`}
+                            >
+                              {type === "PDF" ? (
+                                <div className="flex flex-col items-center gap-2 text-slate-400 group-hover:text-slate-200 transition-colors">
+                                  <svg className="h-8 w-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                  </svg>
+                                  <span className="text-xs font-semibold">View PDF</span>
+                                </div>
+                              ) : (
+                                <>
+                                  <img src={fullUrl} alt="Evidence preview" className="absolute inset-0 h-full w-full object-cover opacity-70 transition-opacity group-hover:opacity-40" />
+                                  <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 transition-opacity group-hover:opacity-100">
+                                    <span className="rounded-lg bg-black/60 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-sm shadow-lg border border-white/10">View</span>
+                                  </div>
+                                </>
+                              )}
+                            </button>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
@@ -291,6 +350,48 @@ export default function ModerationPage() {
         </Modal>
 
       </main>
+
+      {viewerFile && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/85 p-4 backdrop-blur"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setViewerFile(null)}
+        >
+          <div
+            className="relative w-full max-w-5xl rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-slate-700 px-4 py-3">
+              <h3 className="text-sm font-semibold uppercase tracking-[0.15em] text-slate-200">
+                Evidence Viewer
+              </h3>
+              <button
+                type="button"
+                onClick={() => setViewerFile(null)}
+                className="rounded-md border border-slate-600 px-2.5 py-1 text-xs font-semibold text-slate-300 hover:bg-slate-800"
+              >
+                Close
+              </button>
+            </div>
+            <div className="max-h-[80vh] overflow-auto p-4">
+              {viewerFile.type === "PDF" ? (
+                <iframe
+                  src={viewerFile.url}
+                  title="Evidence PDF"
+                  className="h-[75vh] w-full rounded-lg border border-slate-700"
+                />
+              ) : (
+                <img
+                  src={viewerFile.url}
+                  alt="Evidence"
+                  className="mx-auto h-auto max-h-[75vh] w-auto rounded-lg border border-slate-700"
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

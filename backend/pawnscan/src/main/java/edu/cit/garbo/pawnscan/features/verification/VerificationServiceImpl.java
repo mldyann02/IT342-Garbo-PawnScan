@@ -6,6 +6,7 @@ import edu.cit.garbo.pawnscan.features.verification.dto.SearchLogResponse;
 import edu.cit.garbo.pawnscan.features.verification.dto.StolenMatchResponse;
 import edu.cit.garbo.pawnscan.features.verification.dto.StolenReportSummaryResponse;
 import edu.cit.garbo.pawnscan.features.verification.dto.VerifySearchResponse;
+import edu.cit.garbo.pawnscan.features.reports.dto.ReportFileResponse;
 import edu.cit.garbo.pawnscan.features.reports.entity.Report;
 import edu.cit.garbo.pawnscan.features.reports.entity.ReportFile;
 import edu.cit.garbo.pawnscan.features.reports.entity.ReportStatus;
@@ -251,6 +252,15 @@ public class VerificationServiceImpl implements VerificationService {
 
     private StolenReportSummaryResponse toStolenReportSummary(Report report) {
         User victim = report.getUser();
+        java.util.List<ReportFileResponse> files = report.getFiles().stream()
+                .sorted(java.util.Comparator.comparing(ReportFile::getCreatedAt, java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder())).reversed())
+                .map(file -> ReportFileResponse.builder()
+                        .id(file.getId())
+                        .fileUrl(file.getFileUrl())
+                        .fileType(file.getFileType())
+                        .build())
+                .toList();
+
         return StolenReportSummaryResponse.builder()
                 .reportId(report.getId())
                 .serialNumber(report.getSerialNumber())
@@ -260,6 +270,7 @@ public class VerificationServiceImpl implements VerificationService {
                 .ownerName(victim == null ? null : victim.getFullName())
                 .ownerEmail(victim == null ? null : victim.getEmail())
                 .ownerPhoneNumber(victim == null ? null : victim.getPhoneNumber())
+                .files(files)
                 .build();
     }
 
@@ -275,9 +286,14 @@ public class VerificationServiceImpl implements VerificationService {
         }
 
         User victim = report.getUser();
-        ReportFile evidence = report.getFiles() == null || report.getFiles().isEmpty()
-                ? null
-                : report.getFiles().get(0);
+        java.util.List<ReportFileResponse> files = report.getFiles().stream()
+                .sorted(java.util.Comparator.comparing(ReportFile::getCreatedAt, java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder())).reversed())
+                .map(file -> ReportFileResponse.builder()
+                        .id(file.getId())
+                        .fileUrl(file.getFileUrl())
+                        .fileType(file.getFileType())
+                        .build())
+                .toList();
 
         return StolenMatchResponse.builder()
                 .searchedSerial(log.getSearchedSerial())
@@ -289,10 +305,7 @@ public class VerificationServiceImpl implements VerificationService {
                 .victimName(victim == null ? null : victim.getFullName())
                 .victimEmail(victim == null ? null : victim.getEmail())
                 .victimPhoneNumber(victim == null ? null : victim.getPhoneNumber())
-                .evidenceFileUrl(evidence == null ? null : evidence.getFileUrl())
-                .evidenceFileType(evidence == null || evidence.getFileType() == null
-                        ? null
-                        : evidence.getFileType().name())
+                .files(files)
                 .build();
     }
 }

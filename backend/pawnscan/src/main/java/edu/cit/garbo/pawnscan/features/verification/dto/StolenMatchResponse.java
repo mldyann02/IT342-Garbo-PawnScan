@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import edu.cit.garbo.pawnscan.features.reports.dto.ReportFileResponse;
 
 @Getter
 @Setter
@@ -24,8 +26,7 @@ public class StolenMatchResponse {
     private String victimName;
     private String victimEmail;
     private String victimPhoneNumber;
-    private String evidenceFileUrl;
-    private String evidenceFileType;
+    private List<ReportFileResponse> files;
 }
 
 
