@@ -11,6 +11,7 @@ import {
   ReportAdmin, 
   BusinessProfileAdmin,
   updateReportStatus,
+  rejectBusiness,
   verifyBusiness
 } from "@/features/admin/lib/admin";
 import Link from "next/link";
@@ -29,8 +30,10 @@ export default function AdminDashboardPage() {
   // Modal states
   const [selectedReport, setSelectedReport] = useState<ReportAdmin | null>(null);
   const [confirmReportAction, setConfirmReportAction] = useState<{ id: number; status: "APPROVED" | "REJECTED" } | null>(null);
+  const [reportRejectionReason, setReportRejectionReason] = useState("");
   const [selectedBusiness, setSelectedBusiness] = useState<BusinessProfileAdmin | null>(null);
-  const [confirmVerifyId, setConfirmVerifyId] = useState<number | null>(null);
+  const [confirmBusinessAction, setConfirmBusinessAction] = useState<{ id: number; action: "APPROVE" | "REJECT" } | null>(null);
+  const [businessRejectionReason, setBusinessRejectionReason] = useState("");
   const [actionLoading, setActionLoading] = useState<number | null>(null);
 
   useEffect(() => {
@@ -55,7 +58,7 @@ export default function AdminDashboardPage() {
       ]);
       setStats(statsData);
       setRecentReports(reportsData.slice(0, 3));
-      setRecentBusinesses(businessesData.filter(b => !b.isVerified).slice(0, 3));
+      setRecentBusinesses(businessesData.filter(b => !b.isVerified && !b.isRejected).slice(0, 3));
     } catch (error) {
       console.error(error);
     } finally {
@@ -64,11 +67,18 @@ export default function AdminDashboardPage() {
   }
 
   async function handleReportStatusChange(id: number, status: "APPROVED" | "REJECTED") {
+    const trimmedReason = reportRejectionReason.trim();
+    if (status === "REJECTED" && !trimmedReason) {
+      return;
+    }
+
     setActionLoading(id);
     try {
-      await updateReportStatus(id, status);
+      await updateReportStatus(id, status, status === "REJECTED" ? trimmedReason : undefined);
       setRecentReports((prev) => prev.filter((r) => r.id !== id));
       setSelectedReport(null);
+      setConfirmReportAction(null);
+      setReportRejectionReason("");
       // Optional: Refresh stats
       fetchAdminStats().then(setStats).catch(console.error);
     } catch (error) {
@@ -85,11 +95,34 @@ export default function AdminDashboardPage() {
       await verifyBusiness(id);
       setRecentBusinesses((prev) => prev.filter(b => b.userId !== id));
       setSelectedBusiness(null);
+      setConfirmBusinessAction(null);
       // Optional: Refresh stats
       fetchAdminStats().then(setStats).catch(console.error);
     } catch (error) {
       console.error(error);
       alert("Failed to verify business");
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
+  async function handleBusinessReject(id: number) {
+    const trimmedReason = businessRejectionReason.trim();
+    if (!trimmedReason) {
+      return;
+    }
+
+    setActionLoading(id);
+    try {
+      await rejectBusiness(id, trimmedReason);
+      setRecentBusinesses((prev) => prev.filter(b => b.userId !== id));
+      setSelectedBusiness(null);
+      setConfirmBusinessAction(null);
+      setBusinessRejectionReason("");
+      fetchAdminStats().then(setStats).catch(console.error);
+    } catch (error) {
+      console.error(error);
+      alert("Failed to reject business");
     } finally {
       setActionLoading(null);
     }
@@ -309,17 +342,39 @@ export default function AdminDashboardPage() {
         {/* Report Confirmation Modal */}
         <Modal
           isOpen={!!confirmReportAction}
-          onClose={() => setConfirmReportAction(null)}
+          onClose={() => {
+            setConfirmReportAction(null);
+            setReportRejectionReason("");
+          }}
           title="Confirm Action"
-          maxWidth="max-w-sm"
+          maxWidth="max-w-md"
         >
           <div className="space-y-6">
             <p className="text-sm text-slate-300">
               Are you sure you want to <strong className={confirmReportAction?.status === "APPROVED" ? "text-emerald-400" : "text-red-400"}>{confirmReportAction?.status === "APPROVED" ? "approve" : "reject"}</strong> this report? This action cannot be undone.
             </p>
+            {confirmReportAction?.status === "REJECTED" && (
+              <div>
+                <label htmlFor="dashboard-report-rejection-reason" className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  Rejection reason
+                </label>
+                <textarea
+                  id="dashboard-report-rejection-reason"
+                  value={reportRejectionReason}
+                  onChange={(event) => setReportRejectionReason(event.target.value)}
+                  disabled={actionLoading !== null}
+                  rows={4}
+                  className="w-full resize-none rounded-xl border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-200 outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20 disabled:opacity-50"
+                  placeholder="Explain why this report is being rejected..."
+                />
+              </div>
+            )}
             <div className="flex gap-3">
               <button
-                onClick={() => setConfirmReportAction(null)}
+                onClick={() => {
+                  setConfirmReportAction(null);
+                  setReportRejectionReason("");
+                }}
                 disabled={actionLoading !== null}
                 className="flex-1 rounded-xl bg-slate-800 px-4 py-2.5 text-sm font-semibold text-slate-300 hover:bg-slate-700 active:scale-95 transition-all border border-slate-700 disabled:opacity-50"
               >
@@ -327,7 +382,7 @@ export default function AdminDashboardPage() {
               </button>
               <button
                 onClick={() => confirmReportAction && handleReportStatusChange(confirmReportAction.id, confirmReportAction.status)}
-                disabled={actionLoading !== null}
+                disabled={actionLoading !== null || (confirmReportAction?.status === "REJECTED" && !reportRejectionReason.trim())}
                 className={`flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-lg active:scale-95 transition-all disabled:opacity-50 ${
                   confirmReportAction?.status === "APPROVED" 
                     ? "bg-emerald-600 hover:bg-emerald-500 shadow-emerald-900/20" 
@@ -342,7 +397,7 @@ export default function AdminDashboardPage() {
 
         {/* Business Details Modal */}
         <Modal
-          isOpen={!!selectedBusiness && !confirmVerifyId}
+          isOpen={!!selectedBusiness && !confirmBusinessAction}
           onClose={() => setSelectedBusiness(null)}
           title="Business Details"
         >
@@ -380,9 +435,16 @@ export default function AdminDashboardPage() {
                  <p className="text-sm text-slate-300 leading-relaxed">{selectedBusiness.businessAddress}</p>
               </div>
 
-              <div className="pt-4 mt-6 border-t border-slate-700/50 flex justify-end">
+              <div className="pt-4 mt-6 border-t border-slate-700/50 flex flex-col gap-3 sm:flex-row sm:justify-end">
                 <button
-                  onClick={() => setConfirmVerifyId(selectedBusiness.userId)}
+                  onClick={() => setConfirmBusinessAction({ id: selectedBusiness.userId, action: "REJECT" })}
+                  disabled={actionLoading !== null}
+                  className="rounded-xl bg-red-500/20 px-6 py-2.5 text-sm font-semibold text-red-400 transition-all hover:bg-red-500/30 active:scale-95 disabled:opacity-50 border border-red-500/30"
+                >
+                  Reject Business
+                </button>
+                <button
+                  onClick={() => setConfirmBusinessAction({ id: selectedBusiness.userId, action: "APPROVE" })}
                   disabled={actionLoading !== null}
                   className="rounded-xl bg-brand px-6 py-2.5 text-sm font-semibold text-slate-900 shadow-lg shadow-brand/20 transition-all hover:bg-brand/80 active:scale-95 disabled:opacity-50 flex items-center gap-2"
                 >
@@ -395,18 +457,42 @@ export default function AdminDashboardPage() {
 
         {/* Business Confirmation Modal */}
         <Modal
-          isOpen={!!confirmVerifyId}
-          onClose={() => setConfirmVerifyId(null)}
-          title="Confirm Verification"
-          maxWidth="max-w-sm"
+          isOpen={!!confirmBusinessAction}
+          onClose={() => {
+            setConfirmBusinessAction(null);
+            setBusinessRejectionReason("");
+          }}
+          title={confirmBusinessAction?.action === "REJECT" ? "Confirm Rejection" : "Confirm Verification"}
+          maxWidth="max-w-md"
         >
           <div className="space-y-6">
             <p className="text-sm text-slate-300">
-              Are you sure you want to verify and grant platform access to this business?
+              {confirmBusinessAction?.action === "REJECT"
+                ? "Are you sure you want to reject this business account? This action cannot be undone."
+                : "Are you sure you want to verify and grant platform access to this business?"}
             </p>
+            {confirmBusinessAction?.action === "REJECT" && (
+              <div>
+                <label htmlFor="dashboard-business-rejection-reason" className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  Rejection reason
+                </label>
+                <textarea
+                  id="dashboard-business-rejection-reason"
+                  value={businessRejectionReason}
+                  onChange={(event) => setBusinessRejectionReason(event.target.value)}
+                  disabled={actionLoading !== null}
+                  rows={4}
+                  className="w-full resize-none rounded-xl border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-200 outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20 disabled:opacity-50"
+                  placeholder="Explain why this business account is being rejected..."
+                />
+              </div>
+            )}
             <div className="flex gap-3">
               <button
-                onClick={() => setConfirmVerifyId(null)}
+                onClick={() => {
+                  setConfirmBusinessAction(null);
+                  setBusinessRejectionReason("");
+                }}
                 disabled={actionLoading !== null}
                 className="flex-1 rounded-xl bg-slate-800 px-4 py-2.5 text-sm font-semibold text-slate-300 hover:bg-slate-700 active:scale-95 transition-all border border-slate-700 disabled:opacity-50"
               >
@@ -414,15 +500,20 @@ export default function AdminDashboardPage() {
               </button>
               <button
                 onClick={() => {
-                  if (confirmVerifyId) {
-                    handleBusinessVerify(confirmVerifyId);
-                    setConfirmVerifyId(null);
+                  if (confirmBusinessAction?.action === "APPROVE") {
+                    handleBusinessVerify(confirmBusinessAction.id);
+                  } else if (confirmBusinessAction?.action === "REJECT") {
+                    handleBusinessReject(confirmBusinessAction.id);
                   }
                 }}
-                disabled={actionLoading !== null}
-                className="flex-1 rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-lg shadow-brand/20 active:scale-95 transition-all hover:bg-brand/80 disabled:opacity-50"
+                disabled={actionLoading !== null || (confirmBusinessAction?.action === "REJECT" && !businessRejectionReason.trim())}
+                className={`flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold shadow-lg active:scale-95 transition-all disabled:opacity-50 ${
+                  confirmBusinessAction?.action === "REJECT"
+                    ? "bg-red-600 text-white hover:bg-red-500 shadow-red-900/20"
+                    : "bg-brand text-slate-900 hover:bg-brand/80 shadow-brand/20"
+                }`}
               >
-                {actionLoading !== null ? "Verifying..." : "Confirm"}
+                {actionLoading !== null ? "Processing..." : "Confirm"}
               </button>
             </div>
           </div>

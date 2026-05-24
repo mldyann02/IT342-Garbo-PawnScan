@@ -2,6 +2,7 @@ package edu.cit.garbo.pawnscan.features.admin;
 
 import edu.cit.garbo.pawnscan.features.admin.dto.AdminStatsResponse;
 import edu.cit.garbo.pawnscan.features.admin.dto.BusinessProfileAdminResponse;
+import edu.cit.garbo.pawnscan.features.admin.dto.RejectBusinessRequest;
 import edu.cit.garbo.pawnscan.features.admin.dto.ReportAdminResponse;
 import edu.cit.garbo.pawnscan.features.admin.dto.UpdateReportStatusRequest;
 import lombok.RequiredArgsConstructor;
@@ -34,7 +35,7 @@ public class AdminController {
             @PathVariable Long id,
             @RequestBody UpdateReportStatusRequest request
     ) {
-        return ResponseEntity.ok(adminService.updateReportStatus(id, request.getStatus()));
+        return ResponseEntity.ok(adminService.updateReportStatus(id, request.getStatus(), request.getRejectionReason()));
     }
 
     @GetMapping("/businesses/verify")
@@ -50,6 +51,14 @@ public class AdminController {
     @PatchMapping("/businesses/{id}/verify")
     public ResponseEntity<BusinessProfileAdminResponse> verifyBusiness(@PathVariable Long id) {
         return ResponseEntity.ok(adminService.verifyBusiness(id));
+    }
+
+    @PatchMapping("/businesses/{id}/reject")
+    public ResponseEntity<BusinessProfileAdminResponse> rejectBusiness(
+            @PathVariable Long id,
+            @RequestBody RejectBusinessRequest request
+    ) {
+        return ResponseEntity.ok(adminService.rejectBusiness(id, request.getRejectionReason()));
     }
 
     @GetMapping("/stats")

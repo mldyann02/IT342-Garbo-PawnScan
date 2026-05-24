@@ -16,6 +16,8 @@ public class BusinessProfileSummaryResponse {
     private Long userId;
     private String businessName;
     private boolean isVerified;
+    private boolean isRejected;
+    private String rejectionReason;
 }
 
 

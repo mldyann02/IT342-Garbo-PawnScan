@@ -14,6 +14,7 @@ export type Report = {
   itemModel: string;
   description: string;
   status?: "PENDING" | "APPROVED" | "REJECTED";
+  rejectionReason?: string | null;
   createdAt: string;
   updatedAt?: string;
   files: ReportFile[];
