@@ -172,7 +172,7 @@ export default function UserDashboardHeader() {
                 type="button"
                 onClick={() => {
                   setOpenDropdown(null);
-                  router.push("/dashboard");
+                  router.push("/profile");
                 }}
                 className="w-full px-4 py-3 text-left text-sm text-slate-300 transition-all duration-200 ease-out hover:bg-slate-800/50 hover:text-slate-100 active:scale-[0.99]"
               >
