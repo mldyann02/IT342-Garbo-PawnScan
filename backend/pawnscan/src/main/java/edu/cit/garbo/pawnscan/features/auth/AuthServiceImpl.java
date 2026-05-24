@@ -5,6 +5,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import edu.cit.garbo.pawnscan.features.auth.dto.AuthResponse;
 import edu.cit.garbo.pawnscan.features.auth.dto.GoogleAuthConfigResponse;
 import edu.cit.garbo.pawnscan.features.auth.dto.GoogleAuthRequest;
+import edu.cit.garbo.pawnscan.features.auth.dto.CompleteProfileRequest;
 import edu.cit.garbo.pawnscan.features.auth.dto.LoginRequest;
 import edu.cit.garbo.pawnscan.features.auth.dto.RegisterRequest;
 import edu.cit.garbo.pawnscan.features.auth.dto.UserProfileResponse;
@@ -19,6 +20,7 @@ import edu.cit.garbo.pawnscan.features.businessprofile.dto.BusinessProfileSummar
 import edu.cit.garbo.pawnscan.features.businessprofile.exception.InvalidBusinessProfileException;
 import edu.cit.garbo.pawnscan.shared.email.EmailService;
 import edu.cit.garbo.pawnscan.shared.security.JwtService;
+import edu.cit.garbo.pawnscan.shared.user.RegistrationStatus;
 import edu.cit.garbo.pawnscan.shared.user.User;
 import edu.cit.garbo.pawnscan.shared.user.UserRole;
 import edu.cit.garbo.pawnscan.shared.user.UserRepository;
@@ -88,6 +90,7 @@ public class AuthServiceImpl implements AuthService {
                 .email(savedUser.getEmail())
                 .fullName(savedUser.getFullName())
                 .role(savedUser.getRole().name())
+                .registrationStatus(savedUser.getRegistrationStatus())
                 .businessProfile(businessProfileSummary.orElse(null))
                 .message("User registered successfully")
                 .build();
@@ -147,6 +150,7 @@ public class AuthServiceImpl implements AuthService {
                 .email(user.getEmail())
                 .fullName(user.getFullName())
                 .role(user.getRole().name())
+                .registrationStatus(user.getRegistrationStatus())
                 .token(token)
                 .businessProfile(businessProfileSummary.orElse(null))
                 .message("Login successful")
@@ -179,14 +183,27 @@ public class AuthServiceImpl implements AuthService {
                             .passwordHash(passwordEncoder.encode(generateFallbackCredential()))
                             .oauthProvider(GOOGLE_PROVIDER)
                             .oauthSubject(googleSubject)
-                            .role(UserRole.USER)
+                            .role(request.getRole() != null ? request.getRole() : UserRole.USER)
+                            .registrationStatus(RegistrationStatus.INCOMPLETE)
                             .build());
                 });
 
-        if (!created[0] && shouldLinkGoogleIdentity(user, googleSubject)) {
-            user.setOauthProvider(GOOGLE_PROVIDER);
-            user.setOauthSubject(googleSubject);
-            user = userRepository.save(user);
+        if (!created[0]) {
+            boolean updated = false;
+            if (shouldLinkGoogleIdentity(user, googleSubject)) {
+                user.setOauthProvider(GOOGLE_PROVIDER);
+                user.setOauthSubject(googleSubject);
+                updated = true;
+            }
+            if (user.getRegistrationStatus() == RegistrationStatus.INCOMPLETE 
+                    && request.getRole() != null 
+                    && user.getRole() != request.getRole()) {
+                user.setRole(request.getRole());
+                updated = true;
+            }
+            if (updated) {
+                user = userRepository.save(user);
+            }
         }
 
         if (created[0]) {
@@ -260,6 +277,7 @@ public class AuthServiceImpl implements AuthService {
                 .email(user.getEmail())
                 .fullName(user.getFullName())
                 .role(user.getRole().name())
+                .registrationStatus(user.getRegistrationStatus())
                 .businessProfile(businessProfileSummary.orElse(null))
                 .message("User details retrieved successfully")
                 .build();
@@ -305,6 +323,39 @@ public class AuthServiceImpl implements AuthService {
         return toProfileResponse(savedUser, "Profile updated successfully");
     }
 
+    @Override
+    @Transactional
+    public AuthResponse completeProfile(String email, CompleteProfileRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new InvalidCredentialsException("User not found"));
+
+        if (user.getRegistrationStatus() == RegistrationStatus.ACTIVE) {
+            throw new InvalidBusinessProfileException("Profile is already complete");
+        }
+
+        user.setPhoneNumber(normalizePhilippinePhone(request.getPhoneNumber()));
+        
+        if (user.getRole() == UserRole.BUSINESS) {
+            if (isBlank(request.getBusinessName())
+                    || isBlank(request.getBusinessAddress())
+                    || isBlank(request.getPermitNumber())) {
+                throw new InvalidBusinessProfileException(
+                        "Business name, business address, and permit number are required for BUSINESS users");
+            }
+
+            businessProfileService.createProfileForRegistration(user, BusinessProfileRequest.builder()
+                    .businessName(request.getBusinessName())
+                    .businessAddress(request.getBusinessAddress())
+                    .permitNumber(request.getPermitNumber())
+                    .build());
+        }
+
+        user.setRegistrationStatus(RegistrationStatus.ACTIVE);
+        User savedUser = userRepository.save(user);
+
+        return buildAuthResponse(savedUser, "Profile completed successfully");
+    }
+
     private AuthResponse buildAuthResponse(User user, String message) {
         Optional<BusinessProfileSummaryResponse> businessProfileSummary = user.getRole() == UserRole.BUSINESS
                 ? businessProfileService.getSummaryByUserId(user.getUserId())
@@ -317,6 +368,7 @@ public class AuthServiceImpl implements AuthService {
                 .email(user.getEmail())
                 .fullName(user.getFullName())
                 .role(user.getRole().name())
+                .registrationStatus(user.getRegistrationStatus())
                 .token(token)
                 .businessProfile(businessProfileSummary.orElse(null))
                 .message(message)
@@ -335,6 +387,7 @@ public class AuthServiceImpl implements AuthService {
                 .fullName(user.getFullName())
                 .phoneNumber(user.getPhoneNumber())
                 .role(user.getRole().name())
+                .registrationStatus(user.getRegistrationStatus())
                 .createdAt(user.getCreatedAt())
                 .businessProfile(businessProfile)
                 .message(message)

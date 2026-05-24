@@ -7,7 +7,7 @@ export default function LandingPage() {
   const router = useRouter();
 
   const handleReportClick = () => {
-    router.push("/register?role=INDIVIDUAL");
+    router.push("/register?role=USER");
   };
 
   const handleBusinessClick = () => {

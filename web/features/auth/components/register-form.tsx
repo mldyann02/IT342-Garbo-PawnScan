@@ -34,7 +34,7 @@ const initialValues: RegistrationFormValues = {
   businessName: "",
   businessAddress: "",
   permitNumber: "",
-  role: "INDIVIDUAL",
+  role: "USER",
 };
 
 function EyeIcon({ open }: { open: boolean }) {
@@ -74,18 +74,18 @@ function EyeIcon({ open }: { open: boolean }) {
 export default function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [activeRole, setActiveRole] = useState<RegistrationRole>("INDIVIDUAL");
+  const [activeRole, setActiveRole] = useState<RegistrationRole>("USER");
   const [individualValues, setIndividualValues] = useState<RegistrationFormValues>({
     ...initialValues,
-    role: "INDIVIDUAL",
+    role: "USER",
   });
   const [businessValues, setBusinessValues] = useState<RegistrationFormValues>({
     ...initialValues,
     role: "BUSINESS",
   });
 
-  const values = activeRole === "INDIVIDUAL" ? individualValues : businessValues;
-  const setValues = activeRole === "INDIVIDUAL" ? setIndividualValues : setBusinessValues;
+  const values = activeRole === "USER" ? individualValues : businessValues;
+  const setValues = activeRole === "USER" ? setIndividualValues : setBusinessValues;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] =
@@ -99,7 +99,7 @@ export default function RegisterForm() {
   // Set role from query parameter on mount
   useEffect(() => {
     const roleParam = searchParams.get("role");
-    if (roleParam === "BUSINESS" || roleParam === "INDIVIDUAL") {
+    if (roleParam === "BUSINESS" || roleParam === "USER") {
       setActiveRole(roleParam as RegistrationRole);
       setSubmitAttempted(false);
     }
@@ -313,13 +313,13 @@ export default function RegisterForm() {
                   <button
                     type="button"
                     aria-label="Select Individual account"
-                    aria-pressed={activeRole === "INDIVIDUAL"}
+                    aria-pressed={activeRole === "USER"}
                     onClick={() => {
-                      setActiveRole("INDIVIDUAL");
+                      setActiveRole("USER");
                       setSubmitAttempted(false);
                     }}
                     className={`relative z-10 flex min-h-12 items-center justify-center rounded-[8px] px-4 text-sm font-medium transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${
-                      activeRole === "INDIVIDUAL"
+                      activeRole === "USER"
                         ? "text-slate-900"
                         : "text-slate-300 hover:text-slate-100"
                     }`}
@@ -638,7 +638,7 @@ export default function RegisterForm() {
             </div>
 
             <div className="mt-6">
-              <GoogleAuthButton mode="register" />
+              <GoogleAuthButton mode="register" role={activeRole} />
             </div>
 
             <p className="mt-6 text-sm text-slate-300 text-center">

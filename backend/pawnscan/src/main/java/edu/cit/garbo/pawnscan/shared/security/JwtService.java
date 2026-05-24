@@ -32,6 +32,7 @@ public class JwtService {
                 .setSubject(user.getEmail())
                 .claim("user_id", user.getUserId())
                 .claim("role", user.getRole().name())
+                .claim("registration_status", user.getRegistrationStatus().name())
                 .claim("fullName", user.getFullName())
                 .setIssuedAt(now)
                 .setExpiration(expiry)

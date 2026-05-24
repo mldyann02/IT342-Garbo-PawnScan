@@ -13,6 +13,7 @@ type ApiResponse = {
   access_token?: string;
   email?: string;
   role?: string;
+  registrationStatus?: string;
   user?: {
     email?: string;
     role?: string;
@@ -59,6 +60,7 @@ const GOOGLE_SCRIPT_ID = "google-identity-services";
 
 type GoogleAuthButtonProps = {
   mode: "login" | "register";
+  role?: string;
 };
 
 function GoogleIcon() {
@@ -84,11 +86,16 @@ function GoogleIcon() {
   );
 }
 
-export default function GoogleAuthButton({ mode }: GoogleAuthButtonProps) {
+export default function GoogleAuthButton({ mode, role: selectedRole }: GoogleAuthButtonProps) {
   const router = useRouter();
   const buttonRef = useRef<HTMLDivElement | null>(null);
   const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
   const [isReady, setIsReady] = useState(false);
+  const roleRef = useRef(selectedRole);
+
+  useEffect(() => {
+    roleRef.current = selectedRole;
+  }, [selectedRole]);
 
   useEffect(() => {
     let isMounted = true;
@@ -192,6 +199,7 @@ export default function GoogleAuthButton({ mode }: GoogleAuthButtonProps) {
         },
         body: JSON.stringify({
           token: response.credential,
+          role: roleRef.current,
         }),
       });
 
@@ -231,8 +239,15 @@ export default function GoogleAuthButton({ mode }: GoogleAuthButtonProps) {
         text: data.message || "Google authentication successful. Redirecting...",
       });
 
-      const redirectUrl =
-        role === "ADMIN" ? "/admin/dashboard" : role === "BUSINESS" ? "/business" : "/dashboard";
+      const registrationStatus = data.registrationStatus;
+      let redirectUrl;
+      
+      if (registrationStatus === 'INCOMPLETE') {
+        redirectUrl = "/complete-profile";
+      } else {
+        redirectUrl = role === "ADMIN" ? "/admin/dashboard" : role === "BUSINESS" ? "/business" : "/dashboard";
+      }
+      
       router.push(redirectUrl);
     } catch {
       setMessage({

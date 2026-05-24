@@ -6,6 +6,7 @@ import edu.cit.garbo.pawnscan.features.auth.dto.GoogleAuthRequest;
 import edu.cit.garbo.pawnscan.features.auth.dto.LoginRequest;
 import edu.cit.garbo.pawnscan.features.auth.dto.RegisterRequest;
 import edu.cit.garbo.pawnscan.features.auth.dto.UserProfileResponse;
+import edu.cit.garbo.pawnscan.features.auth.dto.CompleteProfileRequest;
 import edu.cit.garbo.pawnscan.features.auth.dto.UserProfileUpdateRequest;
 
 public interface AuthService {
@@ -23,6 +24,8 @@ public interface AuthService {
     UserProfileResponse getProfile(String email);
 
     UserProfileResponse updateProfile(String email, UserProfileUpdateRequest request);
+
+    AuthResponse completeProfile(String email, CompleteProfileRequest request);
 }
 
 

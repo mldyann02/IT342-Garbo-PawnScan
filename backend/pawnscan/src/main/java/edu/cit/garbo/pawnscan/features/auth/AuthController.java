@@ -5,6 +5,7 @@ import edu.cit.garbo.pawnscan.features.auth.dto.GoogleAuthConfigResponse;
 import edu.cit.garbo.pawnscan.features.auth.dto.GoogleAuthRequest;
 import edu.cit.garbo.pawnscan.features.auth.dto.LoginRequest;
 import edu.cit.garbo.pawnscan.features.auth.dto.RegisterRequest;
+import edu.cit.garbo.pawnscan.features.auth.dto.CompleteProfileRequest;
 import edu.cit.garbo.pawnscan.features.auth.dto.UserProfileResponse;
 import edu.cit.garbo.pawnscan.features.auth.dto.UserProfileUpdateRequest;
 import edu.cit.garbo.pawnscan.features.auth.AuthService;
@@ -75,6 +76,17 @@ public class AuthController {
         }
 
         return ResponseEntity.ok(authService.updateProfile(authentication.getName(), request));
+    }
+
+    @PutMapping("/complete-profile")
+    public ResponseEntity<AuthResponse> completeProfile(
+            org.springframework.security.core.Authentication authentication,
+            @Valid @RequestBody CompleteProfileRequest request) {
+        if (authentication == null || authentication.getName() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        return ResponseEntity.ok(authService.completeProfile(authentication.getName(), request));
     }
 }
 

@@ -31,6 +31,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     Claims claims = jwtService.parseClaims(token);
                     String username = claims.getSubject();
                     String role = claims.get("role", String.class);
+                    String registrationStatus = claims.get("registration_status", String.class);
+
+                    if ("INCOMPLETE".equals(registrationStatus)) {
+                        String path = request.getRequestURI();
+                        if (!path.startsWith("/api/auth/") && !path.startsWith("/uploads/")) {
+                            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Please complete your profile first.");
+                            return;
+                        }
+                    }
 
                     UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
                             username,
