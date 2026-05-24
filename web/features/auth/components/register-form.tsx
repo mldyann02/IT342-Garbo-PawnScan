@@ -30,7 +30,7 @@ const initialValues: RegistrationFormValues = {
   password: "",
   confirmPassword: "",
   fullName: "",
-  contactNumber: "",
+  contactNumber: "+639",
   businessName: "",
   businessAddress: "",
   permitNumber: "",
@@ -74,7 +74,18 @@ function EyeIcon({ open }: { open: boolean }) {
 export default function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [values, setValues] = useState<RegistrationFormValues>(initialValues);
+  const [activeRole, setActiveRole] = useState<RegistrationRole>("INDIVIDUAL");
+  const [individualValues, setIndividualValues] = useState<RegistrationFormValues>({
+    ...initialValues,
+    role: "INDIVIDUAL",
+  });
+  const [businessValues, setBusinessValues] = useState<RegistrationFormValues>({
+    ...initialValues,
+    role: "BUSINESS",
+  });
+
+  const values = activeRole === "INDIVIDUAL" ? individualValues : businessValues;
+  const setValues = activeRole === "INDIVIDUAL" ? setIndividualValues : setBusinessValues;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] =
@@ -89,10 +100,8 @@ export default function RegisterForm() {
   useEffect(() => {
     const roleParam = searchParams.get("role");
     if (roleParam === "BUSINESS" || roleParam === "INDIVIDUAL") {
-      setValues((current) => ({
-        ...current,
-        role: roleParam as RegistrationRole,
-      }));
+      setActiveRole(roleParam as RegistrationRole);
+      setSubmitAttempted(false);
     }
   }, [searchParams]);
 
@@ -106,22 +115,11 @@ export default function RegisterForm() {
   ) {
     if (key === "contactNumber") {
       let v = String(value || "");
-      // Allow only digits and a single leading +
-      v = v.replace(/[^\d+]/g, "");
-      if ((v.match(/\+/g) || []).length > 1) {
-        v = v.replace(/\+/g, (m, i) => (i === v.indexOf("+") ? "+" : ""));
+      if (!v.startsWith("+639")) {
+        v = "+639";
       }
-
-      // If there's a +, treat as international format (+63##########) -> max 13 chars
-      if (v.startsWith("+")) {
-        v = v.slice(0, 13);
-      } else if (v.startsWith("0")) {
-        // Local format 0########## -> max 11 chars
-        v = v.slice(0, 11);
-      } else {
-        // Otherwise cap at 13 to prevent overly long input (covers pasted +63...)
-        v = v.slice(0, 13);
-      }
+      const digits = v.slice(4).replace(/\D/g, "");
+      v = "+639" + digits.slice(0, 9);
 
       setValues((current) => ({
         ...current,
@@ -304,9 +302,9 @@ export default function RegisterForm() {
                   <span
                     aria-hidden="true"
                     className={`absolute bottom-1 top-1 z-0 w-[calc(50%-4px)] rounded-[8px] shadow-sm transition-transform duration-300 ${
-                      values.role === "BUSINESS" ? "bg-brand" : "bg-brand"
+                      activeRole === "BUSINESS" ? "bg-brand" : "bg-brand"
                     } ${
-                      values.role === "BUSINESS"
+                      activeRole === "BUSINESS"
                         ? "translate-x-[calc(100%+4px)]"
                         : "translate-x-0"
                     }`}
@@ -315,10 +313,13 @@ export default function RegisterForm() {
                   <button
                     type="button"
                     aria-label="Select Individual account"
-                    aria-pressed={values.role === "INDIVIDUAL"}
-                    onClick={() => updateField("role", "INDIVIDUAL")}
+                    aria-pressed={activeRole === "INDIVIDUAL"}
+                    onClick={() => {
+                      setActiveRole("INDIVIDUAL");
+                      setSubmitAttempted(false);
+                    }}
                     className={`relative z-10 flex min-h-12 items-center justify-center rounded-[8px] px-4 text-sm font-medium transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${
-                      values.role === "INDIVIDUAL"
+                      activeRole === "INDIVIDUAL"
                         ? "text-slate-900"
                         : "text-slate-300 hover:text-slate-100"
                     }`}
@@ -328,10 +329,13 @@ export default function RegisterForm() {
                   <button
                     type="button"
                     aria-label="Select Business account"
-                    aria-pressed={values.role === "BUSINESS"}
-                    onClick={() => updateField("role", "BUSINESS")}
+                    aria-pressed={activeRole === "BUSINESS"}
+                    onClick={() => {
+                      setActiveRole("BUSINESS");
+                      setSubmitAttempted(false);
+                    }}
                     className={`relative z-10 flex min-h-12 items-center justify-center rounded-[8px] px-4 text-sm font-medium transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${
-                      values.role === "BUSINESS"
+                      activeRole === "BUSINESS"
                         ? "text-slate-900"
                         : "text-slate-300 hover:text-slate-100"
                     }`}
@@ -350,6 +354,7 @@ export default function RegisterForm() {
                     Full Name
                   </label>
                   <input
+                    required
                     id="fullName"
                     aria-label="Full Name"
                     type="text"
@@ -360,7 +365,7 @@ export default function RegisterForm() {
                     className="min-h-12 w-full rounded-[10px] border border-border-muted bg-slate-900 px-3 py-2 text-slate-100 transition focus-visible:border-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
                     autoComplete="name"
                   />
-                  {(submitAttempted || values.fullName.length > 0) &&
+                  {submitAttempted &&
                     errors.fullName && (
                       <p className="mt-1 text-sm text-status-stolen">
                         {errors.fullName}
@@ -379,6 +384,7 @@ export default function RegisterForm() {
                       Business Name
                     </label>
                     <input
+                      required
                       id="businessName"
                       aria-label="Business Name"
                       type="text"
@@ -389,7 +395,7 @@ export default function RegisterForm() {
                       className="min-h-12 w-full rounded-[10px] border border-border-muted bg-slate-900 px-3 py-2 text-slate-100 transition focus-visible:border-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
                       autoComplete="organization"
                     />
-                    {(submitAttempted || values.businessName.length > 0) &&
+                    {submitAttempted &&
                       errors.businessName && (
                         <p className="mt-1 text-sm text-status-stolen">
                           {errors.businessName}
@@ -405,6 +411,7 @@ export default function RegisterForm() {
                       Business Address
                     </label>
                     <input
+                      required
                       id="businessAddress"
                       aria-label="Business Address"
                       type="text"
@@ -415,7 +422,7 @@ export default function RegisterForm() {
                       className="min-h-12 w-full rounded-[10px] border border-border-muted bg-slate-900 px-3 py-2 text-slate-100 transition focus-visible:border-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
                       autoComplete="street-address"
                     />
-                    {(submitAttempted || values.businessAddress.length > 0) &&
+                    {submitAttempted &&
                       errors.businessAddress && (
                         <p className="mt-1 text-sm text-status-stolen">
                           {errors.businessAddress}
@@ -431,6 +438,7 @@ export default function RegisterForm() {
                       Permit Number
                     </label>
                     <input
+                      required
                       id="permitNumber"
                       aria-label="Permit Number"
                       type="text"
@@ -440,7 +448,7 @@ export default function RegisterForm() {
                       }
                       className="min-h-12 w-full rounded-[10px] border border-border-muted bg-slate-900 px-3 py-2 text-slate-100 transition focus-visible:border-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
                     />
-                    {(submitAttempted || values.permitNumber.length > 0) &&
+                    {submitAttempted &&
                       errors.permitNumber && (
                         <p className="mt-1 text-sm text-status-stolen">
                           {errors.permitNumber}
@@ -458,6 +466,7 @@ export default function RegisterForm() {
                   Email Address
                 </label>
                 <input
+                  required
                   id="email"
                   aria-label="Email Address"
                   type="email"
@@ -466,7 +475,7 @@ export default function RegisterForm() {
                   className="min-h-12 w-full rounded-[10px] border border-border-muted bg-slate-900 px-3 py-2 text-slate-100 transition focus-visible:border-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
                   autoComplete="email"
                 />
-                {(submitAttempted || values.email.length > 0) &&
+                {submitAttempted &&
                   errors.email && (
                     <p className="mt-1 text-sm text-status-stolen">
                       {errors.email}
@@ -482,6 +491,7 @@ export default function RegisterForm() {
                   Contact Number
                 </label>
                 <input
+                  required
                   id="contactNumber"
                   aria-label="Contact Number"
                   type="tel"
@@ -494,23 +504,20 @@ export default function RegisterForm() {
                       (
                         e.clipboardData || (window as any).clipboardData
                       ).getData("text") || "";
-                    // sanitize pasted value same as typing
                     let v = text.replace(/[^\d+]/g, "");
-                    if (!v) {
-                      e.preventDefault();
-                      return;
-                    }
-                    if (v.startsWith("+")) v = v.slice(0, 13);
-                    else if (v.startsWith("0")) v = v.slice(0, 11);
-                    else v = v.slice(0, 13);
+                    if (v.startsWith("09")) v = "+63" + v.slice(1);
+                    else if (v.startsWith("639")) v = "+" + v;
+                    else if (!v.startsWith("+639")) v = "+639";
+                    const digits = v.slice(4).replace(/\D/g, "");
                     e.preventDefault();
-                    updateField("contactNumber", v);
+                    updateField("contactNumber", "+639" + digits.slice(0, 9));
                   }}
                   className="min-h-12 w-full rounded-[10px] border border-border-muted bg-slate-900 px-3 py-2 text-slate-100 transition focus-visible:border-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
                   autoComplete="tel"
                   placeholder="e.g. +639171234567"
+                  maxLength={13}
                 />
-                {(submitAttempted || values.contactNumber.length > 0) &&
+                {submitAttempted &&
                   errors.contactNumber && (
                     <p className="mt-1 text-sm text-status-stolen">
                       {errors.contactNumber}
@@ -527,6 +534,7 @@ export default function RegisterForm() {
                 </label>
                 <div className="flex gap-2">
                   <input
+                    required
                     id="password"
                     aria-label="Password"
                     type={isPasswordVisible ? "text" : "password"}
@@ -548,7 +556,7 @@ export default function RegisterForm() {
                     <EyeIcon open={isPasswordVisible} />
                   </button>
                 </div>
-                {(submitAttempted || values.password.length > 0) &&
+                {submitAttempted &&
                   errors.password && (
                     <p className="mt-1 text-sm text-status-stolen">
                       {errors.password}
@@ -565,6 +573,7 @@ export default function RegisterForm() {
                 </label>
                 <div className="flex gap-2">
                   <input
+                    required
                     id="confirmPassword"
                     aria-label="Confirm Password"
                     type={isConfirmPasswordVisible ? "text" : "password"}
@@ -590,7 +599,7 @@ export default function RegisterForm() {
                     <EyeIcon open={isConfirmPasswordVisible} />
                   </button>
                 </div>
-                {(submitAttempted || values.confirmPassword.length > 0) &&
+                {submitAttempted &&
                   errors.confirmPassword && (
                     <p className="mt-1 text-sm text-status-stolen">
                       {errors.confirmPassword}
@@ -615,7 +624,7 @@ export default function RegisterForm() {
               <button
                 type="submit"
                 aria-label="Register Account"
-                disabled={!canSubmit}
+                disabled={isSubmitting}
                 className="min-h-12 w-full rounded-[10px] bg-brand px-4 py-3 text-base font-semibold text-slate-950 transition hover:brightness-90 active:scale-95 active:brightness-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isSubmitting ? "Registering..." : "Register Account"}
