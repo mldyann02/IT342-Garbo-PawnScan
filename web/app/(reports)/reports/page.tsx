@@ -22,6 +22,14 @@ function formatDate(value: string): string {
   return parsed.toLocaleString();
 }
 
+type ReportStatusFilter = "ALL" | "APPROVED" | "PENDING" | "REJECTED";
+
+function resolveStatusFilter(value: string | null): ReportStatusFilter {
+  return value === "APPROVED" || value === "PENDING" || value === "REJECTED"
+    ? value
+    : "ALL";
+}
+
 function ReportsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -30,7 +38,9 @@ function ReportsPageContent() {
   const [activeTab, setActiveTab] = useState<"reports" | "matched">(
     () => searchParams.get("tab") === "matched" ? "matched" : "reports",
   );
-  const [statusFilter, setStatusFilter] = useState<"ALL" | "APPROVED" | "PENDING">("ALL");
+  const [statusFilter, setStatusFilter] = useState<ReportStatusFilter>(
+    () => resolveStatusFilter(searchParams.get("status")),
+  );
   const [isLoading, setIsLoading] = useState(() => !getCachedReports());
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [selectedReportId, setSelectedReportId] = useState<number | null>(null);
@@ -104,15 +114,14 @@ function ReportsPageContent() {
         const cached = getCachedReports();
         if (!cached) setIsLoading(true);
         
-        const [data, matchedData] = await Promise.all([
-          fetchReports(),
-          fetchMatchedReports(0, 50),
-        ]);
+        const data = await fetchReports();
+        const matchedData = await fetchMatchedReports(0, 50).catch(() => []);
         setReports(data);
         setMatchedReports(matchedData);
         
         const paramId = searchParams.get("reportId");
         const nextTab = searchParams.get("tab") === "matched" ? "matched" : "reports";
+        setStatusFilter(resolveStatusFilter(searchParams.get("status")));
         setActiveTab(nextTab);
 
         if (paramId && !isNaN(parseInt(paramId))) {
@@ -419,6 +428,13 @@ function ReportsPageContent() {
                       className={`flex-1 text-xs font-medium py-1.5 rounded-md transition-all ${statusFilter === "PENDING" ? "bg-amber-500/20 text-amber-300 shadow-sm" : "text-slate-400 hover:text-slate-300 hover:bg-slate-800/50"}`}
                     >
                       Pending
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setStatusFilter("REJECTED")}
+                      className={`flex-1 text-xs font-medium py-1.5 rounded-md transition-all ${statusFilter === "REJECTED" ? "bg-red-500/20 text-red-400 shadow-sm" : "text-slate-400 hover:text-slate-300 hover:bg-slate-800/50"}`}
+                    >
+                      Rejected
                     </button>
                   </div>
                 </div>

@@ -19,6 +19,29 @@ function formatNotificationDate(value: string): string {
   return parsed.toLocaleString();
 }
 
+function resolveNotificationTarget(notification: NotificationItem): string | null {
+  if (notification.targetUrl) {
+    return notification.targetUrl;
+  }
+
+  const title = notification.title.toLowerCase();
+  const message = notification.message.toLowerCase();
+
+  if (title.includes("stolen item match") || message.includes("matched")) {
+    return "/reports?tab=matched";
+  }
+
+  if (title.includes("report") || message.includes("report")) {
+    return "/reports";
+  }
+
+  if (title.includes("business") || message.includes("business account")) {
+    return "/business";
+  }
+
+  return null;
+}
+
 type NotificationMenuProps = {
   isOpen: boolean;
 };
@@ -105,6 +128,8 @@ export default function NotificationMenu({ isOpen }: NotificationMenuProps) {
   }
 
   async function handleNotificationClick(notification: NotificationItem) {
+    const targetUrl = resolveNotificationTarget(notification);
+
     if (!notification.read) {
       setNotifications((current) =>
         current.map((item) =>
@@ -113,15 +138,13 @@ export default function NotificationMenu({ isOpen }: NotificationMenuProps) {
       );
       setUnreadCount((current) => Math.max(current - 1, 0));
 
-      try {
-        await markNotificationRead(notification.notifId);
-      } catch {
+      markNotificationRead(notification.notifId).catch(() => {
         fetchUnreadNotificationCount().then(setUnreadCount).catch(() => {});
-      }
+      });
     }
 
-    if (notification.targetUrl) {
-      router.push(notification.targetUrl);
+    if (targetUrl) {
+      router.push(targetUrl);
     }
   }
 

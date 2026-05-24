@@ -80,6 +80,7 @@ public class AdminServiceImpl implements AdminService {
         
         profile.setIsVerified(true);
         BusinessProfile savedProfile = businessProfileRepository.save(profile);
+        notifyBusinessOwner(savedProfile);
         
         return toBusinessProfileAdminResponse(savedProfile);
     }
@@ -142,7 +143,24 @@ public class AdminServiceImpl implements AdminService {
                 owner,
                 "Report status updated",
                 itemModel + " has been marked " + status + ".",
-                "/reports?reportId=" + report.getId());
+                "/reports?status=" + report.getStatus().name() + "&reportId=" + report.getId());
+    }
+
+    private void notifyBusinessOwner(BusinessProfile profile) {
+        User owner = profile.getUser();
+        if (owner == null) {
+            return;
+        }
+
+        String businessName = profile.getBusinessName() == null || profile.getBusinessName().isBlank()
+                ? "Your business account"
+                : profile.getBusinessName();
+
+        notificationService.createNotification(
+                owner,
+                "Business account approved",
+                businessName + " has been approved by an administrator.",
+                "/business");
     }
 
     private BusinessProfileAdminResponse toBusinessProfileAdminResponse(BusinessProfile profile) {
