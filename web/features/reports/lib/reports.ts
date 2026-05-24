@@ -41,7 +41,7 @@ export type ReportPayload = {
   serialNumber: string;
   itemModel: string;
   description: string;
-  file?: File | null;
+  files?: File[];
 };
 
 type ApiErrorPayload = {
@@ -85,8 +85,10 @@ function buildFormData(payload: ReportPayload): FormData {
   formData.append("itemModel", payload.itemModel.trim());
   formData.append("description", payload.description.trim());
 
-  if (payload.file) {
-    formData.append("file", payload.file);
+  if (payload.files && payload.files.length > 0) {
+    payload.files.forEach(file => {
+      formData.append("files", file);
+    });
   }
 
   return formData;
