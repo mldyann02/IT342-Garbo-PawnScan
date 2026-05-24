@@ -7,9 +7,12 @@ import edu.cit.garbo.pawnscan.features.auth.dto.GoogleAuthConfigResponse;
 import edu.cit.garbo.pawnscan.features.auth.dto.GoogleAuthRequest;
 import edu.cit.garbo.pawnscan.features.auth.dto.LoginRequest;
 import edu.cit.garbo.pawnscan.features.auth.dto.RegisterRequest;
+import edu.cit.garbo.pawnscan.features.auth.dto.UserProfileResponse;
+import edu.cit.garbo.pawnscan.features.auth.dto.UserProfileUpdateRequest;
 import edu.cit.garbo.pawnscan.features.auth.exception.EmailAlreadyExistsException;
 import edu.cit.garbo.pawnscan.features.auth.exception.InvalidGoogleTokenException;
 import edu.cit.garbo.pawnscan.features.auth.exception.InvalidCredentialsException;
+import edu.cit.garbo.pawnscan.features.businessprofile.dto.BusinessProfileResponse;
 import edu.cit.garbo.pawnscan.features.businessprofile.BusinessProfileService;
 import edu.cit.garbo.pawnscan.features.businessprofile.dto.BusinessProfileRequest;
 import edu.cit.garbo.pawnscan.features.businessprofile.dto.BusinessProfileSummaryResponse;
@@ -262,6 +265,46 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
+    @Override
+    public UserProfileResponse getProfile(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new InvalidCredentialsException("User not found"));
+
+        return toProfileResponse(user, "Profile retrieved successfully");
+    }
+
+    @Override
+    @Transactional
+    public UserProfileResponse updateProfile(String email, UserProfileUpdateRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new InvalidCredentialsException("User not found"));
+
+        if (isBlank(request.getFullName())) {
+            throw new InvalidBusinessProfileException("Full name is required");
+        }
+
+        user.setFullName(request.getFullName().trim());
+        user.setPhoneNumber(normalizePhilippinePhone(request.getPhoneNumber()));
+        User savedUser = userRepository.save(user);
+
+        if (savedUser.getRole() == UserRole.BUSINESS) {
+            if (isBlank(request.getBusinessName())
+                    || isBlank(request.getBusinessAddress())
+                    || isBlank(request.getPermitNumber())) {
+                throw new InvalidBusinessProfileException(
+                        "Business name, business address, and permit number are required for BUSINESS users");
+            }
+
+            businessProfileService.updateProfile(savedUser.getUserId(), BusinessProfileRequest.builder()
+                    .businessName(request.getBusinessName())
+                    .businessAddress(request.getBusinessAddress())
+                    .permitNumber(request.getPermitNumber())
+                    .build(), savedUser.getUserId(), savedUser.getRole());
+        }
+
+        return toProfileResponse(savedUser, "Profile updated successfully");
+    }
+
     private AuthResponse buildAuthResponse(User user, String message) {
         Optional<BusinessProfileSummaryResponse> businessProfileSummary = user.getRole() == UserRole.BUSINESS
                 ? businessProfileService.getSummaryByUserId(user.getUserId())
@@ -276,6 +319,24 @@ public class AuthServiceImpl implements AuthService {
                 .role(user.getRole().name())
                 .token(token)
                 .businessProfile(businessProfileSummary.orElse(null))
+                .message(message)
+                .build();
+    }
+
+    private UserProfileResponse toProfileResponse(User user, String message) {
+        BusinessProfileResponse businessProfile = null;
+        if (user.getRole() == UserRole.BUSINESS) {
+            businessProfile = businessProfileService.getProfile(user.getUserId(), user.getUserId(), user.getRole());
+        }
+
+        return UserProfileResponse.builder()
+                .userId(user.getUserId())
+                .email(user.getEmail())
+                .fullName(user.getFullName())
+                .phoneNumber(user.getPhoneNumber())
+                .role(user.getRole().name())
+                .createdAt(user.getCreatedAt())
+                .businessProfile(businessProfile)
                 .message(message)
                 .build();
     }

@@ -173,11 +173,11 @@ export default function BusinessDashboardHeader() {
                 type="button"
                 onClick={() => {
                   setOpenDropdown(null);
-                  router.push("/business");
+                  router.push("/profile");
                 }}
                 className="w-full px-4 py-3 text-left text-sm text-slate-300 transition-all duration-200 ease-out hover:bg-slate-800/50 hover:text-slate-100 active:scale-[0.99]"
               >
-                My Business
+                My Profile
               </button>
               <button
                 type="button"
