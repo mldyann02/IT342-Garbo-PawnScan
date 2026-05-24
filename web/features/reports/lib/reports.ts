@@ -19,6 +19,20 @@ export type Report = {
   files: ReportFile[];
 };
 
+export type MatchedReport = {
+  matchId: number;
+  reportId: number;
+  serialNumber: string;
+  itemModel: string;
+  description: string;
+  status?: "PENDING" | "APPROVED" | "REJECTED";
+  reportCreatedAt: string;
+  matchedAt: string;
+  matchedByBusinessName?: string | null;
+  matchedByBusinessEmail?: string | null;
+  files: ReportFile[];
+};
+
 export type ReportPayload = {
   serialNumber: string;
   itemModel: string;
@@ -116,6 +130,20 @@ export async function fetchReports(force = false): Promise<Report[]> {
     reportsCachePromise = null;
     throw error;
   }
+}
+
+export async function fetchMatchedReports(page = 0, size = 20): Promise<MatchedReport[]> {
+  const response = await fetchWithTimeout(
+    `/api/reports/matched?page=${encodeURIComponent(String(page))}&size=${encodeURIComponent(String(size))}`,
+    {
+      method: "GET",
+      headers: {
+        ...getAuthHeader(),
+      },
+    },
+  );
+
+  return handleResponse<MatchedReport[]>(response);
 }
 
 async function fetchReportsFromApi(): Promise<Report[]> {

@@ -107,8 +107,9 @@ export default function VerifyItemPage() {
             Verify if an item is stolen
           </h1>
           <p className="mt-4 max-w-3xl text-sm text-slate-300 sm:text-base">
-            Enter a serial number to check PawnScan approved stolen records.
-            Every lookup is logged automatically to your business history.
+            Enter a serial number to check PawnScan approved stolen records and
+            Bike Index's public stolen-bike registry. Every lookup is logged
+            automatically to your business history.
           </p>
 
           <form
@@ -239,6 +240,35 @@ export default function VerifyItemPage() {
                         {result.report.description || "No additional description provided."}
                       </p>
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {result.status === "STOLEN" && !result.report && result.publicApiStolen && (
+                <div className="mt-8 rounded-2xl border border-status-stolen/20 bg-status-stolen/5 p-6 sm:p-8 backdrop-blur-sm">
+                  <h3 className="mb-4 flex items-center gap-2 text-sm font-black uppercase tracking-widest text-status-stolen">
+                    Public Registry Match
+                  </h3>
+                  <div className="space-y-3">
+                    <p className="text-sm text-slate-300">
+                      {result.publicApiSource || "Public API"} found a stolen
+                      listing for this serial number.
+                    </p>
+                    {result.publicApiMatchTitle && (
+                      <p className="text-lg font-bold text-white">
+                        {result.publicApiMatchTitle}
+                      </p>
+                    )}
+                    {result.publicApiMatchUrl && (
+                      <a
+                        href={result.publicApiMatchUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex text-sm font-semibold text-brand transition hover:text-brand/80"
+                      >
+                        View public match
+                      </a>
+                    )}
                   </div>
                 </div>
               )}

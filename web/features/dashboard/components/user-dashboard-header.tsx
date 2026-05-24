@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { clearAuthSession } from "@/shared/auth";
 import { invalidateReportsCache } from "@/features/reports/lib/reports";
+import NotificationMenu from "@/features/notifications/components/notification-menu";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Home" },
@@ -117,29 +118,9 @@ export default function UserDashboardHeader() {
             >
               <path d="M14.857 17.082A23.848 23.848 0 0018 16.5v-5.25a6 6 0 10-12 0v5.25c1.135.24 2.194.434 3.143.582m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
             </svg>
-            <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-status-stolen" />
           </button>
 
-          {openDropdown === "notifications" && (
-            <div className="absolute right-0 top-11 w-[min(84vw,20rem)] overflow-hidden rounded-2xl bg-gradient-to-b from-slate-900/95 to-slate-950/95 shadow-2xl backdrop-blur-sm sm:right-12 sm:top-12 sm:w-72 border border-slate-700/40">
-              <div className="px-4 py-4">
-                <p className="text-sm font-semibold text-slate-100">
-                  Notifications
-                </p>
-              </div>
-              <ul className="divide-y divide-slate-700/30">
-                <li className="px-4 py-3 text-sm text-slate-300 hover:bg-slate-800/40 transition-colors duration-150">
-                  Your report for bicycle frame #PS-1102 is under review.
-                </li>
-                <li className="px-4 py-3 text-sm text-slate-300 hover:bg-slate-800/40 transition-colors duration-150">
-                  A nearby partner business viewed one of your report details.
-                </li>
-                <li className="px-4 py-3 text-sm text-slate-300 hover:bg-slate-800/40 transition-colors duration-150">
-                  No critical alerts right now. You are all caught up.
-                </li>
-              </ul>
-            </div>
-          )}
+          <NotificationMenu isOpen={openDropdown === "notifications"} />
 
           <button
             type="button"

@@ -5,6 +5,7 @@ import edu.cit.garbo.pawnscan.features.admin.dto.BusinessProfileAdminResponse;
 import edu.cit.garbo.pawnscan.features.admin.dto.ReportAdminResponse;
 import edu.cit.garbo.pawnscan.features.businessprofile.entity.BusinessProfile;
 import edu.cit.garbo.pawnscan.features.businessprofile.repository.BusinessProfileRepository;
+import edu.cit.garbo.pawnscan.features.notifications.NotificationService;
 import edu.cit.garbo.pawnscan.features.reports.dto.ReportFileResponse;
 import edu.cit.garbo.pawnscan.features.reports.entity.Report;
 import edu.cit.garbo.pawnscan.features.reports.entity.ReportFile;
@@ -28,6 +29,7 @@ public class AdminServiceImpl implements AdminService {
     private final ReportRepository reportRepository;
     private final BusinessProfileRepository businessProfileRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     @Override
     @Transactional(readOnly = true)
@@ -46,6 +48,7 @@ public class AdminServiceImpl implements AdminService {
         
         report.setStatus(status);
         Report savedReport = reportRepository.save(report);
+        notifyReportOwner(savedReport);
         
         return toReportAdminResponse(savedReport);
     }
@@ -77,6 +80,7 @@ public class AdminServiceImpl implements AdminService {
         
         profile.setIsVerified(true);
         BusinessProfile savedProfile = businessProfileRepository.save(profile);
+        notifyBusinessOwner(savedProfile);
         
         return toBusinessProfileAdminResponse(savedProfile);
     }
@@ -122,6 +126,41 @@ public class AdminServiceImpl implements AdminService {
                 .ownerEmail(user != null ? user.getEmail() : null)
                 .files(files)
                 .build();
+    }
+
+    private void notifyReportOwner(Report report) {
+        User owner = report.getUser();
+        if (owner == null) {
+            return;
+        }
+
+        String itemModel = report.getItemModel() == null || report.getItemModel().isBlank()
+                ? "Your report"
+                : report.getItemModel();
+        String status = report.getStatus() == null ? "updated" : report.getStatus().name().toLowerCase();
+
+        notificationService.createNotification(
+                owner,
+                "Report status updated",
+                itemModel + " has been marked " + status + ".",
+                "/reports?status=" + report.getStatus().name() + "&reportId=" + report.getId());
+    }
+
+    private void notifyBusinessOwner(BusinessProfile profile) {
+        User owner = profile.getUser();
+        if (owner == null) {
+            return;
+        }
+
+        String businessName = profile.getBusinessName() == null || profile.getBusinessName().isBlank()
+                ? "Your business account"
+                : profile.getBusinessName();
+
+        notificationService.createNotification(
+                owner,
+                "Business account approved",
+                businessName + " has been approved by an administrator.",
+                "/business");
     }
 
     private BusinessProfileAdminResponse toBusinessProfileAdminResponse(BusinessProfile profile) {

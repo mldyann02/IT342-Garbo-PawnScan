@@ -18,6 +18,11 @@ export type VerifySearchResponse = {
   status: VerificationResult;
   serial: string;
   report?: StolenReportSummary | null;
+  publicApiChecked?: boolean;
+  publicApiStolen?: boolean;
+  publicApiSource?: string | null;
+  publicApiMatchTitle?: string | null;
+  publicApiMatchUrl?: string | null;
 };
 
 export type SearchLog = {
