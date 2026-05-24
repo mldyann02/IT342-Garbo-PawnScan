@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   NotificationItem,
   buildNotificationStreamUrl,
+  clearNotifications,
   fetchNotifications,
   fetchUnreadNotificationCount,
   markAllNotificationsRead,
@@ -51,6 +52,7 @@ export default function NotificationMenu({ isOpen }: NotificationMenuProps) {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [isClearing, setIsClearing] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -127,6 +129,17 @@ export default function NotificationMenu({ isOpen }: NotificationMenuProps) {
     }
   }
 
+  async function handleClearNotifications() {
+    setIsClearing(true);
+    try {
+      await clearNotifications();
+      setNotifications([]);
+      setUnreadCount(0);
+    } finally {
+      setIsClearing(false);
+    }
+  }
+
   async function handleNotificationClick(notification: NotificationItem) {
     const targetUrl = resolveNotificationTarget(notification);
 
@@ -160,15 +173,27 @@ export default function NotificationMenu({ isOpen }: NotificationMenuProps) {
       <div className="absolute right-0 top-11 w-[min(84vw,22rem)] overflow-hidden rounded-2xl bg-gradient-to-b from-slate-900/95 to-slate-950/95 shadow-2xl backdrop-blur-sm sm:right-12 sm:top-12 sm:w-80 border border-slate-700/40">
         <div className="flex items-center justify-between gap-3 px-4 py-4">
           <p className="text-sm font-semibold text-slate-100">Notifications</p>
-          {hasUnread && (
-            <button
-              type="button"
-              onClick={handleMarkAllRead}
-              className="text-xs font-semibold text-brand transition hover:text-brand/80"
-            >
-              Mark all read
-            </button>
-          )}
+          <div className="flex items-center gap-3">
+            {notifications.length > 0 && (
+              <button
+                type="button"
+                onClick={handleClearNotifications}
+                disabled={isClearing}
+                className="text-xs font-semibold text-slate-400 transition hover:text-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isClearing ? "Clearing..." : "Clear"}
+              </button>
+            )}
+            {hasUnread && (
+              <button
+                type="button"
+                onClick={handleMarkAllRead}
+                className="text-xs font-semibold text-brand transition hover:text-brand/80"
+              >
+                Mark all read
+              </button>
+            )}
+          </div>
         </div>
 
         {isLoading ? (

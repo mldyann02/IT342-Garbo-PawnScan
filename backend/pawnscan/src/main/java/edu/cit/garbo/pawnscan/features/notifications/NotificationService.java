@@ -20,5 +20,7 @@ public interface NotificationService {
 
     void markAllAsRead(String authenticatedEmail);
 
+    void clearNotifications(String authenticatedEmail);
+
     SseEmitter subscribe(String authenticatedEmail);
 }

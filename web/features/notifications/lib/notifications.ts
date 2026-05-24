@@ -78,6 +78,17 @@ export async function markNotificationRead(notificationId: number): Promise<Noti
   return handleResponse<NotificationItem>(response);
 }
 
+export async function clearNotifications(): Promise<void> {
+  const response = await fetch("/api/notifications", {
+    method: "DELETE",
+    headers: {
+      ...getAuthHeader(),
+    },
+  });
+
+  await handleResponse<{ success: boolean }>(response);
+}
+
 export function buildNotificationStreamUrl(): string | null {
   const token = getJwt();
   return token ? `/api/notifications/stream?token=${encodeURIComponent(token)}` : null;

@@ -37,3 +37,23 @@ export async function GET(request: Request) {
     return NextResponse.json({ message: "Unable to fetch notifications" }, { status: 503 });
   }
 }
+
+export async function DELETE(request: Request) {
+  const authorization = request.headers.get("authorization");
+  if (!authorization) {
+    return buildUnauthorizedResponse();
+  }
+
+  try {
+    const backendResponse = await fetch(`${backendBaseUrl}/api/notifications`, {
+      method: "DELETE",
+      headers: {
+        Authorization: authorization,
+      },
+    });
+
+    return mapBackendResponse(backendResponse);
+  } catch {
+    return NextResponse.json({ message: "Unable to clear notifications" }, { status: 503 });
+  }
+}

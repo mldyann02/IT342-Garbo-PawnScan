@@ -109,6 +109,13 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
+    @Transactional
+    public void clearNotifications(String authenticatedEmail) {
+        User user = getAuthenticatedUser(authenticatedEmail);
+        notificationRepository.deleteByRecipientUserId(user.getUserId());
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public SseEmitter subscribe(String authenticatedEmail) {
         User user = getAuthenticatedUser(authenticatedEmail);
