@@ -1,5 +1,6 @@
 package edu.cit.garbo.pawnscan.features.reports;
 
+import edu.cit.garbo.pawnscan.features.reports.dto.MatchedReportResponse;
 import edu.cit.garbo.pawnscan.features.reports.dto.ReportResponse;
 import edu.cit.garbo.pawnscan.features.reports.dto.ReportUpsertRequest;
 import jakarta.validation.Valid;
@@ -12,6 +13,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -39,6 +41,15 @@ public class ReportController {
     @GetMapping
     public ResponseEntity<List<ReportResponse>> getReports(Authentication authentication) {
         return ResponseEntity.ok(reportService.getUserReports(resolveAuthenticatedName(authentication)));
+    }
+
+    @GetMapping("/matched")
+    public ResponseEntity<List<MatchedReportResponse>> getMatchedReports(
+            Authentication authentication,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        return ResponseEntity.ok(reportService.getMatchedReports(resolveAuthenticatedName(authentication), page, size));
     }
 
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

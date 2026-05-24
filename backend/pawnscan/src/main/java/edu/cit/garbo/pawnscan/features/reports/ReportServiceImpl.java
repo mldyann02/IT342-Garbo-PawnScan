@@ -1,5 +1,6 @@
 package edu.cit.garbo.pawnscan.features.reports;
 
+import edu.cit.garbo.pawnscan.features.reports.dto.MatchedReportResponse;
 import edu.cit.garbo.pawnscan.features.reports.dto.ReportFileResponse;
 import edu.cit.garbo.pawnscan.features.reports.dto.ReportResponse;
 import edu.cit.garbo.pawnscan.features.reports.dto.ReportUpsertRequest;
@@ -14,8 +15,13 @@ import edu.cit.garbo.pawnscan.features.reports.exception.ReportNotFoundException
 import edu.cit.garbo.pawnscan.features.reports.repository.ReportFileRepository;
 import edu.cit.garbo.pawnscan.features.reports.repository.ReportRepository;
 import edu.cit.garbo.pawnscan.features.reports.storage.FileStorageService;
+import edu.cit.garbo.pawnscan.features.verification.entity.SearchLog;
+import edu.cit.garbo.pawnscan.features.verification.entity.VerificationResult;
+import edu.cit.garbo.pawnscan.features.verification.repository.SearchLogRepository;
 import edu.cit.garbo.pawnscan.shared.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -29,10 +35,13 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class ReportServiceImpl implements ReportService {
 
+    private static final int MAX_PAGE_SIZE = 100;
+
     private final ReportRepository reportRepository;
     private final ReportFileRepository reportFileRepository;
     private final UserRepository userRepository;
     private final FileStorageService fileStorageService;
+    private final SearchLogRepository searchLogRepository;
 
     @Override
     @Transactional
@@ -66,6 +75,18 @@ public class ReportServiceImpl implements ReportService {
         return reportRepository.findByUserId(user.getUserId())
                 .stream()
                 .map(this::toResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<MatchedReportResponse> getMatchedReports(String authenticatedEmail, int page, int size) {
+        User user = getAuthenticatedUser(authenticatedEmail);
+        Pageable pageable = PageRequest.of(Math.max(page, 0), normalizeSize(size));
+
+        return searchLogRepository.findMatchedReportsForOwner(user.getUserId(), VerificationResult.STOLEN, pageable)
+                .stream()
+                .map(this::toMatchedReportResponse)
                 .toList();
     }
 
@@ -174,6 +195,13 @@ public class ReportServiceImpl implements ReportService {
         return value == null || value.trim().isEmpty();
     }
 
+    private int normalizeSize(int size) {
+        if (size <= 0) {
+            return 20;
+        }
+        return Math.min(size, MAX_PAGE_SIZE);
+    }
+
     private ReportResponse toResponse(Report report) {
         List<ReportFileResponse> files = report.getFiles().stream()
                 .sorted(Comparator.comparing(ReportFile::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder()))
@@ -192,6 +220,35 @@ public class ReportServiceImpl implements ReportService {
                 .description(report.getDescription())
                 .status(report.getStatus())
                 .createdAt(report.getCreatedAt())
+                .files(files)
+                .build();
+    }
+
+    private MatchedReportResponse toMatchedReportResponse(SearchLog searchLog) {
+        Report report = searchLog.getMatchedReport();
+        User businessUser = searchLog.getBusinessUser();
+
+        List<ReportFileResponse> files = report.getFiles().stream()
+                .sorted(Comparator.comparing(ReportFile::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder()))
+                        .reversed())
+                .map(file -> ReportFileResponse.builder()
+                        .id(file.getId())
+                        .fileUrl(file.getFileUrl())
+                        .fileType(file.getFileType())
+                        .build())
+                .toList();
+
+        return MatchedReportResponse.builder()
+                .matchId(searchLog.getId())
+                .reportId(report.getId())
+                .serialNumber(report.getSerialNumber())
+                .itemModel(report.getItemModel())
+                .description(report.getDescription())
+                .status(report.getStatus())
+                .reportCreatedAt(report.getCreatedAt())
+                .matchedAt(searchLog.getSearchedAt())
+                .matchedByBusinessName(businessUser == null ? null : businessUser.getFullName())
+                .matchedByBusinessEmail(businessUser == null ? null : businessUser.getEmail())
                 .files(files)
                 .build();
     }

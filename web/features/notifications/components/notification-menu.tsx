@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   NotificationItem,
   buildNotificationStreamUrl,
   fetchNotifications,
   fetchUnreadNotificationCount,
   markAllNotificationsRead,
+  markNotificationRead,
 } from "@/features/notifications/lib/notifications";
 
 function formatNotificationDate(value: string): string {
@@ -22,6 +24,7 @@ type NotificationMenuProps = {
 };
 
 export default function NotificationMenu({ isOpen }: NotificationMenuProps) {
+  const router = useRouter();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -101,6 +104,27 @@ export default function NotificationMenu({ isOpen }: NotificationMenuProps) {
     }
   }
 
+  async function handleNotificationClick(notification: NotificationItem) {
+    if (!notification.read) {
+      setNotifications((current) =>
+        current.map((item) =>
+          item.notifId === notification.notifId ? { ...item, read: true } : item,
+        ),
+      );
+      setUnreadCount((current) => Math.max(current - 1, 0));
+
+      try {
+        await markNotificationRead(notification.notifId);
+      } catch {
+        fetchUnreadNotificationCount().then(setUnreadCount).catch(() => {});
+      }
+    }
+
+    if (notification.targetUrl) {
+      router.push(notification.targetUrl);
+    }
+  }
+
   return (
     <>
       {hasUnread && (
@@ -137,11 +161,15 @@ export default function NotificationMenu({ isOpen }: NotificationMenuProps) {
             {notifications.map((notification) => (
               <li
                 key={notification.notifId}
-                className={`px-4 py-3 text-sm transition-colors duration-150 hover:bg-slate-800/40 ${
+                className={`text-sm transition-colors duration-150 hover:bg-slate-800/40 ${
                   notification.read ? "text-slate-400" : "text-slate-200"
                 }`}
               >
-                <div className="flex items-start gap-3">
+                <button
+                  type="button"
+                  onClick={() => handleNotificationClick(notification)}
+                  className="flex w-full items-start gap-3 px-4 py-3 text-left"
+                >
                   <span
                     className={`mt-1.5 h-2 w-2 flex-shrink-0 rounded-full ${
                       notification.read ? "bg-slate-600" : "bg-status-stolen"
@@ -154,7 +182,7 @@ export default function NotificationMenu({ isOpen }: NotificationMenuProps) {
                       {formatNotificationDate(notification.createdAt)}
                     </p>
                   </div>
-                </div>
+                </button>
               </li>
             ))}
           </ul>

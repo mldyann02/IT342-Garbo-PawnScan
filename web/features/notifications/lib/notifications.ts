@@ -4,6 +4,7 @@ export type NotificationItem = {
   notifId: number;
   title: string;
   message: string;
+  targetUrl?: string | null;
   read: boolean;
   createdAt: string;
 };
@@ -64,6 +65,17 @@ export async function markAllNotificationsRead(): Promise<void> {
   });
 
   await handleResponse<{ success: boolean }>(response);
+}
+
+export async function markNotificationRead(notificationId: number): Promise<NotificationItem> {
+  const response = await fetch(`/api/notifications/${notificationId}/read`, {
+    method: "PATCH",
+    headers: {
+      ...getAuthHeader(),
+    },
+  });
+
+  return handleResponse<NotificationItem>(response);
 }
 
 export function buildNotificationStreamUrl(): string | null {

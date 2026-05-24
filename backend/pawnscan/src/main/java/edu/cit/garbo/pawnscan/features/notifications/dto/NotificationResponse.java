@@ -18,6 +18,7 @@ public class NotificationResponse {
     private Long notifId;
     private String title;
     private String message;
+    private String targetUrl;
     private boolean read;
     private LocalDateTime createdAt;
 }

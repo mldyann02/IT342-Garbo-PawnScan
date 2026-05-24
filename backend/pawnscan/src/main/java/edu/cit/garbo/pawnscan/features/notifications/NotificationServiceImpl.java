@@ -38,6 +38,12 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     @Transactional
     public NotificationResponse createNotification(User recipient, String title, String message) {
+        return createNotification(recipient, title, message, null);
+    }
+
+    @Override
+    @Transactional
+    public NotificationResponse createNotification(User recipient, String title, String message, String targetUrl) {
         if (recipient == null || recipient.getUserId() == null) {
             throw new IllegalArgumentException("Notification recipient is required");
         }
@@ -46,6 +52,7 @@ public class NotificationServiceImpl implements NotificationService {
                 .recipient(recipient)
                 .title(title)
                 .message(message)
+                .targetUrl(targetUrl)
                 .build());
 
         NotificationResponse response = toResponse(saved);
@@ -173,6 +180,7 @@ public class NotificationServiceImpl implements NotificationService {
                 .notifId(notification.getNotifId())
                 .title(notification.getTitle())
                 .message(notification.getMessage())
+                .targetUrl(notification.getTargetUrl())
                 .read(notification.isRead())
                 .createdAt(notification.getCreatedAt())
                 .build();

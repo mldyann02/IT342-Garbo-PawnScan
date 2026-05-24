@@ -141,7 +141,8 @@ public class AdminServiceImpl implements AdminService {
         notificationService.createNotification(
                 owner,
                 "Report status updated",
-                itemModel + " has been marked " + status + ".");
+                itemModel + " has been marked " + status + ".",
+                "/reports?reportId=" + report.getId());
     }
 
     private BusinessProfileAdminResponse toBusinessProfileAdminResponse(BusinessProfile profile) {

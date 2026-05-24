@@ -10,6 +10,8 @@ public interface NotificationService {
 
     NotificationResponse createNotification(User recipient, String title, String message);
 
+    NotificationResponse createNotification(User recipient, String title, String message, String targetUrl);
+
     List<NotificationResponse> getNotifications(String authenticatedEmail, int page, int size);
 
     long getUnreadCount(String authenticatedEmail);

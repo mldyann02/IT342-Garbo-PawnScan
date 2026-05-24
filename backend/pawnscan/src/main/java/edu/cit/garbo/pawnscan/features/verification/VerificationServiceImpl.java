@@ -214,7 +214,8 @@ public class VerificationServiceImpl implements VerificationService {
         notificationService.createNotification(
                 owner,
                 "Stolen item match found",
-                businessName + " searched serial " + normalizedSerial + " and matched it to " + itemModel + ".");
+                businessName + " searched serial " + normalizedSerial + " and matched it to " + itemModel + ".",
+                "/reports?tab=matched&reportId=" + matchedReport.getId());
     }
 
     private String normalizeAndValidateSerial(String serial) {

@@ -6,9 +6,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { getAuthUser, getJwt } from "@/shared/auth";
 import {
   deleteReport,
+  fetchMatchedReports,
   fetchReports,
   updateReport,
   getCachedReports,
+  MatchedReport,
   Report,
 } from "@/features/reports/lib/reports";
 
@@ -24,10 +26,15 @@ function ReportsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [reports, setReports] = useState<Report[]>(() => getCachedReports() || []);
+  const [matchedReports, setMatchedReports] = useState<MatchedReport[]>([]);
+  const [activeTab, setActiveTab] = useState<"reports" | "matched">(
+    () => searchParams.get("tab") === "matched" ? "matched" : "reports",
+  );
   const [statusFilter, setStatusFilter] = useState<"ALL" | "APPROVED" | "PENDING">("ALL");
   const [isLoading, setIsLoading] = useState(() => !getCachedReports());
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [selectedReportId, setSelectedReportId] = useState<number | null>(null);
+  const [selectedMatchedReportId, setSelectedMatchedReportId] = useState<number | null>(null);
   const [message, setMessage] = useState<{
     type: "success" | "error";
     text: string;
@@ -64,6 +71,14 @@ function ReportsPageContent() {
     [reports, selectedReportId, filteredReports],
   );
 
+  const selectedMatchedReport = useMemo(
+    () =>
+      matchedReports.find((report) => report.reportId === selectedMatchedReportId) ??
+      matchedReports[0] ??
+      null,
+    [matchedReports, selectedMatchedReportId],
+  );
+
   const statusMessage = useMemo(() => {
     if (searchParams.get("created") === "1") {
       return "Report created successfully.";
@@ -89,19 +104,30 @@ function ReportsPageContent() {
         const cached = getCachedReports();
         if (!cached) setIsLoading(true);
         
-        const data = await fetchReports();
+        const [data, matchedData] = await Promise.all([
+          fetchReports(),
+          fetchMatchedReports(0, 50),
+        ]);
         setReports(data);
+        setMatchedReports(matchedData);
         
         const paramId = searchParams.get("reportId");
+        const nextTab = searchParams.get("tab") === "matched" ? "matched" : "reports";
+        setActiveTab(nextTab);
+
         if (paramId && !isNaN(parseInt(paramId))) {
           const parsedId = parseInt(paramId);
-          if (data.some(r => r.id === parsedId)) {
+          if (nextTab === "matched" && matchedData.some(r => r.reportId === parsedId)) {
+            setSelectedMatchedReportId(parsedId);
+          } else if (data.some(r => r.id === parsedId)) {
             setSelectedReportId(parsedId);
           } else {
             setSelectedReportId(data[0]?.id ?? null);
+            setSelectedMatchedReportId(matchedData[0]?.reportId ?? null);
           }
         } else if (!cached) {
           setSelectedReportId(data[0]?.id ?? null);
+          setSelectedMatchedReportId(matchedData[0]?.reportId ?? null);
         } else if (cached && selectedReportId === null) {
           // If we had cache, we might not have set the selected id yet based on params
           if (paramId && !isNaN(parseInt(paramId)) && cached.some(r => r.id === parseInt(paramId))) {
@@ -109,6 +135,7 @@ function ReportsPageContent() {
           } else {
              setSelectedReportId(cached[0]?.id ?? null);
           }
+          setSelectedMatchedReportId(matchedData[0]?.reportId ?? null);
         }
       } catch (error) {
         if (
@@ -130,7 +157,7 @@ function ReportsPageContent() {
     }
 
     loadReports();
-  }, [router]);
+  }, [router, searchParams]);
 
   useEffect(() => {
     setIsEditing(false);
@@ -288,6 +315,31 @@ function ReportsPageContent() {
             </div>
           )}
 
+          <div className="mb-8 flex rounded-xl border border-slate-700/50 bg-slate-900/50 p-1">
+            <button
+              type="button"
+              onClick={() => setActiveTab("reports")}
+              className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all ${
+                activeTab === "reports"
+                  ? "bg-slate-700 text-white shadow-sm"
+                  : "text-slate-400 hover:bg-slate-800/70 hover:text-slate-200"
+              }`}
+            >
+              My Reports
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("matched")}
+              className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all ${
+                activeTab === "matched"
+                  ? "bg-status-stolen/15 text-status-stolen shadow-sm"
+                  : "text-slate-400 hover:bg-slate-800/70 hover:text-slate-200"
+              }`}
+            >
+              Matched Reports
+            </button>
+          </div>
+
           {isLoading && (
             <div className="rounded-2xl border border-slate-700/50 bg-slate-800/40 p-8 text-center text-sm text-slate-400">
               <div className="mx-auto w-8 h-8 border-4 border-slate-600 border-t-brand rounded-full animate-spin mb-4" />
@@ -295,7 +347,7 @@ function ReportsPageContent() {
             </div>
           )}
 
-          {!isLoading && reports.length === 0 && (
+          {!isLoading && activeTab === "reports" && reports.length === 0 && (
             <div className="rounded-2xl border border-slate-700/50 bg-slate-800/40 p-12 text-center text-sm text-slate-400">
               <div className="mx-auto w-12 h-12 text-slate-500 mb-4">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -314,7 +366,19 @@ function ReportsPageContent() {
             </div>
           )}
 
-          {!isLoading && reports.length > 0 && (
+          {!isLoading && activeTab === "matched" && matchedReports.length === 0 && (
+            <div className="rounded-2xl border border-slate-700/50 bg-slate-800/40 p-12 text-center text-sm text-slate-400">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-slate-700/50 text-slate-500">
+                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0a3 3 0 11-6 0m6 0H9" />
+                </svg>
+              </div>
+              <p className="mb-2 text-base text-slate-300">No matched reports yet</p>
+              <p>When a verified business matches one of your stolen reports, it will appear here.</p>
+            </div>
+          )}
+
+          {!isLoading && activeTab === "reports" && reports.length > 0 && (
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.1fr_1.6fr] lg:items-start">
               <aside className="rounded-2xl border border-slate-700/50 bg-slate-800/40 p-4 shadow-xl flex flex-col lg:sticky lg:top-8 lg:max-h-[calc(100vh-6rem)]">
                 <div className="mb-4">
@@ -786,6 +850,140 @@ function ReportsPageContent() {
                       </div>
                     </>
                   )}
+                </article>
+              )}
+            </div>
+          )}
+
+          {!isLoading && activeTab === "matched" && matchedReports.length > 0 && (
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.1fr_1.6fr] lg:items-start">
+              <aside className="rounded-2xl border border-slate-700/50 bg-slate-800/40 p-4 shadow-xl flex flex-col lg:sticky lg:top-8 lg:max-h-[calc(100vh-6rem)]">
+                <div className="mb-4 px-2">
+                  <h2 className="pb-2 text-sm font-semibold text-slate-300 flex items-center gap-2">
+                    <svg className="w-4 h-4 text-status-stolen" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M4.93 19h14.14c1.54 0 2.5-1.667 1.73-3L13.73 4c-.77-1.333-2.69-1.333-3.46 0L3.2 16c-.77 1.333.19 3 1.73 3z" />
+                    </svg>
+                    Matched stolen reports
+                  </h2>
+                </div>
+                <div className="space-y-2.5 overflow-y-auto pr-2 custom-scrollbar lg:max-h-[calc(100vh-12rem)]">
+                  {matchedReports.map((report) => {
+                    const isActive = selectedMatchedReport?.reportId === report.reportId;
+                    return (
+                      <button
+                        key={report.matchId}
+                        type="button"
+                        onClick={() => setSelectedMatchedReportId(report.reportId)}
+                        className={`w-full group rounded-xl border p-4 text-left transition-all duration-200 ${
+                          isActive
+                            ? "border-status-stolen/40 bg-status-stolen/10"
+                            : "border-slate-700/50 bg-slate-900/40 hover:border-slate-500/50 hover:bg-slate-800/60"
+                        }`}
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <p className={`text-sm font-bold truncate pr-3 ${isActive ? "text-status-stolen" : "text-slate-200 group-hover:text-white"}`}>
+                            {report.serialNumber}
+                          </p>
+                        </div>
+                        <p className="text-xs text-slate-400 line-clamp-1">{report.itemModel}</p>
+                        <p className="mt-2 text-[10px] uppercase tracking-widest text-slate-500">
+                          Matched {formatDate(report.matchedAt)}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </aside>
+
+              {selectedMatchedReport && (
+                <article className="rounded-2xl border border-status-stolen/30 bg-slate-800/40 p-6 sm:p-8 shadow-xl flex flex-col relative w-full">
+                  <div className="flex flex-wrap items-start justify-between gap-4 mb-6 pb-6 border-b border-slate-700/50 shrink-0">
+                    <div>
+                      <div className="-ml-3 flex items-center gap-2 mb-2">
+                        <span className="px-2.5 py-1 rounded-md bg-status-stolen/10 text-status-stolen text-xs font-medium tracking-wide">
+                          Stolen Match
+                        </span>
+                        {selectedMatchedReport.status && (
+                          <span className="px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-400 text-xs font-medium tracking-wide border border-emerald-500/20">
+                            {selectedMatchedReport.status}
+                          </span>
+                        )}
+                      </div>
+                      <h2 className="mt-2 text-2xl font-bold text-white">
+                        {selectedMatchedReport.serialNumber}
+                      </h2>
+                      <p className="mt-1.5 text-base text-slate-300">
+                        {selectedMatchedReport.itemModel}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs font-medium text-slate-500">
+                        Matched: <span className="text-slate-400">{formatDate(selectedMatchedReport.matchedAt)}</span>
+                      </p>
+                      <p className="mt-1 text-xs font-medium text-slate-500">
+                        Reported: <span className="text-slate-400">{formatDate(selectedMatchedReport.reportCreatedAt)}</span>
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="rounded-xl border border-status-stolen/20 bg-status-stolen/5 p-4">
+                      <h3 className="mb-2 text-sm font-semibold text-status-stolen">Matched by</h3>
+                      <p className="text-sm font-medium text-slate-200">
+                        {selectedMatchedReport.matchedByBusinessName || "Verified business"}
+                      </p>
+                      {selectedMatchedReport.matchedByBusinessEmail && (
+                        <p className="mt-1 text-xs text-slate-400">{selectedMatchedReport.matchedByBusinessEmail}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <h3 className="text-sm font-semibold text-slate-400 mb-3">Description</h3>
+                      <div className="rounded-xl border border-slate-700/30 bg-slate-900/30 p-4">
+                        <p className="text-sm text-slate-300 leading-relaxed break-words whitespace-pre-wrap">
+                          {selectedMatchedReport.description}
+                        </p>
+                      </div>
+                    </div>
+
+                    {selectedMatchedReport.files?.length ? (
+                      <div>
+                        <h3 className="text-sm font-semibold text-slate-400 mb-3">Evidence / Uploaded File</h3>
+                        <div className="grid grid-cols-1 gap-4">
+                          {selectedMatchedReport.files.map((file) => {
+                            const fileUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080"}${file.fileUrl}`;
+                            const token = getJwt();
+                            const previewUrl =
+                              file.fileType === "PDF"
+                                ? `/api/reports/file?path=${encodeURIComponent(file.fileUrl)}${token ? `&token=${encodeURIComponent(token)}` : ""}`
+                                : fileUrl;
+                            return (
+                              <div key={file.id} className="group relative rounded-xl border border-slate-700/50 bg-slate-900/40 overflow-hidden">
+                                {file.fileType === "IMAGE" ? (
+                                  <div className="aspect-video w-full">
+                                    <img src={fileUrl} alt="Uploaded evidence" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                                  </div>
+                                ) : (
+                                  <div className="aspect-video w-full bg-slate-800">
+                                    <iframe title={`PDF first page ${file.id}`} src={`${previewUrl}#page=1&view=FitH&toolbar=0&navpanes=0&scrollbar=0`} className="h-full w-full" />
+                                  </div>
+                                )}
+                                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                  <button
+                                    type="button"
+                                    onClick={() => setViewerFile({ url: previewUrl, type: file.fileType })}
+                                    className="rounded-lg bg-slate-900/90 backdrop-blur-md px-4 py-2.5 text-sm font-semibold text-white shadow-xl hover:bg-black transition-colors"
+                                  >
+                                    Preview
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
                 </article>
               )}
             </div>
