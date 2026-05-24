@@ -10,6 +10,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -31,7 +33,7 @@ public class ReportUpsertRequest {
     @Size(max = 5000, message = "Description must not exceed 5000 characters")
     private String description;
 
-    private MultipartFile file;
+    private List<MultipartFile> files;
 }
 
 

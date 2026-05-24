@@ -10,7 +10,7 @@ type ReportForm = {
   serialNumber: string;
   itemModel: string;
   description: string;
-  file: File | null;
+  files: File[];
 };
 
 export default function CreateReportPage() {
@@ -19,7 +19,7 @@ export default function CreateReportPage() {
     serialNumber: "",
     itemModel: "",
     description: "",
-    file: null,
+    files: [],
   });
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -52,8 +52,8 @@ export default function CreateReportPage() {
       next.description = "Description is required";
     }
 
-    if (!form.file) {
-      next.file = "Image or PDF evidence is required";
+    if (form.files.length === 0) {
+      next.files = "Image or PDF evidence is required";
     }
 
     return next;
@@ -77,7 +77,7 @@ export default function CreateReportPage() {
         serialNumber: form.serialNumber,
         itemModel: form.itemModel,
         description: form.description,
-        file: form.file,
+        files: form.files,
       });
 
       setFeedback({
@@ -278,89 +278,58 @@ export default function CreateReportPage() {
                     Upload Image or PDF
                   </span>
                   <div className="relative">
-                    <input
-                      type="file"
-                      accept="image/*,.pdf"
-                      onChange={(event) =>
-                        setForm((current) => ({
-                          ...current,
-                          file: event.target.files?.[0] ?? null,
-                        }))
-                      }
-                      className="absolute inset-0 opacity-0 cursor-pointer"
-                    />
-                    {!form.file && (
+                    {form.files.length > 0 && (
+                      <div className="mb-4 space-y-3 relative z-20">
+                        {form.files.map((f, i) => (
+                          <div key={i} className="rounded-lg bg-gradient-to-r from-brand/15 to-brand/5 border border-brand/40 px-5 py-4 flex items-center gap-4 hover:from-brand/20 hover:to-brand/10 transition-all duration-200">
+                            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-brand/40 to-brand/20 flex items-center justify-center flex-shrink-0">
+                              <svg className="w-6 h-6 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-slate-100 truncate">{f.name}</p>
+                              <p className="text-xs text-slate-400">{(f.size / 1024 / 1024).toFixed(2)} MB</p>
+                            </div>
+                            <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setForm(c => ({...c, files: c.files.filter((_, idx) => idx !== i)})) }} className="text-slate-400 hover:text-status-stolen transition-colors p-1">
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
+                    <div className="relative">
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*,.pdf"
+                        onChange={(event) => {
+                          const newFiles = Array.from(event.target.files || []);
+                          if (newFiles.length > 0) {
+                            setForm((current) => ({
+                              ...current,
+                              files: [...current.files, ...newFiles],
+                            }));
+                          }
+                          event.target.value = "";
+                        }}
+                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
+                      />
                       <div className="rounded-lg border-2 border-dashed border-brand/40 bg-brand/5 hover:bg-brand/10 hover:border-brand/60 transition-all duration-200 ease-out p-6 text-center cursor-pointer">
                         <div className="flex items-center justify-center mb-3">
-                          <svg
-                            className="w-8 h-8 text-brand"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                            />
-                          </svg>
+                          <svg className="w-8 h-8 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
                         </div>
-                        <p className="text-sm font-semibold text-slate-200">
-                          Click to upload or drag and drop
-                        </p>
-                        <p className="text-xs text-slate-400 mt-1">
-                          PNG, JPG, or PDF (Max 10MB)
-                        </p>
+                        <p className="text-sm font-semibold text-slate-200">Click to upload or drag and drop</p>
+                        <p className="text-xs text-slate-400 mt-1">PNG, JPG, or PDF (Max 10MB)</p>
                       </div>
-                    )}
-                    {form.file && (
-                      <div className="rounded-lg bg-gradient-to-r from-brand/15 to-brand/5 border border-brand/40 px-5 py-4 flex items-center gap-4 hover:from-brand/20 hover:to-brand/10 transition-all duration-200">
-                        <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-brand/40 to-brand/20 flex items-center justify-center flex-shrink-0">
-                          <svg
-                            className="w-6 h-6 text-brand"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                            />
-                          </svg>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-slate-100 truncate">
-                            {form.file.name}
-                          </p>
-                          <p className="text-xs text-slate-400">
-                            {(form.file.size / 1024 / 1024).toFixed(2)} MB •
-                            Ready to submit
-                          </p>
-                        </div>
-                        <svg
-                          className="w-5 h-5 text-status-clean flex-shrink-0"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      </div>
-                    )}
+                    </div>
                   </div>
                   <p className="text-xs text-slate-500 mt-2">
                     Add photos of the item or documentation to help verify your
                     claim.
                   </p>
-                  {submitAttempted && errors.file && (
+                  {submitAttempted && errors.files && (
                     <p className="text-sm text-status-stolen font-medium">
-                      {errors.file}
+                      {errors.files}
                     </p>
                   )}
                 </label>

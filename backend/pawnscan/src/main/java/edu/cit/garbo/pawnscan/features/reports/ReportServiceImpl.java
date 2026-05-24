@@ -64,7 +64,9 @@ public class ReportServiceImpl implements ReportService {
                 .build();
 
         Report savedReport = reportRepository.save(report);
-        attachFileIfPresent(savedReport, request.getFile());
+        if (request.getFiles() != null) {
+            request.getFiles().forEach(f -> attachFileIfPresent(savedReport, f));
+        }
 
         return toResponse(savedReport);
     }
@@ -116,9 +118,12 @@ public class ReportServiceImpl implements ReportService {
             report.setRejectionReason(null);
         }
 
-        MultipartFile file = request.getFile();
-        if (file != null && !file.isEmpty()) {
-            attachFileIfPresent(report, file);
+        if (request.getFiles() != null) {
+            request.getFiles().forEach(f -> {
+                if (f != null && !f.isEmpty()) {
+                    attachFileIfPresent(report, f);
+                }
+            });
         }
 
         Report savedReport = reportRepository.save(report);
