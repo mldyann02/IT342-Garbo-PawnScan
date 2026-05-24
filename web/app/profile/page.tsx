@@ -25,7 +25,7 @@ type FormState = {
 const EMPTY_FORM: FormState = {
   fullName: "",
   email: "",
-  phoneNumber: "",
+  phoneNumber: "+639",
   businessName: "",
   businessAddress: "",
   permitNumber: "",
@@ -41,7 +41,7 @@ function toFormState(profile: UserProfile): FormState {
   return {
     fullName: profile.fullName || "",
     email: profile.email || "",
-    phoneNumber: profile.phoneNumber || "",
+    phoneNumber: profile.phoneNumber || "+639",
     businessName: profile.businessProfile?.businessName || "",
     businessAddress: profile.businessProfile?.businessAddress || "",
     permitNumber: profile.businessProfile?.permitNumber || "",
@@ -135,6 +135,12 @@ export default function ProfilePage() {
 
     if (!form.fullName.trim()) {
       setError("Full name is required.");
+      return;
+    }
+
+    const phone = form.phoneNumber.trim();
+    if (phone.length !== 13 || !/^\+639\d{9}$/.test(phone)) {
+      setError("A valid Philippine mobile number (+639XXXXXXXXX) is required.");
       return;
     }
 
@@ -293,9 +299,10 @@ export default function ProfilePage() {
                 <div className="grid gap-5 sm:grid-cols-2">
                   <label className="space-y-2">
                     <span className="text-sm font-semibold text-slate-200">
-                      Full Name
+                      Full Name <span className="text-red-500">*</span>
                     </span>
                     <input
+                      required
                       value={form.fullName}
                       onChange={(event) =>
                         updateField("fullName", event.target.value)
@@ -318,15 +325,22 @@ export default function ProfilePage() {
 
                   <label className="space-y-2 sm:col-span-2">
                     <span className="text-sm font-semibold text-slate-200">
-                      Phone Number
+                      Phone Number <span className="text-red-500">*</span>
                     </span>
                     <input
+                      required
                       value={form.phoneNumber}
-                      onChange={(event) =>
-                        updateField("phoneNumber", event.target.value)
-                      }
+                      onChange={(event) => {
+                        let val = event.target.value;
+                        if (!val.startsWith("+639")) {
+                          val = "+639";
+                        }
+                        const digits = val.slice(4).replace(/\D/g, "");
+                        updateField("phoneNumber", "+639" + digits.slice(0, 9));
+                      }}
                       disabled={!isEditing || isSaving}
                       placeholder="+639171234567"
+                      maxLength={13}
                       className="w-full rounded-xl border border-slate-700/70 bg-slate-950/40 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-brand focus:ring-2 focus:ring-brand/20 disabled:cursor-not-allowed disabled:text-slate-400"
                     />
                   </label>
@@ -340,9 +354,10 @@ export default function ProfilePage() {
                     <div className="grid gap-5 sm:grid-cols-2">
                       <label className="space-y-2">
                         <span className="text-sm font-semibold text-slate-200">
-                          Business Name
+                          Business Name <span className="text-red-500">*</span>
                         </span>
                         <input
+                          required
                           value={form.businessName}
                           onChange={(event) =>
                             updateField("businessName", event.target.value)
@@ -354,7 +369,7 @@ export default function ProfilePage() {
 
                       <label className="space-y-2">
                         <span className="text-sm font-semibold text-slate-200">
-                          Permit Number
+                          Permit Number <span className="text-red-500">*</span>
                         </span>
                         <input
                           value={form.permitNumber}
@@ -368,9 +383,10 @@ export default function ProfilePage() {
 
                       <label className="space-y-2 sm:col-span-2">
                         <span className="text-sm font-semibold text-slate-200">
-                          Business Address
+                          Business Address <span className="text-red-500">*</span>
                         </span>
                         <textarea
+                          required
                           value={form.businessAddress}
                           onChange={(event) =>
                             updateField("businessAddress", event.target.value)
