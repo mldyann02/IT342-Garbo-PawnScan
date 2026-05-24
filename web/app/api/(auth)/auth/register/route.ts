@@ -5,7 +5,7 @@ type RequestBody = {
   email: string;
   password: string;
   phoneNumber: string;
-  role: 'INDIVIDUAL' | 'BUSINESS';
+  role: 'USER' | 'BUSINESS';
   business_name?: string;
   business_address?: string;
   permit_number?: string;

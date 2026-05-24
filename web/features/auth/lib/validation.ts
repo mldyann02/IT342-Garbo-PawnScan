@@ -1,4 +1,4 @@
-export type RegistrationRole = 'INDIVIDUAL' | 'BUSINESS';
+export type RegistrationRole = 'USER' | 'BUSINESS';
 
 export type RegistrationFormValues = {
   email: string;

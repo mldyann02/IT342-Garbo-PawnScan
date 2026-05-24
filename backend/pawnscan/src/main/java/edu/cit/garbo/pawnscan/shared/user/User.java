@@ -64,6 +64,11 @@ public class User {
     @Column(nullable = false)
     private UserRole role;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "registration_status", nullable = false, columnDefinition = "varchar(255) default 'ACTIVE'")
+    @Builder.Default
+    private RegistrationStatus registrationStatus = RegistrationStatus.ACTIVE;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
