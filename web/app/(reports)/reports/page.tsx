@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Modal } from "@/features/shared/components/modal";
 import { getJwt } from "@/shared/auth";
 import {
   deleteReport,
@@ -93,6 +94,8 @@ function ReportsPageContent() {
   const [isStatusMenuOpen, setIsStatusMenuOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(() => !getCachedReports());
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
+  const [isResubmitConfirmOpen, setIsResubmitConfirmOpen] = useState(false);
   const [selectedReportId, setSelectedReportId] = useState<number | null>(null);
   const [selectedMatchedReportId, setSelectedMatchedReportId] = useState<number | null>(null);
   const [message, setMessage] = useState<{
@@ -132,6 +135,11 @@ function ReportsPageContent() {
       matchedReports[0] ??
       null,
     [matchedReports, selectedMatchedReportId],
+  );
+
+  const pendingDeleteReport = useMemo(
+    () => reports.find((report) => report.id === pendingDeleteId) ?? null,
+    [pendingDeleteId, reports],
   );
 
   const selectedReportStatus = selectedReport ? getReportStatus(selectedReport) : null;
@@ -241,13 +249,9 @@ function ReportsPageContent() {
   }, [viewerFile]);
 
   async function handleDelete(reportId: number) {
-    const shouldDelete = window.confirm("Delete this report permanently?");
-    if (!shouldDelete) {
-      return;
-    }
-
     setMessage(null);
     setDeletingId(reportId);
+    setPendingDeleteId(null);
 
     try {
       await deleteReport(reportId);
@@ -333,6 +337,22 @@ function ReportsPageContent() {
     } finally {
       setIsSaving(false);
     }
+  }
+
+  function handleSaveButtonClick() {
+    if (isSelectedReportRejected) {
+      if (!editFormHasChanges) {
+        setMessage({
+          type: "error",
+          text: "Make at least one change before resubmitting this report.",
+        });
+        return;
+      }
+      setIsResubmitConfirmOpen(true);
+      return;
+    }
+
+    handleSaveEdit();
   }
 
   return (
@@ -778,7 +798,7 @@ function ReportsPageContent() {
                         </button>
                         <button
                           type="button"
-                          onClick={handleSaveEdit}
+                          onClick={handleSaveButtonClick}
                           disabled={isSaving || (isSelectedReportRejected && !editFormHasChanges)}
                           className={`rounded-xl border px-6 py-2.5 text-sm font-semibold transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 flex items-center gap-2 ${
                             isSelectedReportRejected
@@ -1008,7 +1028,7 @@ function ReportsPageContent() {
                       <div className="mt-8 pt-6 border-t border-slate-700/50 flex flex-wrap gap-4 items-center justify-end">
                         <button
                           type="button"
-                          onClick={() => handleDelete(selectedReport.id)}
+                          onClick={() => setPendingDeleteId(selectedReport.id)}
                           disabled={deletingId === selectedReport.id}
                           className="rounded-xl border border-red-500/20 bg-red-500/10 px-6 py-2.5 text-sm font-semibold text-red-500 transition-all hover:bg-red-500/20 hover:border-red-500/30 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2"
                         >
@@ -1233,6 +1253,123 @@ function ReportsPageContent() {
           )}
         </div>
       </main>
+
+      <Modal
+        isOpen={!!pendingDeleteReport}
+        onClose={() => {
+          if (deletingId === null) {
+            setPendingDeleteId(null);
+          }
+        }}
+        title="Delete report?"
+        maxWidth="max-w-lg"
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setPendingDeleteId(null)}
+              disabled={deletingId !== null}
+              className="rounded-xl border border-slate-600/50 bg-slate-800 px-5 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-slate-700 hover:border-slate-500 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => pendingDeleteId !== null && handleDelete(pendingDeleteId)}
+              disabled={deletingId !== null}
+              className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-5 py-2.5 text-sm font-semibold text-red-300 transition hover:bg-red-500/20 hover:border-red-500/50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {deletingId !== null ? (
+                <>
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-300/30 border-t-red-300" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete Report"
+              )}
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <p className="text-sm leading-6 text-slate-300">
+            This will permanently delete this report and its uploaded evidence from your records.
+          </p>
+          {pendingDeleteReport && (
+            <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4">
+              <p className="text-sm font-semibold text-red-200">
+                {pendingDeleteReport.serialNumber}
+              </p>
+              <p className="mt-1 text-sm text-red-100/80">
+                {pendingDeleteReport.itemModel}
+              </p>
+            </div>
+          )}
+          <p className="text-xs leading-5 text-slate-500">
+            This action cannot be undone.
+          </p>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={isResubmitConfirmOpen}
+        onClose={() => {
+          if (!isSaving) {
+            setIsResubmitConfirmOpen(false);
+          }
+        }}
+        title="Resubmit report?"
+        maxWidth="max-w-lg"
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setIsResubmitConfirmOpen(false)}
+              disabled={isSaving}
+              className="rounded-xl border border-slate-600/50 bg-slate-800 px-5 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-slate-700 hover:border-slate-500 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Keep Editing
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setIsResubmitConfirmOpen(false);
+                handleSaveEdit();
+              }}
+              disabled={isSaving || !editFormHasChanges}
+              className="flex items-center gap-2 rounded-xl border border-brand/30 bg-brand/10 px-5 py-2.5 text-sm font-semibold text-brand transition hover:bg-brand/20 hover:border-brand/50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isSaving ? (
+                <>
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-brand/30 border-t-brand" />
+                  Resubmitting...
+                </>
+              ) : (
+                "Confirm Resubmit"
+              )}
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <p className="text-sm leading-6 text-slate-300">
+            Your updated report will be sent back to pending review. Please confirm that the changes address the rejection details.
+          </p>
+          {selectedReport?.rejectionReason && (
+            <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-red-300">
+                Rejection reason
+              </p>
+              <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-red-100/90">
+                {selectedReport.rejectionReason}
+              </p>
+            </div>
+          )}
+          <p className="text-xs leading-5 text-slate-500">
+            After resubmitting, the report status will change to Pending Review.
+          </p>
+        </div>
+      </Modal>
 
       {/* Viewer Modal overlay */}
       {viewerFile && (
