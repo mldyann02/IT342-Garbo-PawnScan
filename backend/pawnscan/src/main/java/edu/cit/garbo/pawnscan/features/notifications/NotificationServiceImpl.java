@@ -116,7 +116,6 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public SseEmitter subscribe(String authenticatedEmail) {
         User user = getAuthenticatedUser(authenticatedEmail);
         SseEmitter emitter = new SseEmitter(SSE_TIMEOUT_MS);
