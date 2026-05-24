@@ -17,6 +17,11 @@ public class VerifySearchResponse {
     private VerificationResult status;
     private String serial;
     private StolenReportSummaryResponse report;
+    private boolean publicApiChecked;
+    private boolean publicApiStolen;
+    private String publicApiSource;
+    private String publicApiMatchTitle;
+    private String publicApiMatchUrl;
 }
 
 
