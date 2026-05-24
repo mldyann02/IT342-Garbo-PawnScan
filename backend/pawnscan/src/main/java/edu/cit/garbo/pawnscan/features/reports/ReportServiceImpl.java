@@ -7,6 +7,7 @@ import edu.cit.garbo.pawnscan.features.reports.dto.ReportUpsertRequest;
 import edu.cit.garbo.pawnscan.features.reports.entity.Report;
 import edu.cit.garbo.pawnscan.features.reports.entity.ReportFile;
 import edu.cit.garbo.pawnscan.features.reports.entity.ReportFileType;
+import edu.cit.garbo.pawnscan.features.reports.entity.ReportStatus;
 import edu.cit.garbo.pawnscan.shared.user.User;
 import edu.cit.garbo.pawnscan.features.reports.exception.DuplicateSerialNumberException;
 import edu.cit.garbo.pawnscan.shared.exception.ForbiddenActionException;
@@ -109,6 +110,10 @@ public class ReportServiceImpl implements ReportService {
         report.setSerialNumber(normalizedSerial);
         report.setItemModel(request.getItemModel().trim());
         report.setDescription(request.getDescription().trim());
+        if (report.getStatus() == ReportStatus.REJECTED) {
+            report.setStatus(ReportStatus.PENDING);
+            report.setRejectionReason(null);
+        }
 
         MultipartFile file = request.getFile();
         if (file != null && !file.isEmpty()) {
