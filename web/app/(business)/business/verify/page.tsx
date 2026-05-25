@@ -9,6 +9,13 @@ import {
   verifySerialNumber,
 } from "@/features/verification/lib/verify";
 import VerificationGuard from "@/features/business/components/verification-guard";
+import {
+  SERIAL_NUMBER_ALLOWED_TEXT,
+  SERIAL_NUMBER_HTML_PATTERN,
+  SERIAL_NUMBER_MAX_LENGTH,
+  sanitizeSerialNumberInput,
+  validateSerialNumber,
+} from "@/shared/serial-number";
 
 function formatDate(value: string): string {
   const parsed = new Date(value);
@@ -87,6 +94,11 @@ export default function VerifyItemPage() {
     return getAuthRole() || "";
   }, []);
 
+  const serialValidationMessage = useMemo(
+    () => validateSerialNumber(serial),
+    [serial],
+  );
+
   useEffect(() => {
     const token = getJwt();
     const authenticatedEmail = getAuthUser();
@@ -110,8 +122,9 @@ export default function VerifyItemPage() {
     setResult(null);
 
     const trimmedSerial = serial.trim();
-    if (!trimmedSerial) {
-      setErrorMessage("Serial number is required.");
+    const validationMessage = validateSerialNumber(serial);
+    if (validationMessage) {
+      setErrorMessage(validationMessage);
       return;
     }
 
@@ -168,14 +181,19 @@ export default function VerifyItemPage() {
               <input
                 type="text"
                 value={serial}
-                onChange={(event) => setSerial(event.target.value)}
+                onChange={(event) =>
+                  setSerial(sanitizeSerialNumberInput(event.target.value))
+                }
                 placeholder="Enter item serial number (e.g. SN-123456789)"
+                maxLength={SERIAL_NUMBER_MAX_LENGTH}
+                pattern={SERIAL_NUMBER_HTML_PATTERN}
+                title={SERIAL_NUMBER_ALLOWED_TEXT}
                 className="w-full rounded-xl border border-slate-700/60 bg-slate-900/70 py-4 pl-12 pr-4 text-sm text-slate-100 placeholder-slate-400 outline-none transition focus:border-brand/70 focus:ring-2 focus:ring-brand/25"
               />
             </div>
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || Boolean(serialValidationMessage)}
               className="flex items-center justify-center gap-2 rounded-xl bg-brand px-7 py-4 text-sm font-bold text-bg-main transition-all duration-200 ease-out hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isLoading ? "Checking..." : "Verify Item"}

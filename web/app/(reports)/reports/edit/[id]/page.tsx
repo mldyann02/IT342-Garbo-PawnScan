@@ -5,6 +5,13 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getAuthUser, getJwt } from "@/shared/auth";
 import { fetchReports, updateReport } from "@/features/reports/lib/reports";
+import {
+  SERIAL_NUMBER_ALLOWED_TEXT,
+  SERIAL_NUMBER_HTML_PATTERN,
+  SERIAL_NUMBER_MAX_LENGTH,
+  sanitizeSerialNumberInput,
+  validateSerialNumber,
+} from "@/shared/serial-number";
 
 type ReportForm = {
   serialNumber: string;
@@ -80,8 +87,9 @@ export default function EditReportPage() {
 
   const errors = useMemo(() => {
     const next: Partial<Record<keyof Omit<ReportForm, "file">, string>> = {};
-    if (!form.serialNumber.trim()) {
-      next.serialNumber = "Serial number is required";
+    const serialNumberError = validateSerialNumber(form.serialNumber);
+    if (serialNumberError) {
+      next.serialNumber = serialNumberError;
     }
     if (!form.itemModel.trim()) {
       next.itemModel = "Item model is required";
@@ -157,9 +165,12 @@ export default function EditReportPage() {
                   onChange={(event) =>
                     setForm((current) => ({
                       ...current,
-                      serialNumber: event.target.value,
+                      serialNumber: sanitizeSerialNumberInput(event.target.value),
                     }))
                   }
+                  maxLength={SERIAL_NUMBER_MAX_LENGTH}
+                  pattern={SERIAL_NUMBER_HTML_PATTERN}
+                  title={SERIAL_NUMBER_ALLOWED_TEXT}
                   className="rounded-lg bg-slate-900/70 px-3 py-2.5 text-slate-100 shadow-[inset_0_0_0_1px_rgba(71,85,105,0.45)] focus:outline-none focus:ring-2 focus:ring-brand/50"
                 />
                 {submitAttempted && errors.serialNumber && (
