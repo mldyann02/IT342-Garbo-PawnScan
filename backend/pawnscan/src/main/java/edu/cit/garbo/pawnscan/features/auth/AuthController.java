@@ -6,6 +6,7 @@ import edu.cit.garbo.pawnscan.features.auth.dto.GoogleAuthRequest;
 import edu.cit.garbo.pawnscan.features.auth.dto.LoginRequest;
 import edu.cit.garbo.pawnscan.features.auth.dto.RegisterRequest;
 import edu.cit.garbo.pawnscan.features.auth.dto.CompleteProfileRequest;
+import edu.cit.garbo.pawnscan.features.auth.dto.VerifyOtpRequest;
 import edu.cit.garbo.pawnscan.features.auth.dto.UserProfileResponse;
 import edu.cit.garbo.pawnscan.features.auth.dto.UserProfileUpdateRequest;
 import edu.cit.garbo.pawnscan.features.auth.AuthService;
@@ -30,6 +31,12 @@ public class AuthController {
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
         AuthResponse response = authService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<AuthResponse> verifyOtp(@Valid @RequestBody VerifyOtpRequest request) {
+        AuthResponse response = authService.verifyOtp(request);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/login")

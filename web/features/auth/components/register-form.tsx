@@ -223,17 +223,25 @@ export default function RegisterForm() {
       }
 
       const registeredEmail = typeof data.email === "string" ? data.email : "";
-      const registeredRole = typeof data.role === "string" ? data.role : "";
+      
+      if (data.registrationStatus === "PENDING_VERIFICATION" || !token) {
+        setApiMessage({
+          type: "success",
+          text: data.message || "Registration successful. Please check your email for the verification code.",
+        });
+
+        setTimeout(() => {
+          router.push(`/verify-otp?email=${encodeURIComponent(registeredEmail)}`);
+        }, 1500);
+        return;
+      }
+
       const params = new URLSearchParams({
         registered: "1",
       });
 
       if (registeredEmail) {
         params.set("email", registeredEmail);
-      }
-
-      if (registeredRole) {
-        params.set("role", registeredRole);
       }
 
       setApiMessage({

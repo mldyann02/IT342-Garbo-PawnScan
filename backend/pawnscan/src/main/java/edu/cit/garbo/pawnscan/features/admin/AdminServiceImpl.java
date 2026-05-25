@@ -14,6 +14,7 @@ import edu.cit.garbo.pawnscan.features.reports.exception.ReportNotFoundException
 import edu.cit.garbo.pawnscan.features.reports.repository.ReportRepository;
 import edu.cit.garbo.pawnscan.shared.user.User;
 import edu.cit.garbo.pawnscan.shared.user.UserRepository;
+import edu.cit.garbo.pawnscan.shared.email.EmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +31,7 @@ public class AdminServiceImpl implements AdminService {
     private final BusinessProfileRepository businessProfileRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
+    private final EmailService emailService;
 
     @Override
     @Transactional(readOnly = true)
@@ -171,6 +173,8 @@ public class AdminServiceImpl implements AdminService {
                 "Report status updated",
                 itemModel + " has been marked " + status + "." + reasonSuffix,
                 "/reports?status=" + report.getStatus().name() + "&reportId=" + report.getId());
+
+        emailService.sendReportStatusEmail(owner.getEmail(), report, report.getStatus().name());
     }
 
     private void notifyBusinessOwner(BusinessProfile profile) {
