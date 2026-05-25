@@ -5,12 +5,17 @@ import edu.cit.garbo.pawnscan.features.auth.dto.GoogleAuthConfigResponse;
 import edu.cit.garbo.pawnscan.features.auth.dto.GoogleAuthRequest;
 import edu.cit.garbo.pawnscan.features.auth.dto.LoginRequest;
 import edu.cit.garbo.pawnscan.features.auth.dto.RegisterRequest;
+import edu.cit.garbo.pawnscan.features.auth.dto.CompleteProfileRequest;
+import edu.cit.garbo.pawnscan.features.auth.dto.VerifyOtpRequest;
+import edu.cit.garbo.pawnscan.features.auth.dto.UserProfileResponse;
+import edu.cit.garbo.pawnscan.features.auth.dto.UserProfileUpdateRequest;
 import edu.cit.garbo.pawnscan.features.auth.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,6 +31,12 @@ public class AuthController {
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
         AuthResponse response = authService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<AuthResponse> verifyOtp(@Valid @RequestBody VerifyOtpRequest request) {
+        AuthResponse response = authService.verifyOtp(request);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/login")
@@ -52,6 +63,37 @@ public class AuthController {
         }
         AuthResponse response = authService.getMe(authentication.getName());
         return ResponseEntity.ok(response);
+    }
+
+    @org.springframework.web.bind.annotation.GetMapping("/profile")
+    public ResponseEntity<UserProfileResponse> getProfile(org.springframework.security.core.Authentication authentication) {
+        if (authentication == null || authentication.getName() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        return ResponseEntity.ok(authService.getProfile(authentication.getName()));
+    }
+
+    @PutMapping("/profile")
+    public ResponseEntity<UserProfileResponse> updateProfile(
+            org.springframework.security.core.Authentication authentication,
+            @Valid @RequestBody UserProfileUpdateRequest request) {
+        if (authentication == null || authentication.getName() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        return ResponseEntity.ok(authService.updateProfile(authentication.getName(), request));
+    }
+
+    @PutMapping("/complete-profile")
+    public ResponseEntity<AuthResponse> completeProfile(
+            org.springframework.security.core.Authentication authentication,
+            @Valid @RequestBody CompleteProfileRequest request) {
+        if (authentication == null || authentication.getName() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        return ResponseEntity.ok(authService.completeProfile(authentication.getName(), request));
     }
 }
 

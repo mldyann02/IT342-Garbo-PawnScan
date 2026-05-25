@@ -62,7 +62,7 @@ describe('RegisterForm', () => {
             email: 'juan@example.com',
             password: 'Strong123',
             phoneNumber: '+639171234567',
-            role: 'INDIVIDUAL'
+            role: 'USER'
           })
         })
       );

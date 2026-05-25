@@ -1,16 +1,22 @@
 package edu.cit.garbo.pawnscan.features.verification;
 
+import edu.cit.garbo.pawnscan.features.businessprofile.entity.BusinessProfile;
+import edu.cit.garbo.pawnscan.features.businessprofile.repository.BusinessProfileRepository;
 import edu.cit.garbo.pawnscan.features.verification.dto.SearchLogResponse;
 import edu.cit.garbo.pawnscan.features.verification.dto.StolenMatchResponse;
 import edu.cit.garbo.pawnscan.features.verification.dto.StolenReportSummaryResponse;
 import edu.cit.garbo.pawnscan.features.verification.dto.VerifySearchResponse;
+import edu.cit.garbo.pawnscan.features.reports.dto.ReportFileResponse;
 import edu.cit.garbo.pawnscan.features.reports.entity.Report;
 import edu.cit.garbo.pawnscan.features.reports.entity.ReportFile;
 import edu.cit.garbo.pawnscan.features.reports.entity.ReportStatus;
 import edu.cit.garbo.pawnscan.features.verification.entity.SearchLog;
+import edu.cit.garbo.pawnscan.features.notifications.NotificationService;
 import edu.cit.garbo.pawnscan.shared.user.User;
 import edu.cit.garbo.pawnscan.shared.user.UserRole;
 import edu.cit.garbo.pawnscan.features.verification.entity.VerificationResult;
+import edu.cit.garbo.pawnscan.features.verification.publicapi.PublicStolenItemClient;
+import edu.cit.garbo.pawnscan.features.verification.publicapi.PublicStolenItemMatch;
 import edu.cit.garbo.pawnscan.shared.exception.ForbiddenActionException;
 import edu.cit.garbo.pawnscan.features.verification.exception.InvalidVerificationRequestException;
 import edu.cit.garbo.pawnscan.features.reports.repository.ReportRepository;
@@ -28,6 +34,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Locale;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.regex.Pattern;
 
 @Service
@@ -42,6 +49,9 @@ public class VerificationServiceImpl implements VerificationService {
     private final ReportRepository reportRepository;
     private final SearchLogRepository searchLogRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
+    private final PublicStolenItemClient publicStolenItemClient;
+    private final BusinessProfileRepository businessProfileRepository;
 
     @Override
     @Transactional
@@ -53,6 +63,7 @@ public class VerificationServiceImpl implements VerificationService {
         try {
             persistSearchLog(attempt.businessUser(), attempt.normalizedSerial(), attempt.result(),
                     attempt.matchedReport());
+            notifyOriginalOwnerIfStolen(attempt.businessUser(), attempt.normalizedSerial(), attempt.matchedReport());
         } catch (RuntimeException ex) {
             LOGGER.warn("Search log persistence failed for business user {} and serial {}", authenticatedEmail,
                     attempt.normalizedSerial(), ex);
@@ -62,6 +73,11 @@ public class VerificationServiceImpl implements VerificationService {
                 .status(attempt.result())
                 .serial(attempt.normalizedSerial())
                 .report(attempt.matchedReport() == null ? null : toStolenReportSummary(attempt.matchedReport()))
+                .publicApiChecked(true)
+                .publicApiStolen(attempt.publicMatch().stolen())
+                .publicApiSource(attempt.publicMatch().source())
+                .publicApiMatchTitle(attempt.publicMatch().title())
+                .publicApiMatchUrl(attempt.publicMatch().url())
                 .build();
     }
 
@@ -75,6 +91,7 @@ public class VerificationServiceImpl implements VerificationService {
                 attempt.normalizedSerial(),
                 attempt.result(),
                 attempt.matchedReport());
+        notifyOriginalOwnerIfStolen(attempt.businessUser(), attempt.normalizedSerial(), attempt.matchedReport());
         return toSearchLogResponse(log);
     }
 
@@ -127,6 +144,13 @@ public class VerificationServiceImpl implements VerificationService {
             throw new ForbiddenActionException("Only BUSINESS users can verify item serial numbers");
         }
 
+        BusinessProfile profile = businessProfileRepository.findById(user.getUserId())
+                .orElseThrow(() -> new ForbiddenActionException("Business profile was not found"));
+
+        if (!Boolean.TRUE.equals(profile.getIsVerified())) {
+            throw new ForbiddenActionException("Only verified BUSINESS users can verify item serial numbers");
+        }
+
         return user;
     }
 
@@ -134,16 +158,23 @@ public class VerificationServiceImpl implements VerificationService {
         User businessUser = getAuthenticatedBusinessUser(authenticatedEmail);
         String normalizedSerial = normalizeAndValidateSerial(serial);
 
-        Optional<Report> matchedReport = reportRepository
-                .findFirstBySerialNumberIgnoreCaseAndStatus(normalizedSerial, ReportStatus.APPROVED);
+        CompletableFuture<Optional<Report>> internalLookup = CompletableFuture.supplyAsync(() -> reportRepository
+                .findFirstBySerialNumberIgnoreCaseAndStatusWithUser(normalizedSerial, ReportStatus.APPROVED));
+        CompletableFuture<PublicStolenItemMatch> publicLookup = CompletableFuture
+                .supplyAsync(() -> publicStolenItemClient.searchBySerial(normalizedSerial));
 
-        VerificationResult result = matchedReport.isPresent() ? VerificationResult.STOLEN : VerificationResult.CLEAN;
+        Optional<Report> matchedReport = internalLookup.join();
+        PublicStolenItemMatch publicMatch = publicLookup.join();
+        VerificationResult result = matchedReport.isPresent() || publicMatch.stolen()
+                ? VerificationResult.STOLEN
+                : VerificationResult.CLEAN;
 
         return new VerificationAttempt(
                 businessUser,
                 normalizedSerial,
                 matchedReport.orElse(null),
-                result);
+                result,
+                publicMatch);
     }
 
     private SearchLog persistSearchLog(User businessUser, String normalizedSerial, VerificationResult result,
@@ -160,7 +191,32 @@ public class VerificationServiceImpl implements VerificationService {
             User businessUser,
             String normalizedSerial,
             Report matchedReport,
-            VerificationResult result) {
+            VerificationResult result,
+            PublicStolenItemMatch publicMatch) {
+    }
+
+    private void notifyOriginalOwnerIfStolen(User businessUser, String normalizedSerial, Report matchedReport) {
+        if (matchedReport == null || matchedReport.getUser() == null) {
+            return;
+        }
+
+        User owner = matchedReport.getUser();
+        if (owner.getUserId().equals(businessUser.getUserId())) {
+            return;
+        }
+
+        String businessName = businessUser.getFullName() == null || businessUser.getFullName().isBlank()
+                ? "A verified business"
+                : businessUser.getFullName();
+        String itemModel = matchedReport.getItemModel() == null || matchedReport.getItemModel().isBlank()
+                ? "your reported item"
+                : matchedReport.getItemModel();
+
+        notificationService.createNotification(
+                owner,
+                "Stolen item match found",
+                businessName + " searched serial " + normalizedSerial + " and matched it to " + itemModel + ".",
+                "/reports?tab=matched&reportId=" + matchedReport.getId());
     }
 
     private String normalizeAndValidateSerial(String serial) {
@@ -196,6 +252,15 @@ public class VerificationServiceImpl implements VerificationService {
 
     private StolenReportSummaryResponse toStolenReportSummary(Report report) {
         User victim = report.getUser();
+        java.util.List<ReportFileResponse> files = report.getFiles().stream()
+                .sorted(java.util.Comparator.comparing(ReportFile::getCreatedAt, java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder())).reversed())
+                .map(file -> ReportFileResponse.builder()
+                        .id(file.getId())
+                        .fileUrl(file.getFileUrl())
+                        .fileType(file.getFileType())
+                        .build())
+                .toList();
+
         return StolenReportSummaryResponse.builder()
                 .reportId(report.getId())
                 .serialNumber(report.getSerialNumber())
@@ -205,6 +270,7 @@ public class VerificationServiceImpl implements VerificationService {
                 .ownerName(victim == null ? null : victim.getFullName())
                 .ownerEmail(victim == null ? null : victim.getEmail())
                 .ownerPhoneNumber(victim == null ? null : victim.getPhoneNumber())
+                .files(files)
                 .build();
     }
 
@@ -220,9 +286,14 @@ public class VerificationServiceImpl implements VerificationService {
         }
 
         User victim = report.getUser();
-        ReportFile evidence = report.getFiles() == null || report.getFiles().isEmpty()
-                ? null
-                : report.getFiles().get(0);
+        java.util.List<ReportFileResponse> files = report.getFiles().stream()
+                .sorted(java.util.Comparator.comparing(ReportFile::getCreatedAt, java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder())).reversed())
+                .map(file -> ReportFileResponse.builder()
+                        .id(file.getId())
+                        .fileUrl(file.getFileUrl())
+                        .fileType(file.getFileType())
+                        .build())
+                .toList();
 
         return StolenMatchResponse.builder()
                 .searchedSerial(log.getSearchedSerial())
@@ -234,10 +305,7 @@ public class VerificationServiceImpl implements VerificationService {
                 .victimName(victim == null ? null : victim.getFullName())
                 .victimEmail(victim == null ? null : victim.getEmail())
                 .victimPhoneNumber(victim == null ? null : victim.getPhoneNumber())
-                .evidenceFileUrl(evidence == null ? null : evidence.getFileUrl())
-                .evidenceFileType(evidence == null || evidence.getFileType() == null
-                        ? null
-                        : evidence.getFileType().name())
+                .files(files)
                 .build();
     }
 }

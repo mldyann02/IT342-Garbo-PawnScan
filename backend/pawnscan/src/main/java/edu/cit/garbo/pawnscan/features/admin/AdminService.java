@@ -9,9 +9,10 @@ import java.util.List;
 
 public interface AdminService {
     List<ReportAdminResponse> getPendingReports();
-    ReportAdminResponse updateReportStatus(Long reportId, ReportStatus status);
+    ReportAdminResponse updateReportStatus(Long reportId, ReportStatus status, String rejectionReason);
     List<BusinessProfileAdminResponse> getPendingBusinesses();
     List<BusinessProfileAdminResponse> getAllBusinesses();
     BusinessProfileAdminResponse verifyBusiness(Long userId);
+    BusinessProfileAdminResponse rejectBusiness(Long userId, String rejectionReason);
     AdminStatsResponse getSystemStats();
 }

@@ -32,6 +32,16 @@ services:
       UPLOAD_BASE_DIR: ${UPLOAD_BASE_DIR:-uploads}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      SMTP_HOST: ${SMTP_HOST:-smtp.sendgrid.net}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-apikey}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-${SENDGRID_API_KEY:-}}
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY:-}
+      SMTP_AUTH: ${SMTP_AUTH:-true}
+      SMTP_STARTTLS: ${SMTP_STARTTLS:-true}
+      SMTP_STARTTLS_REQUIRED: ${SMTP_STARTTLS_REQUIRED:-false}
+      SMTP_SSL_TRUST: ${SMTP_SSL_TRUST:-smtp.sendgrid.net}
+      APP_MAIL_FROM: ${APP_MAIL_FROM:-pawnscan1@gmail.com}
     ports:
       - "8080:8080"
     volumes:

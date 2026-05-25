@@ -22,6 +22,7 @@ public class ReportAdminResponse {
     private String itemModel;
     private String description;
     private ReportStatus status;
+    private String rejectionReason;
     private LocalDateTime createdAt;
     private String ownerName;
     private String ownerEmail;

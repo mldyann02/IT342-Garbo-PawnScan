@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 type RequestBody = {
   token: string;
+  role?: string;
 };
 
 export async function POST(request: Request) {
@@ -16,7 +17,8 @@ export async function POST(request: Request) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        token: body.token
+        token: body.token,
+        role: body.role
       })
     });
 

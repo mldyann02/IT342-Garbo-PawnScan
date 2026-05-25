@@ -1,15 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchMe, getAuthRole, clearAuthSession } from "@/shared/auth";
-import { invalidateReportsCache } from "@/features/reports/lib/reports";
+import { fetchMe, getAuthRole } from "@/shared/auth";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 export default function VerificationGuard({ children }: { children: React.ReactNode }) {
   const [isVerified, setIsVerified] = useState<boolean | null>(null);
+  const [rejectionReason, setRejectionReason] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
 
   useEffect(() => {
     async function checkVerification() {
@@ -25,7 +23,11 @@ export default function VerificationGuard({ children }: { children: React.ReactN
         const isVerifiedStatus = me.businessProfile.verified !== undefined 
           ? me.businessProfile.verified 
           : me.businessProfile.isVerified;
+        const isRejectedStatus = me.businessProfile.rejected !== undefined
+          ? me.businessProfile.rejected
+          : me.businessProfile.isRejected;
         setIsVerified(!!isVerifiedStatus);
+        setRejectionReason(isRejectedStatus ? me.businessProfile.rejectionReason || "No reason was provided." : null);
       } else {
         // Fallback or error fetching profile
         setIsVerified(false);
@@ -51,6 +53,8 @@ export default function VerificationGuard({ children }: { children: React.ReactN
     return <>{children}</>;
   }
 
+  const isRejected = !!rejectionReason;
+
   // Unverified State UI
   return (
     <div className="min-h-screen relative overflow-hidden text-slate-200 flex flex-col pt-32 px-4">
@@ -68,10 +72,12 @@ export default function VerificationGuard({ children }: { children: React.ReactN
           </div>
           
           <h1 className="text-3xl font-extrabold tracking-tight text-white mb-4">
-            Pending Admin Approval
+            {isRejected ? "Business Account Rejected" : "Pending Admin Approval"}
           </h1>
           <p className="text-lg text-slate-400 leading-relaxed max-w-lg mb-8">
-            Your business account is currently under review. Our administrators are verifying your provided credentials and permit number. You will gain full access to the business portal once approved.
+            {isRejected
+              ? `Your business account was rejected. Reason: ${rejectionReason}`
+              : "Your business account is currently under review. Our administrators are verifying your provided credentials and permit number. You will gain full access to verification features once approved."}
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
@@ -81,16 +87,12 @@ export default function VerificationGuard({ children }: { children: React.ReactN
             >
               Refresh Status
             </button>
-            <button 
-              onClick={() => {
-                clearAuthSession();
-                invalidateReportsCache();
-                router.push("/login");
-              }}
+            <Link 
+              href="/business"
               className="inline-flex items-center justify-center rounded-xl bg-slate-800 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-slate-900/20 transition-all hover:scale-105 hover:bg-slate-700"
             >
-              Logout
-            </button>
+              Back to Dashboard
+            </Link>
           </div>
         </div>
       </main>

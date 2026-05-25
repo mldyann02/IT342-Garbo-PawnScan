@@ -19,6 +19,8 @@ public class BusinessProfileAdminResponse {
     private String businessAddress;
     private String permitNumber;
     private Boolean isVerified;
+    private Boolean isRejected;
+    private String rejectionReason;
     private String ownerName;
     private String ownerEmail;
     private LocalDateTime createdAt;

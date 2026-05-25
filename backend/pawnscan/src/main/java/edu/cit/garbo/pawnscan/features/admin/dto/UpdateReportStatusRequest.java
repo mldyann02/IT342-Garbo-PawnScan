@@ -8,4 +8,5 @@ import lombok.Setter;
 @Setter
 public class UpdateReportStatusRequest {
     private ReportStatus status;
+    private String rejectionReason;
 }

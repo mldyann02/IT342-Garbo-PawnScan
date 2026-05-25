@@ -16,6 +16,8 @@ export type BusinessProfileAdmin = {
   businessAddress: string;
   permitNumber: string;
   isVerified: boolean;
+  isRejected?: boolean;
+  rejectionReason?: string | null;
   ownerName: string;
   ownerEmail: string;
   createdAt: string;
@@ -27,6 +29,7 @@ export type ReportAdmin = {
   itemModel: string;
   description: string;
   status: "PENDING" | "APPROVED" | "REJECTED";
+  rejectionReason?: string | null;
   createdAt: string;
   ownerName: string;
   ownerEmail: string;
@@ -68,10 +71,14 @@ export async function fetchPendingReports(): Promise<ReportAdmin[]> {
   return fetchWithAuth("/api/admin/reports/pending");
 }
 
-export async function updateReportStatus(id: number, status: "APPROVED" | "REJECTED" | "PENDING"): Promise<ReportAdmin> {
+export async function updateReportStatus(
+  id: number,
+  status: "APPROVED" | "REJECTED" | "PENDING",
+  rejectionReason?: string,
+): Promise<ReportAdmin> {
   return fetchWithAuth(`/api/admin/reports/${id}/status`, {
     method: "PATCH",
-    body: JSON.stringify({ status }),
+    body: JSON.stringify({ status, rejectionReason }),
   });
 }
 
@@ -86,5 +93,12 @@ export async function fetchAllBusinesses(): Promise<BusinessProfileAdmin[]> {
 export async function verifyBusiness(id: number): Promise<BusinessProfileAdmin> {
   return fetchWithAuth(`/api/admin/businesses/${id}/verify`, {
     method: "PATCH",
+  });
+}
+
+export async function rejectBusiness(id: number, rejectionReason: string): Promise<BusinessProfileAdmin> {
+  return fetchWithAuth(`/api/admin/businesses/${id}/reject`, {
+    method: "PATCH",
+    body: JSON.stringify({ rejectionReason }),
   });
 }

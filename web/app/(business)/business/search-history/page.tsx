@@ -9,6 +9,7 @@ import {
   fetchSearchHistory,
   fetchStolenMatches,
 } from "@/features/verification/lib/verify";
+import VerificationGuard from "@/features/business/components/verification-guard";
 
 const PAGE_SIZE = 500;
 
@@ -21,7 +22,7 @@ function formatDate(value: string): string {
 }
 
 function inferEvidenceType(
-  fileType: StolenMatch["evidenceFileType"],
+  fileType: string | null | undefined,
   fileUrl?: string | null,
 ): "IMAGE" | "PDF" {
   if (fileType === "PDF") {
@@ -183,7 +184,8 @@ export default function SearchHistoryPage() {
   }, [viewerFile]);
 
   return (
-    <div className="min-h-screen text-slate-200">
+    <VerificationGuard>
+      <div className="min-h-screen text-slate-200">
       <main className="mx-auto w-full max-w-5xl px-4 pb-16 pt-36 sm:px-6 sm:pt-40 md:pt-32 lg:px-8">
         {errorMessage && (
           <div className="mb-8 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
@@ -587,55 +589,45 @@ export default function SearchHistoryPage() {
                             <h4 className="text-sm font-semibold uppercase tracking-[0.15em] text-slate-300">
                               Uploaded Evidence
                             </h4>
-                            {selectedMatch.evidenceFileUrl && (
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  setViewerFile({
-                                    url: selectedMatch.evidenceFileUrl!,
-                                    type: inferEvidenceType(
-                                      selectedMatch.evidenceFileType,
-                                      selectedMatch.evidenceFileUrl,
-                                    ),
-                                  })
-                                }
-                                className="rounded-lg border border-brand/40 px-3 py-1.5 text-xs font-semibold text-brand hover:bg-brand/10"
-                              >
-                                Open Evidence
-                              </button>
-                            )}
                           </div>
 
-                          {!selectedMatch.evidenceFileUrl ? (
+                          {!selectedMatch.files || selectedMatch.files.length === 0 ? (
                             <p className="mt-3 text-sm text-slate-500">
                               No evidence file was uploaded for this report.
                             </p>
-                          ) : inferEvidenceType(
-                              selectedMatch.evidenceFileType,
-                              selectedMatch.evidenceFileUrl,
-                            ) === "PDF" ? (
-                            <div className="mt-4 rounded-xl border border-slate-700/60 bg-slate-900/50 p-4">
-                              <p className="text-sm text-slate-300">
-                                PDF evidence is available for review.
-                              </p>
-                            </div>
                           ) : (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setViewerFile({
-                                  url: selectedMatch.evidenceFileUrl!,
-                                  type: "IMAGE",
-                                })
-                              }
-                              className="mt-4 block w-full overflow-hidden rounded-xl border border-slate-700/60"
-                            >
-                              <img
-                                src={selectedMatch.evidenceFileUrl}
-                                alt="Evidence preview"
-                                className="h-56 w-full object-cover"
-                              />
-                            </button>
+                            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              {selectedMatch.files.map((file, idx) => {
+                                const type = inferEvidenceType(file.fileType, file.fileUrl);
+                                const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080";
+                                const fullUrl = `${backendUrl}${file.fileUrl}`;
+                                
+                                return (
+                                  <button
+                                    key={file.id || idx}
+                                    type="button"
+                                    onClick={() => setViewerFile({ url: fullUrl, type })}
+                                    className="group relative flex h-32 w-full flex-col items-center justify-center overflow-hidden rounded-xl border border-slate-700/60 bg-slate-900/50 transition-all hover:border-brand/40 hover:bg-slate-800"
+                                  >
+                                    {type === "PDF" ? (
+                                      <div className="flex flex-col items-center gap-2 text-slate-400 group-hover:text-slate-200 transition-colors">
+                                        <svg className="h-8 w-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                        </svg>
+                                        <span className="text-xs font-semibold">View PDF Document</span>
+                                      </div>
+                                    ) : (
+                                      <>
+                                        <img src={fullUrl} alt="Evidence preview" className="absolute inset-0 h-full w-full object-cover opacity-60 transition-opacity group-hover:opacity-40" />
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 transition-opacity group-hover:opacity-100">
+                                          <span className="rounded-lg bg-black/60 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-sm shadow-lg border border-white/10">View Image</span>
+                                        </div>
+                                      </>
+                                    )}
+                                  </button>
+                                );
+                              })}
+                            </div>
                           )}
                         </div>
                       </article>
@@ -739,6 +731,7 @@ export default function SearchHistoryPage() {
         </div>
       )}
     </div>
+    </VerificationGuard>
   );
 }
 

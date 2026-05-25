@@ -5,17 +5,24 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import edu.cit.garbo.pawnscan.features.auth.dto.AuthResponse;
 import edu.cit.garbo.pawnscan.features.auth.dto.GoogleAuthConfigResponse;
 import edu.cit.garbo.pawnscan.features.auth.dto.GoogleAuthRequest;
+import edu.cit.garbo.pawnscan.features.auth.dto.CompleteProfileRequest;
 import edu.cit.garbo.pawnscan.features.auth.dto.LoginRequest;
 import edu.cit.garbo.pawnscan.features.auth.dto.RegisterRequest;
+import edu.cit.garbo.pawnscan.features.auth.dto.VerifyOtpRequest;
+import edu.cit.garbo.pawnscan.features.auth.dto.UserProfileResponse;
+import edu.cit.garbo.pawnscan.features.auth.dto.UserProfileUpdateRequest;
 import edu.cit.garbo.pawnscan.features.auth.exception.EmailAlreadyExistsException;
 import edu.cit.garbo.pawnscan.features.auth.exception.InvalidGoogleTokenException;
 import edu.cit.garbo.pawnscan.features.auth.exception.InvalidCredentialsException;
+import edu.cit.garbo.pawnscan.features.businessprofile.dto.BusinessProfileResponse;
 import edu.cit.garbo.pawnscan.features.businessprofile.BusinessProfileService;
 import edu.cit.garbo.pawnscan.features.businessprofile.dto.BusinessProfileRequest;
 import edu.cit.garbo.pawnscan.features.businessprofile.dto.BusinessProfileSummaryResponse;
 import edu.cit.garbo.pawnscan.features.businessprofile.exception.InvalidBusinessProfileException;
 import edu.cit.garbo.pawnscan.shared.email.EmailService;
+import edu.cit.garbo.pawnscan.shared.email.OtpService;
 import edu.cit.garbo.pawnscan.shared.security.JwtService;
+import edu.cit.garbo.pawnscan.shared.user.RegistrationStatus;
 import edu.cit.garbo.pawnscan.shared.user.User;
 import edu.cit.garbo.pawnscan.shared.user.UserRole;
 import edu.cit.garbo.pawnscan.shared.user.UserRepository;
@@ -43,6 +50,7 @@ public class AuthServiceImpl implements AuthService {
     private final JwtService jwtService;
     private final GoogleIdTokenVerifier googleIdTokenVerifier;
     private final EmailService emailService;
+    private final OtpService otpService;
 
     @Value("${google.client-id:}")
     private String googleClientId;
@@ -65,6 +73,7 @@ public class AuthServiceImpl implements AuthService {
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .phoneNumber(normalizePhilippinePhone(request.getPhoneNumber()))
                 .role(request.getRole())
+                .registrationStatus(RegistrationStatus.PENDING_VERIFICATION)
                 .build();
 
         User savedUser = userRepository.save(user);
@@ -80,13 +89,16 @@ public class AuthServiceImpl implements AuthService {
             businessProfileSummary = businessProfileService.getSummaryByUserId(savedUser.getUserId());
         }
 
+        otpService.generateAndSendOtp(savedUser.getEmail());
+
         return AuthResponse.builder()
                 .userId(savedUser.getUserId())
                 .email(savedUser.getEmail())
                 .fullName(savedUser.getFullName())
                 .role(savedUser.getRole().name())
+                .registrationStatus(savedUser.getRegistrationStatus())
                 .businessProfile(businessProfileSummary.orElse(null))
-                .message("User registered successfully")
+                .message("User registered successfully. Please check your email for the verification code.")
                 .build();
     }
 
@@ -132,6 +144,10 @@ public class AuthServiceImpl implements AuthService {
             throw new InvalidCredentialsException("Invalid email or password");
         }
 
+        if (user.getRegistrationStatus() == RegistrationStatus.PENDING_VERIFICATION) {
+            throw new InvalidCredentialsException("Please verify your email address before logging in");
+        }
+
         Optional<BusinessProfileSummaryResponse> businessProfileSummary = user.getRole() == UserRole.BUSINESS
                 ? businessProfileService.getSummaryByUserId(user.getUserId())
                 : Optional.empty();
@@ -144,6 +160,7 @@ public class AuthServiceImpl implements AuthService {
                 .email(user.getEmail())
                 .fullName(user.getFullName())
                 .role(user.getRole().name())
+                .registrationStatus(user.getRegistrationStatus())
                 .token(token)
                 .businessProfile(businessProfileSummary.orElse(null))
                 .message("Login successful")
@@ -176,14 +193,27 @@ public class AuthServiceImpl implements AuthService {
                             .passwordHash(passwordEncoder.encode(generateFallbackCredential()))
                             .oauthProvider(GOOGLE_PROVIDER)
                             .oauthSubject(googleSubject)
-                            .role(UserRole.USER)
+                            .role(request.getRole() != null ? request.getRole() : UserRole.USER)
+                            .registrationStatus(RegistrationStatus.INCOMPLETE)
                             .build());
                 });
 
-        if (!created[0] && shouldLinkGoogleIdentity(user, googleSubject)) {
-            user.setOauthProvider(GOOGLE_PROVIDER);
-            user.setOauthSubject(googleSubject);
-            user = userRepository.save(user);
+        if (!created[0]) {
+            boolean updated = false;
+            if (shouldLinkGoogleIdentity(user, googleSubject)) {
+                user.setOauthProvider(GOOGLE_PROVIDER);
+                user.setOauthSubject(googleSubject);
+                updated = true;
+            }
+            if (user.getRegistrationStatus() == RegistrationStatus.INCOMPLETE 
+                    && request.getRole() != null 
+                    && user.getRole() != request.getRole()) {
+                user.setRole(request.getRole());
+                updated = true;
+            }
+            if (updated) {
+                user = userRepository.save(user);
+            }
         }
 
         if (created[0]) {
@@ -257,9 +287,103 @@ public class AuthServiceImpl implements AuthService {
                 .email(user.getEmail())
                 .fullName(user.getFullName())
                 .role(user.getRole().name())
+                .registrationStatus(user.getRegistrationStatus())
                 .businessProfile(businessProfileSummary.orElse(null))
                 .message("User details retrieved successfully")
                 .build();
+    }
+
+    @Override
+    public UserProfileResponse getProfile(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new InvalidCredentialsException("User not found"));
+
+        return toProfileResponse(user, "Profile retrieved successfully");
+    }
+
+    @Override
+    @Transactional
+    public UserProfileResponse updateProfile(String email, UserProfileUpdateRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new InvalidCredentialsException("User not found"));
+
+        if (isBlank(request.getFullName())) {
+            throw new InvalidBusinessProfileException("Full name is required");
+        }
+
+        user.setFullName(request.getFullName().trim());
+        user.setPhoneNumber(normalizePhilippinePhone(request.getPhoneNumber()));
+        User savedUser = userRepository.save(user);
+
+        if (savedUser.getRole() == UserRole.BUSINESS) {
+            if (isBlank(request.getBusinessName())
+                    || isBlank(request.getBusinessAddress())
+                    || isBlank(request.getPermitNumber())) {
+                throw new InvalidBusinessProfileException(
+                        "Business name, business address, and permit number are required for BUSINESS users");
+            }
+
+            businessProfileService.updateProfile(savedUser.getUserId(), BusinessProfileRequest.builder()
+                    .businessName(request.getBusinessName())
+                    .businessAddress(request.getBusinessAddress())
+                    .permitNumber(request.getPermitNumber())
+                    .build(), savedUser.getUserId(), savedUser.getRole());
+        }
+
+        return toProfileResponse(savedUser, "Profile updated successfully");
+    }
+
+    @Override
+    @Transactional
+    public AuthResponse completeProfile(String email, CompleteProfileRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new InvalidCredentialsException("User not found"));
+
+        if (user.getRegistrationStatus() == RegistrationStatus.ACTIVE) {
+            throw new InvalidBusinessProfileException("Profile is already complete");
+        }
+
+        user.setPhoneNumber(normalizePhilippinePhone(request.getPhoneNumber()));
+        
+        if (user.getRole() == UserRole.BUSINESS) {
+            if (isBlank(request.getBusinessName())
+                    || isBlank(request.getBusinessAddress())
+                    || isBlank(request.getPermitNumber())) {
+                throw new InvalidBusinessProfileException(
+                        "Business name, business address, and permit number are required for BUSINESS users");
+            }
+
+            businessProfileService.createProfileForRegistration(user, BusinessProfileRequest.builder()
+                    .businessName(request.getBusinessName())
+                    .businessAddress(request.getBusinessAddress())
+                    .permitNumber(request.getPermitNumber())
+                    .build());
+        }
+
+        user.setRegistrationStatus(RegistrationStatus.ACTIVE);
+        User savedUser = userRepository.save(user);
+
+        return buildAuthResponse(savedUser, "Profile completed successfully");
+    }
+
+    @Override
+    @Transactional
+    public AuthResponse verifyOtp(VerifyOtpRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new InvalidCredentialsException("User not found"));
+
+        if (user.getRegistrationStatus() == RegistrationStatus.ACTIVE) {
+            throw new InvalidCredentialsException("User is already verified");
+        }
+
+        otpService.verifyOtp(request.getEmail(), request.getCode());
+
+        user.setRegistrationStatus(RegistrationStatus.ACTIVE);
+        User savedUser = userRepository.save(user);
+
+        emailService.sendWelcomeEmail(savedUser.getEmail(), savedUser.getFullName());
+
+        return buildAuthResponse(savedUser, "Email verified successfully");
     }
 
     private AuthResponse buildAuthResponse(User user, String message) {
@@ -274,8 +398,28 @@ public class AuthServiceImpl implements AuthService {
                 .email(user.getEmail())
                 .fullName(user.getFullName())
                 .role(user.getRole().name())
+                .registrationStatus(user.getRegistrationStatus())
                 .token(token)
                 .businessProfile(businessProfileSummary.orElse(null))
+                .message(message)
+                .build();
+    }
+
+    private UserProfileResponse toProfileResponse(User user, String message) {
+        BusinessProfileResponse businessProfile = null;
+        if (user.getRole() == UserRole.BUSINESS) {
+            businessProfile = businessProfileService.getProfile(user.getUserId(), user.getUserId(), user.getRole());
+        }
+
+        return UserProfileResponse.builder()
+                .userId(user.getUserId())
+                .email(user.getEmail())
+                .fullName(user.getFullName())
+                .phoneNumber(user.getPhoneNumber())
+                .role(user.getRole().name())
+                .registrationStatus(user.getRegistrationStatus())
+                .createdAt(user.getCreatedAt())
+                .businessProfile(businessProfile)
                 .message(message)
                 .build();
     }

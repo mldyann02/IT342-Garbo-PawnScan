@@ -87,6 +87,10 @@ public class BusinessProfileServiceImpl implements BusinessProfileService {
 
         BusinessProfile profile = getProfileOrThrow(targetUserId);
         profile.setIsVerified(isVerified);
+        if (isVerified) {
+            profile.setIsRejected(false);
+            profile.setRejectionReason(null);
+        }
 
         return toResponse(businessProfileRepository.save(profile));
     }
@@ -188,6 +192,8 @@ public class BusinessProfileServiceImpl implements BusinessProfileService {
                 .businessAddress(profile.getBusinessAddress())
                 .permitNumber(profile.getPermitNumber())
                 .isVerified(Boolean.TRUE.equals(profile.getIsVerified()))
+                .isRejected(Boolean.TRUE.equals(profile.getIsRejected()))
+                .rejectionReason(profile.getRejectionReason())
                 .createdAt(profile.getCreatedAt())
                 .updatedAt(profile.getUpdatedAt())
                 .build();
@@ -198,6 +204,8 @@ public class BusinessProfileServiceImpl implements BusinessProfileService {
                 .userId(profile.getUserId())
                 .businessName(profile.getBusinessName())
                 .isVerified(Boolean.TRUE.equals(profile.getIsVerified()))
+                .isRejected(Boolean.TRUE.equals(profile.getIsRejected()))
+                .rejectionReason(profile.getRejectionReason())
                 .build();
     }
 }

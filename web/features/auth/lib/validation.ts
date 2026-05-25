@@ -1,4 +1,4 @@
-export type RegistrationRole = 'INDIVIDUAL' | 'BUSINESS';
+export type RegistrationRole = 'USER' | 'BUSINESS';
 
 export type RegistrationFormValues = {
   email: string;
@@ -15,9 +15,8 @@ export type RegistrationFormValues = {
 export type RegistrationFieldErrors = Partial<Record<keyof RegistrationFormValues, string>>;
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-// Accept Philippine mobile numbers: either +63 followed by 10 digits (e.g. +639171234567)
-// or local format starting with 0 (e.g. 09171234567)
-const contactNumberRegex = /^(\+63|0)9\d{9}$/;
+// Accept Philippine mobile numbers: must strictly be +639 followed by 9 digits (e.g. +639171234567)
+const contactNumberRegex = /^\+639\d{9}$/;
 
 export function validateEmail(email: string): string | null {
   if (!email.trim()) {
@@ -86,7 +85,7 @@ export function validateRegistrationForm(values: RegistrationFormValues): Regist
   if (!values.contactNumber.trim()) {
     errors.contactNumber = 'Contact number is required.';
   } else if (!contactNumberRegex.test(values.contactNumber.trim())) {
-    errors.contactNumber = 'Contact number must be a valid Philippine mobile number (e.g. +639171234567 or 09171234567).';
+    errors.contactNumber = 'Contact number must be a valid Philippine mobile number (e.g. +639171234567).';
   }
 
   return errors;

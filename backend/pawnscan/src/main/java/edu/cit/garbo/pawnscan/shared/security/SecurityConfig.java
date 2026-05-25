@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.ProviderManager;
@@ -61,9 +62,11 @@ public class SecurityConfig {
 
                 http.cors(org.springframework.security.config.Customizer.withDefaults())
                                 .csrf(AbstractHttpConfigurer::disable)
+                                .headers(headers -> headers.frameOptions(org.springframework.security.config.annotation.web.configurers.HeadersConfigurer.FrameOptionsConfig::disable))
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers("/api/auth/**").permitAll()
                                                 .requestMatchers("/uploads/**").permitAll()
+                                                .requestMatchers(HttpMethod.GET, "/api/notifications/stream").permitAll()
                                                 // Updated to match your refactored verification path in tests
                                                 .requestMatchers("/api/verification/**").hasRole("BUSINESS")
                                                 .requestMatchers("/api/business-profiles/**").hasRole("ADMIN")

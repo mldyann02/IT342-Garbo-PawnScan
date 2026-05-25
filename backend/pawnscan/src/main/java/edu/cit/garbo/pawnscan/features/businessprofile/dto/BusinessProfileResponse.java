@@ -20,6 +20,8 @@ public class BusinessProfileResponse {
     private String businessAddress;
     private String permitNumber;
     private boolean isVerified;
+    private boolean isRejected;
+    private String rejectionReason;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

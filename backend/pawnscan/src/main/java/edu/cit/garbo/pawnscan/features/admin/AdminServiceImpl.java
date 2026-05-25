@@ -5,6 +5,7 @@ import edu.cit.garbo.pawnscan.features.admin.dto.BusinessProfileAdminResponse;
 import edu.cit.garbo.pawnscan.features.admin.dto.ReportAdminResponse;
 import edu.cit.garbo.pawnscan.features.businessprofile.entity.BusinessProfile;
 import edu.cit.garbo.pawnscan.features.businessprofile.repository.BusinessProfileRepository;
+import edu.cit.garbo.pawnscan.features.notifications.NotificationService;
 import edu.cit.garbo.pawnscan.features.reports.dto.ReportFileResponse;
 import edu.cit.garbo.pawnscan.features.reports.entity.Report;
 import edu.cit.garbo.pawnscan.features.reports.entity.ReportFile;
@@ -13,6 +14,7 @@ import edu.cit.garbo.pawnscan.features.reports.exception.ReportNotFoundException
 import edu.cit.garbo.pawnscan.features.reports.repository.ReportRepository;
 import edu.cit.garbo.pawnscan.shared.user.User;
 import edu.cit.garbo.pawnscan.shared.user.UserRepository;
+import edu.cit.garbo.pawnscan.shared.email.EmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +30,8 @@ public class AdminServiceImpl implements AdminService {
     private final ReportRepository reportRepository;
     private final BusinessProfileRepository businessProfileRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
+    private final EmailService emailService;
 
     @Override
     @Transactional(readOnly = true)
@@ -40,12 +44,15 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     @Transactional
-    public ReportAdminResponse updateReportStatus(Long reportId, ReportStatus status) {
+    public ReportAdminResponse updateReportStatus(Long reportId, ReportStatus status, String rejectionReason) {
         Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new ReportNotFoundException("Report not found"));
-        
+
+        String normalizedReason = normalizeRequiredReason(status, rejectionReason);
         report.setStatus(status);
+        report.setRejectionReason(status == ReportStatus.REJECTED ? normalizedReason : null);
         Report savedReport = reportRepository.save(report);
+        notifyReportOwner(savedReport, normalizedReason);
         
         return toReportAdminResponse(savedReport);
     }
@@ -55,6 +62,7 @@ public class AdminServiceImpl implements AdminService {
     public List<BusinessProfileAdminResponse> getPendingBusinesses() {
         return businessProfileRepository.findByIsVerified(false)
                 .stream()
+                .filter(profile -> !Boolean.TRUE.equals(profile.getIsRejected()))
                 .map(this::toBusinessProfileAdminResponse)
                 .collect(Collectors.toList());
     }
@@ -76,8 +84,27 @@ public class AdminServiceImpl implements AdminService {
                 .orElseThrow(() -> new IllegalArgumentException("Business Profile not found"));
         
         profile.setIsVerified(true);
+        profile.setIsRejected(false);
+        profile.setRejectionReason(null);
         BusinessProfile savedProfile = businessProfileRepository.save(profile);
+        notifyBusinessOwner(savedProfile);
         
+        return toBusinessProfileAdminResponse(savedProfile);
+    }
+
+    @Override
+    @Transactional
+    public BusinessProfileAdminResponse rejectBusiness(Long userId, String rejectionReason) {
+        BusinessProfile profile = businessProfileRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Business Profile not found"));
+
+        String normalizedReason = normalizeRequiredReason(ReportStatus.REJECTED, rejectionReason);
+        profile.setIsVerified(false);
+        profile.setIsRejected(true);
+        profile.setRejectionReason(normalizedReason);
+        BusinessProfile savedProfile = businessProfileRepository.save(profile);
+        notifyBusinessOwnerRejected(savedProfile, normalizedReason);
+
         return toBusinessProfileAdminResponse(savedProfile);
     }
 
@@ -89,7 +116,9 @@ public class AdminServiceImpl implements AdminService {
         
         // In-memory filter or count query. A custom count query would be better, but this works for now.
         long pendingReports = reportRepository.findByStatusOrderByCreatedAtDesc(ReportStatus.PENDING).size();
-        long pendingBusinesses = businessProfileRepository.findByIsVerified(false).size();
+        long pendingBusinesses = businessProfileRepository.findByIsVerified(false).stream()
+                .filter(profile -> !Boolean.TRUE.equals(profile.getIsRejected()))
+                .count();
 
         return AdminStatsResponse.builder()
                 .totalUsers(totalUsers)
@@ -117,11 +146,81 @@ public class AdminServiceImpl implements AdminService {
                 .itemModel(report.getItemModel())
                 .description(report.getDescription())
                 .status(report.getStatus())
+                .rejectionReason(report.getRejectionReason())
                 .createdAt(report.getCreatedAt())
                 .ownerName(user != null ? user.getFullName() : null)
                 .ownerEmail(user != null ? user.getEmail() : null)
                 .files(files)
                 .build();
+    }
+
+    private void notifyReportOwner(Report report, String rejectionReason) {
+        User owner = report.getUser();
+        if (owner == null) {
+            return;
+        }
+
+        String itemModel = report.getItemModel() == null || report.getItemModel().isBlank()
+                ? "Your report"
+                : report.getItemModel();
+        String status = report.getStatus() == null ? "updated" : report.getStatus().name().toLowerCase();
+        String reasonSuffix = report.getStatus() == ReportStatus.REJECTED && rejectionReason != null
+                ? " Reason: " + rejectionReason
+                : "";
+
+        notificationService.createNotification(
+                owner,
+                "Report status updated",
+                itemModel + " has been marked " + status + "." + reasonSuffix,
+                "/reports?status=" + report.getStatus().name() + "&reportId=" + report.getId());
+
+        emailService.sendReportStatusEmail(owner.getEmail(), report, report.getStatus().name());
+    }
+
+    private void notifyBusinessOwner(BusinessProfile profile) {
+        User owner = profile.getUser();
+        if (owner == null) {
+            return;
+        }
+
+        String businessName = profile.getBusinessName() == null || profile.getBusinessName().isBlank()
+                ? "Your business account"
+                : profile.getBusinessName();
+
+        notificationService.createNotification(
+                owner,
+                "Business account approved",
+                businessName + " has been approved by an administrator.",
+                "/business");
+    }
+
+    private void notifyBusinessOwnerRejected(BusinessProfile profile, String rejectionReason) {
+        User owner = profile.getUser();
+        if (owner == null) {
+            return;
+        }
+
+        String businessName = profile.getBusinessName() == null || profile.getBusinessName().isBlank()
+                ? "Your business account"
+                : profile.getBusinessName();
+
+        notificationService.createNotification(
+                owner,
+                "Business account rejected",
+                businessName + " was rejected by an administrator. Reason: " + rejectionReason,
+                "/profile");
+    }
+
+    private String normalizeRequiredReason(ReportStatus status, String rejectionReason) {
+        if (status != ReportStatus.REJECTED) {
+            return null;
+        }
+
+        if (rejectionReason == null || rejectionReason.isBlank()) {
+            throw new IllegalArgumentException("Rejection reason is required");
+        }
+
+        return rejectionReason.trim();
     }
 
     private BusinessProfileAdminResponse toBusinessProfileAdminResponse(BusinessProfile profile) {
@@ -133,6 +232,8 @@ public class AdminServiceImpl implements AdminService {
                 .businessAddress(profile.getBusinessAddress())
                 .permitNumber(profile.getPermitNumber())
                 .isVerified(profile.getIsVerified())
+                .isRejected(profile.getIsRejected())
+                .rejectionReason(profile.getRejectionReason())
                 .ownerName(user != null ? user.getFullName() : null)
                 .ownerEmail(user != null ? user.getEmail() : null)
                 .createdAt(profile.getCreatedAt())

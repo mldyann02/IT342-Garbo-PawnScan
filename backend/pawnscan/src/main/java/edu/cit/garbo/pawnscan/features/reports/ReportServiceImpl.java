@@ -1,11 +1,14 @@
 package edu.cit.garbo.pawnscan.features.reports;
 
+import edu.cit.garbo.pawnscan.features.reports.dto.MatchedReportResponse;
 import edu.cit.garbo.pawnscan.features.reports.dto.ReportFileResponse;
 import edu.cit.garbo.pawnscan.features.reports.dto.ReportResponse;
 import edu.cit.garbo.pawnscan.features.reports.dto.ReportUpsertRequest;
+import edu.cit.garbo.pawnscan.features.businessprofile.entity.BusinessProfile;
 import edu.cit.garbo.pawnscan.features.reports.entity.Report;
 import edu.cit.garbo.pawnscan.features.reports.entity.ReportFile;
 import edu.cit.garbo.pawnscan.features.reports.entity.ReportFileType;
+import edu.cit.garbo.pawnscan.features.reports.entity.ReportStatus;
 import edu.cit.garbo.pawnscan.shared.user.User;
 import edu.cit.garbo.pawnscan.features.reports.exception.DuplicateSerialNumberException;
 import edu.cit.garbo.pawnscan.shared.exception.ForbiddenActionException;
@@ -14,8 +17,13 @@ import edu.cit.garbo.pawnscan.features.reports.exception.ReportNotFoundException
 import edu.cit.garbo.pawnscan.features.reports.repository.ReportFileRepository;
 import edu.cit.garbo.pawnscan.features.reports.repository.ReportRepository;
 import edu.cit.garbo.pawnscan.features.reports.storage.FileStorageService;
+import edu.cit.garbo.pawnscan.features.verification.entity.SearchLog;
+import edu.cit.garbo.pawnscan.features.verification.entity.VerificationResult;
+import edu.cit.garbo.pawnscan.features.verification.repository.SearchLogRepository;
 import edu.cit.garbo.pawnscan.shared.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -29,10 +37,13 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class ReportServiceImpl implements ReportService {
 
+    private static final int MAX_PAGE_SIZE = 100;
+
     private final ReportRepository reportRepository;
     private final ReportFileRepository reportFileRepository;
     private final UserRepository userRepository;
     private final FileStorageService fileStorageService;
+    private final SearchLogRepository searchLogRepository;
 
     @Override
     @Transactional
@@ -53,7 +64,9 @@ public class ReportServiceImpl implements ReportService {
                 .build();
 
         Report savedReport = reportRepository.save(report);
-        attachFileIfPresent(savedReport, request.getFile());
+        if (request.getFiles() != null) {
+            request.getFiles().forEach(f -> attachFileIfPresent(savedReport, f));
+        }
 
         return toResponse(savedReport);
     }
@@ -66,6 +79,18 @@ public class ReportServiceImpl implements ReportService {
         return reportRepository.findByUserId(user.getUserId())
                 .stream()
                 .map(this::toResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<MatchedReportResponse> getMatchedReports(String authenticatedEmail, int page, int size) {
+        User user = getAuthenticatedUser(authenticatedEmail);
+        Pageable pageable = PageRequest.of(Math.max(page, 0), normalizeSize(size));
+
+        return searchLogRepository.findMatchedReportsForOwner(user.getUserId(), VerificationResult.STOLEN, pageable)
+                .stream()
+                .map(this::toMatchedReportResponse)
                 .toList();
     }
 
@@ -88,10 +113,17 @@ public class ReportServiceImpl implements ReportService {
         report.setSerialNumber(normalizedSerial);
         report.setItemModel(request.getItemModel().trim());
         report.setDescription(request.getDescription().trim());
+        if (report.getStatus() == ReportStatus.REJECTED) {
+            report.setStatus(ReportStatus.PENDING);
+            report.setRejectionReason(null);
+        }
 
-        MultipartFile file = request.getFile();
-        if (file != null && !file.isEmpty()) {
-            attachFileIfPresent(report, file);
+        if (request.getFiles() != null) {
+            request.getFiles().forEach(f -> {
+                if (f != null && !f.isEmpty()) {
+                    attachFileIfPresent(report, f);
+                }
+            });
         }
 
         Report savedReport = reportRepository.save(report);
@@ -174,6 +206,13 @@ public class ReportServiceImpl implements ReportService {
         return value == null || value.trim().isEmpty();
     }
 
+    private int normalizeSize(int size) {
+        if (size <= 0) {
+            return 20;
+        }
+        return Math.min(size, MAX_PAGE_SIZE);
+    }
+
     private ReportResponse toResponse(Report report) {
         List<ReportFileResponse> files = report.getFiles().stream()
                 .sorted(Comparator.comparing(ReportFile::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder()))
@@ -191,7 +230,44 @@ public class ReportServiceImpl implements ReportService {
                 .itemModel(report.getItemModel())
                 .description(report.getDescription())
                 .status(report.getStatus())
+                .rejectionReason(report.getRejectionReason())
                 .createdAt(report.getCreatedAt())
+                .files(files)
+                .build();
+    }
+
+    private MatchedReportResponse toMatchedReportResponse(SearchLog searchLog) {
+        Report report = searchLog.getMatchedReport();
+        User businessUser = searchLog.getBusinessUser();
+        BusinessProfile businessProfile = businessUser == null ? null : businessUser.getBusinessProfile();
+
+        List<ReportFileResponse> files = report.getFiles().stream()
+                .sorted(Comparator.comparing(ReportFile::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder()))
+                        .reversed())
+                .map(file -> ReportFileResponse.builder()
+                        .id(file.getId())
+                        .fileUrl(file.getFileUrl())
+                        .fileType(file.getFileType())
+                        .build())
+                .toList();
+
+        return MatchedReportResponse.builder()
+                .matchId(searchLog.getId())
+                .reportId(report.getId())
+                .serialNumber(report.getSerialNumber())
+                .itemModel(report.getItemModel())
+                .description(report.getDescription())
+                .status(report.getStatus())
+                .reportCreatedAt(report.getCreatedAt())
+                .matchedAt(searchLog.getSearchedAt())
+                .matchedByBusinessName(businessProfile == null
+                        ? (businessUser == null ? null : businessUser.getFullName())
+                        : businessProfile.getBusinessName())
+                .matchedByBusinessEmail(businessUser == null ? null : businessUser.getEmail())
+                .matchedByBusinessPhone(businessUser == null ? null : businessUser.getPhoneNumber())
+                .matchedByBusinessPermitNumber(businessProfile == null ? null : businessProfile.getPermitNumber())
+                .matchedByBusinessAddress(businessProfile == null ? null : businessProfile.getBusinessAddress())
+                .matchedByBusinessRegisteredAt(businessProfile == null ? null : businessProfile.getCreatedAt())
                 .files(files)
                 .build();
     }
