@@ -60,6 +60,8 @@
     <string name="login_password_hint">Password</string>
     <string name="login_sign_in_button">Sign In</string>
     <string name="login_signing_in_button">Signing In...</string>
+    <string name="auth_continue_with">Or continue with</string>
+    <string name="auth_continue_google">Continue with Google</string>
     <string name="login_register_link">Don\'t have an account? Create one here.</string>
     <string name="login_show_password">Show password</string>
     <string name="login_hide_password">Hide password</string>
