@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">PawnScan</string>
     
     <!-- Landing Page Strings -->
@@ -44,7 +44,8 @@
     <!-- CTA and Links -->
     <string name="registration_cta_button">Register Account</string>
     <string name="registration_registering_button">Registering...</string>
-    <string name="registration_sign_in_link">Already registered? Sign in here.</string>
+    <string name="registration_already_registered_text">Already registered?\u0020</string>
+    <string name="registration_sign_in_action">Sign in here.</string>
     <string name="registration_terms">By creating an account, you agree to our Terms of Service</string>
     
     <!-- Messages -->
@@ -63,7 +64,8 @@
     <string name="auth_continue_with">Or continue with</string>
     <string name="auth_continue_google">Continue with Google</string>
     <string name="auth_google_connecting">Connecting...</string>
-    <string name="login_register_link">Don\'t have an account? Create one here.</string>
+    <string name="login_no_account_text">No account yet?\u0020</string>
+    <string name="login_register_action">Register here.</string>
     <string name="login_show_password">Show password</string>
     <string name="login_hide_password">Hide password</string>
 
