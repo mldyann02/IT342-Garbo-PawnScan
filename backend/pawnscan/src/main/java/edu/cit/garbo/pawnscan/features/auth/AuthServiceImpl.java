@@ -52,8 +52,8 @@ public class AuthServiceImpl implements AuthService {
     private final EmailService emailService;
     private final OtpService otpService;
 
-    @Value("${google.client-id:}")
-    private String googleClientId;
+    @Value("${google.web-client-id:${google.client-id:}}")
+    private String googleWebClientId;
 
     @Override
     @Transactional
@@ -170,7 +170,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public AuthResponse authenticateWithGoogle(GoogleAuthRequest request) {
-        if (isBlank(googleClientId)) {
+        if (isBlank(googleWebClientId)) {
             throw new InvalidGoogleTokenException("Google authentication is not configured");
         }
 
@@ -230,8 +230,8 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public GoogleAuthConfigResponse getGoogleAuthConfig() {
         return GoogleAuthConfigResponse.builder()
-                .configured(!isBlank(googleClientId))
-                .clientId(isBlank(googleClientId) ? null : googleClientId)
+                .configured(!isBlank(googleWebClientId))
+                .clientId(isBlank(googleWebClientId) ? null : googleWebClientId.trim())
                 .build();
     }
 

@@ -8,6 +8,7 @@ import android.widget.Button
 import android.widget.ImageButton
 import android.widget.EditText
 import android.widget.TextView
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.cit.pawnscan.R
 import com.cit.pawnscan.features.auth.api.RegisterRequest
@@ -23,6 +24,12 @@ class RegistrationActivity : AppCompatActivity() {
     private var isPasswordVisible = false
     private var isConfirmPasswordVisible = false
     private var isBusinessMode = false
+    private lateinit var googleAuthCoordinator: GoogleAuthCoordinator
+    private val googleSignInLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        googleAuthCoordinator.handleSignInResult(result.data)
+    }
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -157,12 +164,14 @@ class RegistrationActivity : AppCompatActivity() {
             )
         }
 
-        GoogleAuthCoordinator(
+        googleAuthCoordinator = GoogleAuthCoordinator(
             activity = this,
             button = btnGoogleRegister,
             statusMessage = findViewById(R.id.status_message),
+            signInLauncher = googleSignInLauncher,
             roleProvider = { if (isBusinessMode) "BUSINESS" else "USER" }
-        ).bind()
+        )
+        googleAuthCoordinator.bind()
 
         // Sign in link
         signInLink.setOnClickListener {

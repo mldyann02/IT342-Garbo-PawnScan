@@ -4,12 +4,9 @@ import android.content.Intent
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
+import androidx.activity.result.ActivityResultLauncher
 import androidx.appcompat.app.AppCompatActivity
-import androidx.credentials.CredentialManager
-import androidx.credentials.CustomCredential
-import androidx.credentials.GetCredentialRequest
-import androidx.credentials.exceptions.GetCredentialException
-import androidx.lifecycle.lifecycleScope
+import com.cit.pawnscan.BuildConfig
 import com.cit.pawnscan.R
 import com.cit.pawnscan.features.auth.api.AuthResponse
 import com.cit.pawnscan.features.auth.api.GoogleAuthConfigResponse
@@ -17,10 +14,9 @@ import com.cit.pawnscan.features.auth.api.GoogleAuthRequest
 import com.cit.pawnscan.features.dashboard.TemporaryDashboardActivity
 import com.cit.pawnscan.shared.auth.JwtStorageUtil
 import com.cit.pawnscan.shared.network.RetrofitClient
-import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
-import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
-import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
-import kotlinx.coroutines.launch
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -29,6 +25,7 @@ class GoogleAuthCoordinator(
     private val activity: AppCompatActivity,
     private val button: Button,
     private val statusMessage: TextView,
+    private val signInLauncher: ActivityResultLauncher<Intent>,
     private val roleProvider: () -> String?
 ) {
     private val authService = RetrofitClient.getAuthService()
@@ -36,6 +33,24 @@ class GoogleAuthCoordinator(
     fun bind() {
         button.setOnClickListener {
             beginGoogleAuth()
+        }
+    }
+
+    fun handleSignInResult(data: Intent?) {
+        val task = GoogleSignIn.getSignedInAccountFromIntent(data)
+        try {
+            val account = task.getResult(ApiException::class.java)
+            val idToken = account.idToken
+            if (idToken.isNullOrBlank()) {
+                showStatus("Google did not return an ID token. Check the OAuth client configuration.", isError = true)
+                setLoading(false)
+                return
+            }
+
+            exchangeGoogleToken(idToken)
+        } catch (e: ApiException) {
+            showStatus(googleSignInErrorMessage(e.statusCode), isError = true)
+            setLoading(false)
         }
     }
 
@@ -63,7 +78,16 @@ class GoogleAuthCoordinator(
                     return
                 }
 
-                requestGoogleCredential(clientId)
+                if (!isGoogleClientId(clientId)) {
+                    showStatus(
+                        "Google sign-in is misconfigured. Set GOOGLE_WEB_CLIENT_ID to a valid Web OAuth client ID.",
+                        isError = true
+                    )
+                    setLoading(false)
+                    return
+                }
+
+                launchGoogleSignIn(clientId)
             }
 
             override fun onFailure(call: Call<GoogleAuthConfigResponse>, t: Throwable) {
@@ -73,44 +97,19 @@ class GoogleAuthCoordinator(
         })
     }
 
-    private fun requestGoogleCredential(clientId: String) {
-        activity.lifecycleScope.launch {
-            try {
-                val idToken = getGoogleIdToken(clientId)
-                exchangeGoogleToken(idToken)
-            } catch (e: GetCredentialException) {
-                showStatus("Google sign-in was cancelled or no Google account was available.", isError = true)
-                setLoading(false)
-            } catch (e: GoogleIdTokenParsingException) {
-                showStatus("Google returned an invalid sign-in token.", isError = true)
-                setLoading(false)
-            } catch (e: Exception) {
-                showStatus("Google sign-in failed. Please try again.", isError = true)
-                setLoading(false)
-            }
-        }
-    }
-
-    private suspend fun getGoogleIdToken(clientId: String): String {
-        val googleOption = GetSignInWithGoogleOption.Builder(clientId)
+    private fun launchGoogleSignIn(clientId: String) {
+        val options = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestEmail()
+            .requestIdToken(clientId)
             .build()
-        val request = GetCredentialRequest.Builder()
-            .addCredentialOption(googleOption)
-            .build()
-        val result = CredentialManager.create(activity).getCredential(
-            context = activity,
-            request = request
-        )
-        val credential = result.credential
+        val client = GoogleSignIn.getClient(activity, options)
 
-        if (
-            credential is CustomCredential &&
-            credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
-        ) {
-            return GoogleIdTokenCredential.createFrom(credential.data).idToken
+        client.signOut().addOnCompleteListener {
+            signInLauncher.launch(client.signInIntent)
+        }.addOnFailureListener { error ->
+            showStatus(networkMessage("Google sign-in could not start", error), isError = true)
+            setLoading(false)
         }
-
-        throw IllegalStateException("Unexpected Google credential type")
     }
 
     private fun exchangeGoogleToken(idToken: String) {
@@ -187,6 +186,19 @@ class GoogleAuthCoordinator(
             throwable.message?.contains("timeout") == true ->
                 "$prefix: Server took too long to respond."
             else -> "$prefix: ${throwable.message ?: "Unknown error"}"
+        }
+    }
+
+    private fun isGoogleClientId(clientId: String): Boolean {
+        return clientId.endsWith(".apps.googleusercontent.com")
+    }
+
+    private fun googleSignInErrorMessage(statusCode: Int): String {
+        return when (statusCode) {
+            10 -> "Google setup mismatch. Add an Android OAuth client for ${BuildConfig.APPLICATION_ID} with this debug SHA-1, and use the Web client ID on the backend."
+            12501 -> "Google sign-in was cancelled."
+            12500 -> "Google sign-in failed. Check Google Play services and OAuth consent setup."
+            else -> "Google sign-in failed ($statusCode). Please try again."
         }
     }
 }

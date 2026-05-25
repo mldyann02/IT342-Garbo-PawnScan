@@ -8,6 +8,7 @@ import android.widget.Button
 import android.widget.ImageButton
 import android.widget.EditText
 import android.widget.TextView
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.cit.pawnscan.R
 import com.cit.pawnscan.features.auth.api.LoginRequest
@@ -22,6 +23,12 @@ import retrofit2.Response
 class LoginActivity : AppCompatActivity() {
 
     private var isPasswordVisible = false
+    private lateinit var googleAuthCoordinator: GoogleAuthCoordinator
+    private val googleSignInLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        googleAuthCoordinator.handleSignInResult(result.data)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -84,12 +91,14 @@ class LoginActivity : AppCompatActivity() {
             handleLogin(email, password, btnSignIn)
         }
 
-        GoogleAuthCoordinator(
+        googleAuthCoordinator = GoogleAuthCoordinator(
             activity = this,
             button = btnGoogleLogin,
             statusMessage = findViewById(R.id.status_message),
+            signInLauncher = googleSignInLauncher,
             roleProvider = { null }
-        ).bind()
+        )
+        googleAuthCoordinator.bind()
 
         // Register link
         registerLink.setOnClickListener {

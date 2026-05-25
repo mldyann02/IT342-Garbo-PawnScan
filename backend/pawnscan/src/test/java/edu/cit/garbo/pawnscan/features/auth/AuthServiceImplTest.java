@@ -69,7 +69,7 @@ class AuthServiceImplTest {
                 googleIdTokenVerifier,
                 emailService,
                 otpService);
-        ReflectionTestUtils.setField(authService, "googleClientId", "google-client-id");
+        ReflectionTestUtils.setField(authService, "googleWebClientId", "google-client-id");
     }
 
     @Test
