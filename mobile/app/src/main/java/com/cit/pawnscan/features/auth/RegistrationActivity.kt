@@ -268,7 +268,7 @@ class RegistrationActivity : AppCompatActivity() {
         )
 
         if (validationError != null) {
-            showStatusMessage(validationError, isError = true)
+            showStatusMessage("Registration failed: $validationError", isError = true)
             return
         }
 
@@ -323,12 +323,13 @@ class RegistrationActivity : AppCompatActivity() {
                     val errorMsg = try {
                         val errorBody = response.errorBody()?.string()
                         if (!errorBody.isNullOrEmpty()) {
-                            AuthErrorParser.parse(errorBody, "Registration failed. Please try again.")
+                            val parsedMsg = AuthErrorParser.parse(errorBody, "Please check your details and try again.")
+                            "Registration failed: $parsedMsg"
                         } else {
-                            "Registration failed. Please try again."
+                            "Registration failed: Please check your details and try again."
                         }
                     } catch (e: Exception) {
-                        "Registration failed. Please check your details."
+                        "Registration failed: Please check your details and try again."
                     }
                     showStatusMessage(errorMsg, isError = true)
                     submitButton.isEnabled = true
@@ -337,13 +338,7 @@ class RegistrationActivity : AppCompatActivity() {
             }
 
             override fun onFailure(call: Call<com.cit.pawnscan.features.auth.api.AuthResponse>, t: Throwable) {
-                val errorMsg = when {
-                    t.message?.contains("Unable to resolve host") == true ->
-                        "Network error: Cannot reach server. Check your connection."
-                    t.message?.contains("timeout") == true ->
-                        "Request timeout: Server took too long to respond."
-                    else -> "Registration failed: ${t.message ?: "Unknown error"}"
-                }
+                val errorMsg = "Registration failed: We could not reach the server. Please try again."
                 showStatusMessage(errorMsg, isError = true)
                 submitButton.isEnabled = true
                 submitButton.text = resources.getString(R.string.registration_cta_button)

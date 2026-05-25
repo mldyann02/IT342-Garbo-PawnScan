@@ -17,18 +17,15 @@ class MainActivity : AppCompatActivity() {
 
         // Initialize views
         val btnReportStolen = findViewById<Button>(R.id.btn_report_stolen)
-        val btnBusinessVerification = findViewById<Button>(R.id.btn_business_verification)
-        val navSignIn = findViewById<TextView>(R.id.nav_sign_in)
-        val navGetStarted = findViewById<Button>(R.id.nav_get_started)
+        val navSignIn = findViewById<Button>(R.id.nav_sign_in)
+        val navGetStarted = findViewById<TextView>(R.id.nav_get_started)
 
         // Set click listeners
         btnReportStolen.setOnClickListener {
             navigateToReportStolen()
         }
 
-        btnBusinessVerification.setOnClickListener {
-            navigateToBusinessVerification()
-        }
+
 
         navSignIn.setOnClickListener {
             navigateToLogin()

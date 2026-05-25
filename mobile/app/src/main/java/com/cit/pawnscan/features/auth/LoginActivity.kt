@@ -170,12 +170,13 @@ class LoginActivity : AppCompatActivity() {
                     val errorMsg = try {
                         val errorBody = response.errorBody()?.string()
                         if (!errorBody.isNullOrEmpty()) {
-                            AuthErrorParser.parse(errorBody, "Login failed. Please check your credentials.")
+                            val parsedMsg = AuthErrorParser.parse(errorBody, "Please check your credentials and try again.")
+                            "Login failed: $parsedMsg"
                         } else {
-                            "Login failed. Please check your credentials."
+                            "Login failed: Please check your credentials and try again."
                         }
                     } catch (e: Exception) {
-                        "Login failed. Please check your credentials."
+                        "Login failed: Please check your credentials and try again."
                     }
                     showStatusMessage(errorMsg, isError = true)
                     submitButton.isEnabled = true
@@ -184,13 +185,7 @@ class LoginActivity : AppCompatActivity() {
             }
 
             override fun onFailure(call: Call<com.cit.pawnscan.features.auth.api.AuthResponse>, t: Throwable) {
-                val errorMsg = when {
-                    t.message?.contains("Unable to resolve host") == true ->
-                        "Network error: Cannot reach server. Check your connection."
-                    t.message?.contains("timeout") == true ->
-                        "Request timeout: Server took too long to respond."
-                    else -> "Login failed: ${t.message ?: "Unknown error"}"
-                }
+                val errorMsg = "Login failed: We could not reach the server. Please try again."
                 showStatusMessage(errorMsg, isError = true)
                 submitButton.isEnabled = true
                 submitButton.text = resources.getString(R.string.login_sign_in_button)
@@ -199,8 +194,11 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun validateLoginForm(email: String, password: String): String? {
-        ValidationUtil.validateEmail(email)?.let { return it }
-        ValidationUtil.validatePassword(password)?.let { return it }
+        val emailError = ValidationUtil.validateEmail(email)
+        val passwordError = ValidationUtil.validatePassword(password)
+        if (emailError != null || passwordError != null) {
+            return "Login failed: Please check your credentials and try again."
+        }
         return null
     }
 
