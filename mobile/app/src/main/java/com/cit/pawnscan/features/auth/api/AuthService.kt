@@ -3,7 +3,9 @@ package com.cit.pawnscan.features.auth.api
 import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.POST
+import retrofit2.http.PUT
 
 interface AuthService {
     @POST("/api/auth/register")
@@ -17,6 +19,15 @@ interface AuthService {
 
     @POST("/api/auth/google")
     fun authenticateWithGoogle(@Body request: GoogleAuthRequest): Call<AuthResponse>
+
+    @GET("/api/auth/profile")
+    fun getProfile(@Header("Authorization") authorization: String): Call<UserProfileResponse>
+
+    @PUT("/api/auth/profile")
+    fun updateProfile(
+        @Header("Authorization") authorization: String,
+        @Body request: UserProfileUpdateRequest
+    ): Call<UserProfileResponse>
 }
 
 
