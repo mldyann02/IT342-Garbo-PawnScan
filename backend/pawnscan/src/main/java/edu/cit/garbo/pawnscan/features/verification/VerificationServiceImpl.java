@@ -22,6 +22,7 @@ import edu.cit.garbo.pawnscan.features.verification.exception.InvalidVerificatio
 import edu.cit.garbo.pawnscan.features.reports.repository.ReportRepository;
 import edu.cit.garbo.pawnscan.features.verification.repository.SearchLogRepository;
 import edu.cit.garbo.pawnscan.shared.user.UserRepository;
+import edu.cit.garbo.pawnscan.shared.validation.SerialNumberValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -32,10 +33,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
@@ -44,7 +43,6 @@ public class VerificationServiceImpl implements VerificationService {
     private static final Logger LOGGER = LoggerFactory.getLogger(VerificationServiceImpl.class);
 
     private static final int MAX_PAGE_SIZE = 100;
-    private static final Pattern SERIAL_PATTERN = Pattern.compile("^[A-Z0-9][A-Z0-9\\-_.:/]{1,63}$");
 
     private final ReportRepository reportRepository;
     private final SearchLogRepository searchLogRepository;
@@ -224,10 +222,10 @@ public class VerificationServiceImpl implements VerificationService {
             throw new InvalidVerificationRequestException("Serial number is required");
         }
 
-        String normalized = serial.trim().toUpperCase(Locale.ROOT);
+        String normalized = SerialNumberValidator.normalize(serial);
 
-        if (!SERIAL_PATTERN.matcher(normalized).matches()) {
-            throw new InvalidVerificationRequestException("Serial number format is invalid");
+        if (!SerialNumberValidator.isValid(normalized)) {
+            throw new InvalidVerificationRequestException(SerialNumberValidator.ALLOWED_CHARACTERS_MESSAGE);
         }
 
         return normalized;

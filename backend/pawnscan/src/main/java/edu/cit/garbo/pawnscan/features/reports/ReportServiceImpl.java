@@ -21,6 +21,7 @@ import edu.cit.garbo.pawnscan.features.verification.entity.SearchLog;
 import edu.cit.garbo.pawnscan.features.verification.entity.VerificationResult;
 import edu.cit.garbo.pawnscan.features.verification.repository.SearchLogRepository;
 import edu.cit.garbo.pawnscan.shared.user.UserRepository;
+import edu.cit.garbo.pawnscan.shared.validation.SerialNumberValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -199,7 +200,11 @@ public class ReportServiceImpl implements ReportService {
     }
 
     private String normalizeSerial(String serialNumber) {
-        return serialNumber == null ? "" : serialNumber.trim();
+        String normalized = SerialNumberValidator.normalize(serialNumber);
+        if (!SerialNumberValidator.isValid(normalized)) {
+            throw new InvalidReportException(SerialNumberValidator.ALLOWED_CHARACTERS_MESSAGE);
+        }
+        return normalized;
     }
 
     private boolean isBlank(String value) {

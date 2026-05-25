@@ -205,6 +205,10 @@ public class AuthServiceImpl implements AuthService {
                 user.setOauthSubject(googleSubject);
                 updated = true;
             }
+            if (user.getRegistrationStatus() == RegistrationStatus.PENDING_VERIFICATION) {
+                user.setRegistrationStatus(RegistrationStatus.ACTIVE);
+                updated = true;
+            }
             if (user.getRegistrationStatus() == RegistrationStatus.INCOMPLETE 
                     && request.getRole() != null 
                     && user.getRole() != request.getRole()) {
@@ -372,8 +376,8 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new InvalidCredentialsException("User not found"));
 
-        if (user.getRegistrationStatus() == RegistrationStatus.ACTIVE) {
-            throw new InvalidCredentialsException("User is already verified");
+        if (user.getRegistrationStatus() != RegistrationStatus.PENDING_VERIFICATION) {
+            throw new InvalidCredentialsException("This account does not require email verification");
         }
 
         otpService.verifyOtp(request.getEmail(), request.getCode());

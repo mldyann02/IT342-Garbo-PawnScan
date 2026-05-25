@@ -6,6 +6,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Modal } from "@/features/shared/components/modal";
 import { getJwt } from "@/shared/auth";
 import {
+  SERIAL_NUMBER_ALLOWED_TEXT,
+  SERIAL_NUMBER_HTML_PATTERN,
+  SERIAL_NUMBER_MAX_LENGTH,
+  sanitizeSerialNumberInput,
+  validateSerialNumber,
+} from "@/shared/serial-number";
+import {
   deleteReport,
   fetchMatchedReports,
   fetchReports,
@@ -252,6 +259,7 @@ function ReportsPageContent() {
 
   const selectedReportStatus = selectedReport ? getReportStatus(selectedReport) : null;
   const isSelectedReportRejected = selectedReportStatus === "REJECTED";
+  const editFormSerialNumberError = validateSerialNumber(editForm.serialNumber);
   const editFormHasChanges = selectedReport
     ? hasReportChanges(selectedReport, editForm)
     : false;
@@ -436,12 +444,13 @@ function ReportsPageContent() {
       return;
     }
 
-    if (
-      !editForm.serialNumber.trim() ||
-      !editForm.itemModel.trim() ||
-      !editForm.description.trim()
-    ) {
+    if (!editForm.itemModel.trim() || !editForm.description.trim()) {
       setMessage({ type: "error", text: "All fields are required." });
+      return;
+    }
+
+    if (editFormSerialNumberError) {
+      setMessage({ type: "error", text: editFormSerialNumberError });
       return;
     }
 
@@ -843,11 +852,19 @@ function ReportsPageContent() {
                             onChange={(e) =>
                               setEditForm((c) => ({
                                 ...c,
-                                serialNumber: e.target.value,
+                                serialNumber: sanitizeSerialNumberInput(e.target.value),
                               }))
                             }
+                            maxLength={SERIAL_NUMBER_MAX_LENGTH}
+                            pattern={SERIAL_NUMBER_HTML_PATTERN}
+                            title={SERIAL_NUMBER_ALLOWED_TEXT}
                             className="rounded-lg bg-slate-900/50 px-4 py-3 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand/40 focus:bg-slate-900/70 border border-slate-700/50"
                           />
+                          {editFormSerialNumberError && (
+                            <p className="text-sm text-status-stolen">
+                              {editFormSerialNumberError}
+                            </p>
+                          )}
                         </label>
                         <label className="flex flex-col gap-2">
                           <span className="text-sm font-semibold text-slate-400">
@@ -960,15 +977,16 @@ function ReportsPageContent() {
                         <button
                           type="button"
                           onClick={handleSaveButtonClick}
-                          disabled={isSaving || (isSelectedReportRejected && !editFormHasChanges)}
+                          disabled={isSaving || Boolean(editFormSerialNumberError) || (isSelectedReportRejected && !editFormHasChanges)}
                           className={`rounded-xl border px-6 py-2.5 text-sm font-semibold transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 flex items-center gap-2 ${
                             isSelectedReportRejected
                               ? "border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20 hover:border-red-500/50"
                               : "border-brand/30 bg-brand/10 text-brand hover:bg-brand/20 hover:border-brand/50"
                           }`}
                           title={
-                            isSelectedReportRejected && !editFormHasChanges
-                              ? "Make at least one change before resubmitting"
+                            editFormSerialNumberError ||
+                            (isSelectedReportRejected && !editFormHasChanges)
+                              ? editFormSerialNumberError || "Make at least one change before resubmitting"
                               : undefined
                           }
                         >
@@ -1543,7 +1561,7 @@ function ReportsPageContent() {
                 setIsResubmitConfirmOpen(false);
                 handleSaveEdit();
               }}
-              disabled={isSaving || !editFormHasChanges}
+              disabled={isSaving || Boolean(editFormSerialNumberError) || !editFormHasChanges}
               className="flex items-center gap-2 rounded-xl border border-brand/30 bg-brand/10 px-5 py-2.5 text-sm font-semibold text-brand transition hover:bg-brand/20 hover:border-brand/50 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isSaving ? (

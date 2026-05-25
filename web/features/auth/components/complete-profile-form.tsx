@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getAuthRole, storeJwt } from "@/shared/auth";
+import { getAuthRole, getJwt, storeJwt } from "@/shared/auth";
 import { RegistrationRole } from "@/features/auth/lib/validation";
 
 type CompleteProfileValues = {
@@ -111,6 +111,7 @@ export default function CompleteProfileForm() {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
+          ...(getJwt() ? { Authorization: `Bearer ${getJwt()}` } : {}),
         },
         body: JSON.stringify(payload),
       });

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function PUT(request: NextRequest) {
   const backendBaseUrl = process.env.BACKEND_URL || 'http://localhost:8080';
   const token = request.cookies.get('pawnscan_jwt')?.value;
+  const authorization = request.headers.get('authorization');
 
   try {
     const body = await request.json();
@@ -11,7 +12,7 @@ export async function PUT(request: NextRequest) {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {})
+        ...(authorization ? { Authorization: authorization } : token ? { Authorization: `Bearer ${token}` } : {})
       },
       body: JSON.stringify(body)
     });
