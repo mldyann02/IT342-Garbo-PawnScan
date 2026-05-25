@@ -22,6 +22,7 @@ type ApiResponse = {
   access_token?: string;
   email?: string;
   role?: string;
+  registrationStatus?: "INCOMPLETE" | "PENDING_VERIFICATION" | "ACTIVE";
   errors?: Record<string, string>;
 };
 
