@@ -8,6 +8,7 @@ import edu.cit.garbo.pawnscan.features.auth.dto.GoogleAuthRequest;
 import edu.cit.garbo.pawnscan.features.auth.dto.CompleteProfileRequest;
 import edu.cit.garbo.pawnscan.features.auth.dto.LoginRequest;
 import edu.cit.garbo.pawnscan.features.auth.dto.RegisterRequest;
+import edu.cit.garbo.pawnscan.features.auth.dto.VerifyOtpRequest;
 import edu.cit.garbo.pawnscan.features.auth.dto.UserProfileResponse;
 import edu.cit.garbo.pawnscan.features.auth.dto.UserProfileUpdateRequest;
 import edu.cit.garbo.pawnscan.features.auth.exception.EmailAlreadyExistsException;
@@ -19,6 +20,7 @@ import edu.cit.garbo.pawnscan.features.businessprofile.dto.BusinessProfileReques
 import edu.cit.garbo.pawnscan.features.businessprofile.dto.BusinessProfileSummaryResponse;
 import edu.cit.garbo.pawnscan.features.businessprofile.exception.InvalidBusinessProfileException;
 import edu.cit.garbo.pawnscan.shared.email.EmailService;
+import edu.cit.garbo.pawnscan.shared.email.OtpService;
 import edu.cit.garbo.pawnscan.shared.security.JwtService;
 import edu.cit.garbo.pawnscan.shared.user.RegistrationStatus;
 import edu.cit.garbo.pawnscan.shared.user.User;
@@ -48,6 +50,7 @@ public class AuthServiceImpl implements AuthService {
     private final JwtService jwtService;
     private final GoogleIdTokenVerifier googleIdTokenVerifier;
     private final EmailService emailService;
+    private final OtpService otpService;
 
     @Value("${google.client-id:}")
     private String googleClientId;
@@ -70,6 +73,7 @@ public class AuthServiceImpl implements AuthService {
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .phoneNumber(normalizePhilippinePhone(request.getPhoneNumber()))
                 .role(request.getRole())
+                .registrationStatus(RegistrationStatus.PENDING_VERIFICATION)
                 .build();
 
         User savedUser = userRepository.save(user);
@@ -85,6 +89,8 @@ public class AuthServiceImpl implements AuthService {
             businessProfileSummary = businessProfileService.getSummaryByUserId(savedUser.getUserId());
         }
 
+        otpService.generateAndSendOtp(savedUser.getEmail());
+
         return AuthResponse.builder()
                 .userId(savedUser.getUserId())
                 .email(savedUser.getEmail())
@@ -92,7 +98,7 @@ public class AuthServiceImpl implements AuthService {
                 .role(savedUser.getRole().name())
                 .registrationStatus(savedUser.getRegistrationStatus())
                 .businessProfile(businessProfileSummary.orElse(null))
-                .message("User registered successfully")
+                .message("User registered successfully. Please check your email for the verification code.")
                 .build();
     }
 
@@ -136,6 +142,10 @@ public class AuthServiceImpl implements AuthService {
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             throw new InvalidCredentialsException("Invalid email or password");
+        }
+
+        if (user.getRegistrationStatus() == RegistrationStatus.PENDING_VERIFICATION) {
+            throw new InvalidCredentialsException("Please verify your email address before logging in");
         }
 
         Optional<BusinessProfileSummaryResponse> businessProfileSummary = user.getRole() == UserRole.BUSINESS
@@ -354,6 +364,26 @@ public class AuthServiceImpl implements AuthService {
         User savedUser = userRepository.save(user);
 
         return buildAuthResponse(savedUser, "Profile completed successfully");
+    }
+
+    @Override
+    @Transactional
+    public AuthResponse verifyOtp(VerifyOtpRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new InvalidCredentialsException("User not found"));
+
+        if (user.getRegistrationStatus() == RegistrationStatus.ACTIVE) {
+            throw new InvalidCredentialsException("User is already verified");
+        }
+
+        otpService.verifyOtp(request.getEmail(), request.getCode());
+
+        user.setRegistrationStatus(RegistrationStatus.ACTIVE);
+        User savedUser = userRepository.save(user);
+
+        emailService.sendWelcomeEmail(savedUser.getEmail(), savedUser.getFullName());
+
+        return buildAuthResponse(savedUser, "Email verified successfully");
     }
 
     private AuthResponse buildAuthResponse(User user, String message) {

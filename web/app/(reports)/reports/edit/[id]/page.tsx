@@ -109,7 +109,7 @@ export default function EditReportPage() {
         serialNumber: form.serialNumber,
         itemModel: form.itemModel,
         description: form.description,
-        file: form.file,
+        files: form.file ? [form.file] : [],
       });
 
       setFeedback({

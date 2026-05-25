@@ -8,6 +8,7 @@ import edu.cit.garbo.pawnscan.features.auth.dto.RegisterRequest;
 import edu.cit.garbo.pawnscan.features.auth.dto.UserProfileResponse;
 import edu.cit.garbo.pawnscan.features.auth.dto.CompleteProfileRequest;
 import edu.cit.garbo.pawnscan.features.auth.dto.UserProfileUpdateRequest;
+import edu.cit.garbo.pawnscan.features.auth.dto.VerifyOtpRequest;
 
 public interface AuthService {
 
@@ -26,6 +27,8 @@ public interface AuthService {
     UserProfileResponse updateProfile(String email, UserProfileUpdateRequest request);
 
     AuthResponse completeProfile(String email, CompleteProfileRequest request);
+
+    AuthResponse verifyOtp(VerifyOtpRequest request);
 }
 
 
