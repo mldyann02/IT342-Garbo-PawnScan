@@ -2,16 +2,21 @@
     <string name="app_name">PawnScan</string>
     
     <!-- Landing Page Strings -->
-    <string name="landing_badge_text">Real-time Stolen Item Verification</string>
-    <string name="landing_headline_line1">Stop stolen</string>
-    <string name="landing_headline_line2">goods</string>
-    <string name="landing_headline_line3">before they</string>
-    <string name="landing_headline_green">sell.</string>
+    <string name="landing_badge_text">Real-time Item Verification</string>
+    <string name="landing_headline_line1">Protect your assets,</string>
+    <string name="landing_headline_line2">secure your</string>
+    <string name="landing_headline_green">business.</string>
     
-    <string name="landing_subheadline">PawnScan connects victims, businesses, and law enforcement through a unified registry. Report stolen items, verify serial numbers instantly, and recover what\'s yours.</string>
+    <string name="landing_subheadline">Connect individuals and businesses to prevent stolen items from entering the market. Report, verify, and secure transactions with confidence.</string>
     
-    <string name="landing_cta_primary">Report a Stolen Item </string>
-    <string name="landing_cta_secondary">Business Verification</string>
+    <string name="landing_cta_primary">Report an Item</string>
+    <string name="landing_cta_secondary">Partner as Business</string>
+    <string name="landing_feature_verify_title">Instant Verification</string>
+    <string name="landing_feature_verify_body">Cross-check serial numbers before a transaction moves forward.</string>
+    <string name="landing_feature_secure_title">Secure Records</string>
+    <string name="landing_feature_secure_body">Keep sensitive item and account details protected.</string>
+    <string name="landing_feature_network_title">Trusted Network</string>
+    <string name="landing_feature_network_body">Work with verified users and business partners.</string>
     
     <string name="nav_sign_in">Sign In</string>
     <string name="nav_get_started">Get Started</string>
@@ -49,6 +54,8 @@
     <!-- Login Page Strings -->
     <string name="login_title">Welcome Back</string>
     <string name="login_subtitle">Use your registered email and password</string>
+    <string name="auth_secure_badge">Secure Access</string>
+    <string name="auth_join_badge">Join the Network</string>
     <string name="login_email_hint">Email Address</string>
     <string name="login_password_hint">Password</string>
     <string name="login_sign_in_button">Sign In</string>

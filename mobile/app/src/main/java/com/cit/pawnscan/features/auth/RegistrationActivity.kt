@@ -29,7 +29,7 @@ class RegistrationActivity : AppCompatActivity() {
         setContentView(R.layout.activity_registration)
 
         // Initialize views
-        val backButton = findViewById<Button>(R.id.back_button)
+        val backButton = findViewById<ImageButton>(R.id.back_button)
         val btnIndividual = findViewById<Button>(R.id.btn_individual)
         val btnBusiness = findViewById<Button>(R.id.btn_business)
         val btnCreateAccount = findViewById<Button>(R.id.btn_create_account)
@@ -90,8 +90,15 @@ class RegistrationActivity : AppCompatActivity() {
             finish()
         }
 
-        // Account type toggle - default Individual
-        updateAccountTypeUI(btnIndividual, btnBusiness)
+        isBusinessMode = intent.getStringExtra("account_type") == "BUSINESS"
+        if (isBusinessMode) {
+            updateAccountTypeUI(btnBusiness, btnIndividual)
+        } else {
+            updateAccountTypeUI(btnIndividual, btnBusiness)
+        }
+        updateFieldVisibility(
+            fullNameInput, businessNameInput, businessAddressInput, permitNumberInput
+        )
 
         btnIndividual.setOnClickListener {
             isBusinessMode = false

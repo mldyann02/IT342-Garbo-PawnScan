@@ -8,6 +8,9 @@
     <color name="bg_main_dark">#0B0F1A</color>
     <color name="bg_gradient_end">#071022</color>
     <color name="bg_input">#1E293B</color>
+    <color name="bg_surface">#99111827</color>
+    <color name="bg_surface_strong">#CC0F172A</color>
+    <color name="bg_surface_soft">#661E293B</color>
     
     <!-- Status Colors -->
     <color name="status_clean">#00D37F</color>
@@ -23,9 +26,13 @@
     <!-- Form Input Colors -->
     <color name="input_bg">#1E293B</color>
     <color name="input_border">#334155</color>
+    <color name="input_border_focus">#6600D37F</color>
     
     <!-- Border Colors -->
     <color name="border_muted">#1E293B</color>
+    <color name="border_soft">#334155</color>
+    <color name="brand_green_soft">#2600D37F</color>
+    <color name="brand_green_faint">#1400D37F</color>
     
     <!-- Legacy colors -->
     <color name="black">#FF000000</color>
