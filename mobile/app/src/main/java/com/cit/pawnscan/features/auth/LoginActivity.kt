@@ -28,7 +28,7 @@ class LoginActivity : AppCompatActivity() {
         setContentView(R.layout.activity_login)
 
         // Initialize views
-        val backButton = findViewById<Button>(R.id.back_button)
+        val backButton = findViewById<ImageButton>(R.id.back_button)
         val btnSignIn = findViewById<Button>(R.id.btn_sign_in)
         val registerLink = findViewById<TextView>(R.id.register_link)
 

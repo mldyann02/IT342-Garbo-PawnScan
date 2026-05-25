@@ -42,12 +42,14 @@ class MainActivity : AppCompatActivity() {
     private fun navigateToReportStolen() {
         // Redirecting to Registration as per the web landing page logic
         val intent = Intent(this, RegistrationActivity::class.java)
+        intent.putExtra("account_type", "USER")
         startActivity(intent)
     }
 
     private fun navigateToBusinessVerification() {
         // Redirecting to Registration for business as per web logic
         val intent = Intent(this, RegistrationActivity::class.java)
+        intent.putExtra("account_type", "BUSINESS")
         startActivity(intent)
     }
 
@@ -58,6 +60,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun navigateToGetStarted() {
         val intent = Intent(this, RegistrationActivity::class.java)
+        intent.putExtra("account_type", "USER")
         startActivity(intent)
     }
 }
