@@ -5,6 +5,13 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getAuthUser, getJwt } from "@/shared/auth";
 import { createReport } from "@/features/reports/lib/reports";
+import {
+  SERIAL_NUMBER_ALLOWED_TEXT,
+  SERIAL_NUMBER_HTML_PATTERN,
+  SERIAL_NUMBER_MAX_LENGTH,
+  sanitizeSerialNumberInput,
+  validateSerialNumber,
+} from "@/shared/serial-number";
 
 type ReportForm = {
   serialNumber: string;
@@ -40,8 +47,9 @@ export default function CreateReportPage() {
   const errors = useMemo(() => {
     const next: Partial<Record<keyof ReportForm, string>> = {};
 
-    if (!form.serialNumber.trim()) {
-      next.serialNumber = "Serial number is required";
+    const serialNumberError = validateSerialNumber(form.serialNumber);
+    if (serialNumberError) {
+      next.serialNumber = serialNumberError;
     }
 
     if (!form.itemModel.trim()) {
@@ -175,10 +183,13 @@ export default function CreateReportPage() {
                       onChange={(event) =>
                         setForm((current) => ({
                           ...current,
-                          serialNumber: event.target.value,
+                          serialNumber: sanitizeSerialNumberInput(event.target.value),
                         }))
                       }
                       placeholder="e.g., SN-001122 or IMEI 123456789"
+                      maxLength={SERIAL_NUMBER_MAX_LENGTH}
+                      pattern={SERIAL_NUMBER_HTML_PATTERN}
+                      title={SERIAL_NUMBER_ALLOWED_TEXT}
                       className="rounded-lg bg-slate-900/50 px-4 py-3 text-slate-100 placeholder:text-slate-600 transition-all duration-200 ease-out focus:outline-none focus:ring-2 focus:ring-brand/40 focus:bg-slate-900/70"
                     />
                     {submitAttempted && errors.serialNumber && (

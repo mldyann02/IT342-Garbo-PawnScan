@@ -23,6 +23,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -158,5 +160,26 @@ class ReportControllerTest {
                 .param("description", "Illegal upload attempt")
                 .with(USER))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @WithMockUser(username = "user@test.com", roles = "USER")
+    @DisplayName("TC-REPORT-009: testRejectInvalidSerialNumberCharacters")
+    void testRejectInvalidSerialNumberCharacters() throws Exception {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "evidence.pdf", "application/pdf", "test data".getBytes());
+
+        mockMvc.perform(multipart("/api/reports")
+                .file(file)
+                .param("serialNumber", "SN-123@456")
+                .param("itemModel", "iPhone 13")
+                .param("description", "Stolen near the park")
+                .with(USER)
+                .contentType(MediaType.MULTIPART_FORM_DATA))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.serialNumber")
+                        .value("Serial number can only contain letters, numbers, spaces, and - _ . / : # + ="));
+
+        verify(reportService, never()).createReport(eq("user@test.com"), any(ReportUpsertRequest.class));
     }
 }

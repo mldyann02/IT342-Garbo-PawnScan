@@ -1,7 +1,9 @@
 package edu.cit.garbo.pawnscan.features.reports.dto;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
+import edu.cit.garbo.pawnscan.shared.validation.SerialNumberValidator;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,6 +23,10 @@ public class ReportUpsertRequest {
 
     @NotBlank(message = "Serial number is required")
     @Size(max = 255, message = "Serial number must not exceed 255 characters")
+    @Pattern(
+            regexp = SerialNumberValidator.ALLOWED_CHARACTERS_PATTERN,
+            message = SerialNumberValidator.ALLOWED_CHARACTERS_MESSAGE
+    )
     @JsonAlias({"serial_number", "serialNumber"})
     private String serialNumber;
 
