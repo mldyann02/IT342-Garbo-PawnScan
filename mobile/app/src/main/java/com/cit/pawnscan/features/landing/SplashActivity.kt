@@ -6,6 +6,8 @@ import android.os.Handler
 import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
 import com.cit.pawnscan.R
+import com.cit.pawnscan.features.dashboard.UserPortalActivity
+import com.cit.pawnscan.shared.auth.JwtStorageUtil
 
 class SplashActivity : AppCompatActivity() {
 
@@ -15,7 +17,12 @@ class SplashActivity : AppCompatActivity() {
 
         // Delay for 2 seconds, then launch Landing Activity
         Handler(Looper.getMainLooper()).postDelayed({
-            startActivity(Intent(this, MainActivity::class.java))
+            val target = if (JwtStorageUtil.getToken(this).isNullOrBlank()) {
+                MainActivity::class.java
+            } else {
+                UserPortalActivity::class.java
+            }
+            startActivity(Intent(this, target))
             finish() // Prevents user from going back to splash screen
         }, 2000)
     }
