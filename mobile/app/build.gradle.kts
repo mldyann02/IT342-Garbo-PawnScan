@@ -51,6 +51,9 @@ dependencies {
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation("androidx.credentials:credentials:1.3.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
     
     // AppCompat for XML-based layouts (required - Jetpack Compose NOT allowed)
     implementation("androidx.appcompat:appcompat:1.6.1")

@@ -33,6 +33,7 @@ class RegistrationActivity : AppCompatActivity() {
         val btnIndividual = findViewById<Button>(R.id.btn_individual)
         val btnBusiness = findViewById<Button>(R.id.btn_business)
         val btnCreateAccount = findViewById<Button>(R.id.btn_create_account)
+        val btnGoogleRegister = findViewById<Button>(R.id.btn_google_register)
         val signInLink = findViewById<TextView>(R.id.sign_in_link)
 //        val navSignIn = findViewById<TextView>(R.id.nav_sign_in)
 //        val navGetStarted = findViewById<Button>(R.id.nav_get_started)
@@ -156,6 +157,13 @@ class RegistrationActivity : AppCompatActivity() {
             )
         }
 
+        GoogleAuthCoordinator(
+            activity = this,
+            button = btnGoogleRegister,
+            statusMessage = findViewById(R.id.status_message),
+            roleProvider = { if (isBusinessMode) "BUSINESS" else "USER" }
+        ).bind()
+
         // Sign in link
         signInLink.setOnClickListener {
             navigateToLogin()
@@ -232,6 +240,12 @@ class RegistrationActivity : AppCompatActivity() {
         val statusMessage = findViewById<TextView>(R.id.status_message)
         statusMessage.visibility = View.GONE
 
+        val normalizedPhone = if (phone.isNotBlank()) {
+            ValidationUtil.normalizePhilippinePhone(phone)
+        } else {
+            ""
+        }
+
         // Validate inputs
         val validationError = validateRegistrationForm(
             fullName,
@@ -239,7 +253,7 @@ class RegistrationActivity : AppCompatActivity() {
             businessAddress,
             permitNumber,
             email,
-            phone,
+            normalizedPhone,
             password,
             confirmPassword
         )
@@ -247,13 +261,6 @@ class RegistrationActivity : AppCompatActivity() {
         if (validationError != null) {
             showStatusMessage(validationError, isError = true)
             return
-        }
-
-        // Normalize phone number
-        val normalizedPhone = if (phone.isNotBlank()) {
-            ValidationUtil.normalizePhilippinePhone(phone)
-        } else {
-            ""
         }
 
         // Update button state to show loading
@@ -307,7 +314,7 @@ class RegistrationActivity : AppCompatActivity() {
                     val errorMsg = try {
                         val errorBody = response.errorBody()?.string()
                         if (!errorBody.isNullOrEmpty()) {
-                            parseErrorMessage(errorBody)
+                            AuthErrorParser.parse(errorBody, "Registration failed. Please try again.")
                         } else {
                             "Registration failed. Please try again."
                         }
@@ -379,23 +386,6 @@ class RegistrationActivity : AppCompatActivity() {
             statusMessage.setTextColor(resources.getColor(R.color.text_red, null))
         } else {
             statusMessage.setTextColor(resources.getColor(R.color.brand_green, null))
-        }
-    }
-
-    private fun parseErrorMessage(errorBody: String): String {
-        return try {
-            // Try to parse JSON error response
-            if (errorBody.contains("message")) {
-                val messageIndex = errorBody.indexOf("\"message\":")
-                val startIndex = errorBody.indexOf("\"", messageIndex + 10) + 1
-                val endIndex = errorBody.indexOf("\"", startIndex)
-                if (startIndex > 0 && endIndex > startIndex) {
-                    return errorBody.substring(startIndex, endIndex)
-                }
-            }
-            "Registration failed. Please try again."
-        } catch (e: Exception) {
-            "Registration failed. Please try again."
         }
     }
 
