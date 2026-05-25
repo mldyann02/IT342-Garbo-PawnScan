@@ -11,7 +11,7 @@ import com.cit.pawnscan.R
 import com.cit.pawnscan.features.auth.api.AuthResponse
 import com.cit.pawnscan.features.auth.api.GoogleAuthConfigResponse
 import com.cit.pawnscan.features.auth.api.GoogleAuthRequest
-import com.cit.pawnscan.features.dashboard.UserPortalActivity
+import com.cit.pawnscan.features.dashboard.UserDashboardActivity
 import com.cit.pawnscan.shared.auth.JwtStorageUtil
 import com.cit.pawnscan.shared.network.RetrofitClient
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -126,7 +126,7 @@ class GoogleAuthCoordinator(
                     showStatus(authResponse.message ?: "Google authentication successful.", isError = false)
 
                     statusMessage.postDelayed({
-                        val intent = Intent(activity, UserPortalActivity::class.java)
+                        val intent = Intent(activity, UserDashboardActivity::class.java)
                         activity.startActivity(intent)
                         activity.finish()
                     }, 900)

@@ -12,7 +12,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.cit.pawnscan.R
 import com.cit.pawnscan.features.auth.api.LoginRequest
-import com.cit.pawnscan.features.dashboard.UserPortalActivity
+import com.cit.pawnscan.features.dashboard.UserDashboardActivity
 import com.cit.pawnscan.shared.auth.JwtStorageUtil
 import com.cit.pawnscan.shared.network.RetrofitClient
 import com.cit.pawnscan.shared.validation.ValidationUtil
@@ -220,7 +220,7 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun navigateToDashboard() {
-        val intent = Intent(this, UserPortalActivity::class.java)
+        val intent = Intent(this, UserDashboardActivity::class.java)
         startActivity(intent)
         finish()
     }

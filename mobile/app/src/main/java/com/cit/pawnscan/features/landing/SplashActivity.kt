@@ -6,7 +6,7 @@ import android.os.Handler
 import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
 import com.cit.pawnscan.R
-import com.cit.pawnscan.features.dashboard.UserPortalActivity
+import com.cit.pawnscan.features.dashboard.UserDashboardActivity
 import com.cit.pawnscan.shared.auth.JwtStorageUtil
 
 class SplashActivity : AppCompatActivity() {
@@ -20,7 +20,7 @@ class SplashActivity : AppCompatActivity() {
             val target = if (JwtStorageUtil.getToken(this).isNullOrBlank()) {
                 MainActivity::class.java
             } else {
-                UserPortalActivity::class.java
+                UserDashboardActivity::class.java
             }
             startActivity(Intent(this, target))
             finish() // Prevents user from going back to splash screen

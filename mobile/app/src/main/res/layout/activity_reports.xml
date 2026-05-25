@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_screen_gradient">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        app:layout_constraintBottom_toTopOf="@id/portal_nav"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/portal_all_reports"
+                android:textColor="@color/text_white"
+                android:textSize="28sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Review, edit, resubmit, or remove your stolen item reports."
+                android:textColor="@color/text_muted_gray"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/reports_status"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/bg_mobile_feature_card"
+                android:padding="12dp"
+                android:textSize="12sp"
+                android:visibility="gone" />
+
+            <Button
+                android:id="@+id/reports_new"
+                android:layout_width="match_parent"
+                android:layout_height="54dp"
+                android:layout_marginTop="18dp"
+                android:background="@drawable/button_rounded_pill_green"
+                android:stateListAnimator="@null"
+                android:text="@string/portal_create_title"
+                android:textAllCaps="false"
+                android:textColor="@color/bg_main_dark"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/reports_refresh"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/button_rounded_pill_outline_green"
+                android:stateListAnimator="@null"
+                android:text="@string/portal_refresh"
+                android:textAllCaps="false"
+                android:textColor="@color/brand_green"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:id="@+id/reports_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:layout_marginBottom="16dp"
+                android:orientation="vertical" />
+        </LinearLayout>
+    </ScrollView>
+
+    <include
+        android:id="@+id/portal_nav"
+        layout="@layout/include_portal_bottom_nav"
+        app:layout_constraintBottom_toBottomOf="parent" />
+</androidx.constraintlayout.widget.ConstraintLayout>
