@@ -15,7 +15,7 @@ import java.util.Collections;
 public class GoogleAuthConfig {
 
     @Bean
-    public GoogleIdTokenVerifier googleIdTokenVerifier(@Value("${google.client-id:}") String clientId)
+    public GoogleIdTokenVerifier googleIdTokenVerifier(@Value("${google.web-client-id:${google.client-id:}}") String clientId)
             throws GeneralSecurityException, IOException {
         return new GoogleIdTokenVerifier.Builder(
                 GoogleNetHttpTransport.newTrustedTransport(),

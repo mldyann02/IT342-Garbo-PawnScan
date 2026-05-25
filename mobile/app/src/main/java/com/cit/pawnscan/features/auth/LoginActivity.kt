@@ -8,13 +8,14 @@ import android.widget.Button
 import android.widget.ImageButton
 import android.widget.EditText
 import android.widget.TextView
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.cit.pawnscan.R
-import com.cit.pawnscan.features.auth.api.AuthService
 import com.cit.pawnscan.features.auth.api.LoginRequest
 import com.cit.pawnscan.features.dashboard.TemporaryDashboardActivity
 import com.cit.pawnscan.shared.auth.JwtStorageUtil
 import com.cit.pawnscan.shared.network.RetrofitClient
+import com.cit.pawnscan.shared.validation.ValidationUtil
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -22,6 +23,12 @@ import retrofit2.Response
 class LoginActivity : AppCompatActivity() {
 
     private var isPasswordVisible = false
+    private lateinit var googleAuthCoordinator: GoogleAuthCoordinator
+    private val googleSignInLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        googleAuthCoordinator.handleSignInResult(result.data)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,6 +37,7 @@ class LoginActivity : AppCompatActivity() {
         // Initialize views
         val backButton = findViewById<ImageButton>(R.id.back_button)
         val btnSignIn = findViewById<Button>(R.id.btn_sign_in)
+        val btnGoogleLogin = findViewById<Button>(R.id.btn_google_login)
         val registerLink = findViewById<TextView>(R.id.register_link)
 
         // Form inputs
@@ -56,7 +64,6 @@ class LoginActivity : AppCompatActivity() {
         
         // Check if user came from registration page
         val registrationEmail = intent.getStringExtra("registered_email")
-        val registrationRole = intent.getStringExtra("registered_role")
         if (!registrationEmail.isNullOrEmpty()) {
             showStatusMessage(
                 "Registration successful! Please log in with your credentials.",
@@ -83,6 +90,15 @@ class LoginActivity : AppCompatActivity() {
 
             handleLogin(email, password, btnSignIn)
         }
+
+        googleAuthCoordinator = GoogleAuthCoordinator(
+            activity = this,
+            button = btnGoogleLogin,
+            statusMessage = findViewById(R.id.status_message),
+            signInLauncher = googleSignInLauncher,
+            roleProvider = { null }
+        )
+        googleAuthCoordinator.bind()
 
         // Register link
         registerLink.setOnClickListener {
@@ -154,7 +170,7 @@ class LoginActivity : AppCompatActivity() {
                     val errorMsg = try {
                         val errorBody = response.errorBody()?.string()
                         if (!errorBody.isNullOrEmpty()) {
-                            parseErrorMessage(errorBody)
+                            AuthErrorParser.parse(errorBody, "Login failed. Please check your credentials.")
                         } else {
                             "Login failed. Please check your credentials."
                         }
@@ -183,23 +199,9 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun validateLoginForm(email: String, password: String): String? {
-        return when {
-            email.isEmpty() -> "Email is required"
-            !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() ->
-                "Please enter a valid email address"
-            password.isEmpty() -> "Password is required"
-            password.length < 8 -> "Password must be at least 8 characters"
-            else -> null
-        }
-    }
-
-    private fun parseErrorMessage(errorBody: String): String {
-        return try {
-            val json = org.json.JSONObject(errorBody)
-            json.optString("message", "Login failed. Please try again.")
-        } catch (e: Exception) {
-            "Login failed. Please try again."
-        }
+        ValidationUtil.validateEmail(email)?.let { return it }
+        ValidationUtil.validatePassword(password)?.let { return it }
+        return null
     }
 
     private fun showStatusMessage(message: String, isError: Boolean) {

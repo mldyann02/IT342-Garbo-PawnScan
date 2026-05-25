@@ -1,7 +1,24 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
 }
+
+val localProperties = Properties()
+listOf(
+    rootProject.file("local.properties"),
+    project.file("local.properties")
+).forEach { localPropertiesFile ->
+    if (localPropertiesFile.exists()) {
+        localPropertiesFile.inputStream().use { input ->
+            localProperties.load(input)
+        }
+    }
+}
+val pawnScanApiBaseUrl = localProperties
+    .getProperty("PAWNSCAN_API_BASE_URL", "http://10.0.2.2:8080")
+    .trim()
 
 android {
     namespace = "com.cit.pawnscan"
@@ -15,6 +32,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "PAWNSCAN_API_BASE_URL", "\"$pawnScanApiBaseUrl\"")
         vectorDrawables {
             useSupportLibrary = true
         }
@@ -39,6 +57,7 @@ android {
     buildFeatures {
         compose = false
         viewBinding = true
+        buildConfig = true
     }
     packaging {
         resources {
@@ -51,6 +70,7 @@ dependencies {
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation("com.google.android.gms:play-services-auth:21.2.0")
     
     // AppCompat for XML-based layouts (required - Jetpack Compose NOT allowed)
     implementation("androidx.appcompat:appcompat:1.6.1")

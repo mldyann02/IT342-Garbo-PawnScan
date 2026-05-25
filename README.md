@@ -27,10 +27,10 @@ cp .env.example .env
 
 Notes:
 
-- `application.properties` reads `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET`, `GOOGLE_CLIENT_ID`, and SMTP settings from environment values.
+- `application.properties` reads `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET`, `GOOGLE_WEB_CLIENT_ID` or legacy `GOOGLE_CLIENT_ID`, and SMTP settings from environment values.
 - For SendGrid SMTP, set `SMTP_HOST=smtp.sendgrid.net`, `SMTP_USERNAME=apikey`, `SMTP_PASSWORD` or `SENDGRID_API_KEY` to your API key, and `APP_MAIL_FROM` to a verified sender.
 - For Gmail SMTP, set `SMTP_HOST=smtp.gmail.com`, `SMTP_USERNAME` and `APP_MAIL_FROM` to the Gmail address, and `SMTP_PASSWORD` to a Google app password.
-- For Google OAuth on localhost, create a Google OAuth Web Client in Google Cloud Console and add `http://localhost:3000` to Authorized JavaScript origins.
+- For Google OAuth, create a Web application OAuth client and set its client ID as `GOOGLE_WEB_CLIENT_ID`. For Android Google Sign-In, also create an Android OAuth client in the same Google Cloud project using package `com.cit.pawnscan` and your debug SHA-1 from `mobile/gradlew.bat :app:signingReport`.
 - If you run Next.js directly from `web`, set `NEXT_PUBLIC_GOOGLE_CLIENT_ID` in `web/.env.local` or set `GOOGLE_CLIENT_ID` in the same shell before starting `npm run dev`.
 
 ## Docker Setup (Web + Backend + PostgreSQL)
