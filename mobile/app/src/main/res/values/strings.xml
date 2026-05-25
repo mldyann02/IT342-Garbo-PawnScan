@@ -76,4 +76,33 @@
     <string name="dashboard_user_email">Email: %1$s</string>
     <string name="dashboard_user_role">Role: %1$s</string>
     <string name="dashboard_logout">Log Out</string>
+
+    <!-- User Portal Strings -->
+    <string name="portal_title">Keep your items protected.</string>
+    <string name="portal_subtitle">Track reports, file incident details, and watch for matches from partner businesses.</string>
+    <string name="portal_dashboard">Home</string>
+    <string name="portal_reports">Reports</string>
+    <string name="portal_new_report">New</string>
+    <string name="portal_matches">Matches</string>
+    <string name="portal_profile">Profile</string>
+    <string name="portal_recent_reports">Recent Reports</string>
+    <string name="portal_all_reports">Your Reports</string>
+    <string name="portal_matched_reports">Matched Reports</string>
+    <string name="portal_profile_title">My Profile</string>
+    <string name="portal_create_title">Report a Stolen Item</string>
+    <string name="portal_serial_hint">Serial Number</string>
+    <string name="portal_model_hint">Item Model</string>
+    <string name="portal_description_hint">Details and condition</string>
+    <string name="portal_choose_files">Choose Evidence</string>
+    <string name="portal_submit_report">Submit Report</string>
+    <string name="portal_update_report">Save Changes</string>
+    <string name="portal_cancel_edit">Cancel Edit</string>
+    <string name="portal_edit">Edit</string>
+    <string name="portal_delete">Delete</string>
+    <string name="portal_refresh">Refresh</string>
+    <string name="portal_save_profile">Save Profile</string>
+    <string name="portal_full_name_hint">Full Name</string>
+    <string name="portal_phone_hint">Phone Number (+639XXXXXXXXX)</string>
+    <string name="portal_empty_reports">No reports yet. File your first stolen item report.</string>
+    <string name="portal_empty_matches">No matched reports yet.</string>
 </resources>

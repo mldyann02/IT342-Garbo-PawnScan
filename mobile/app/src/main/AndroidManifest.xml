@@ -50,6 +50,12 @@
             android:exported="false"
             android:label="@string/dashboard_welcome_title"
             android:theme="@style/Theme.PawnScan" />
+
+        <activity
+            android:name="com.cit.pawnscan.features.dashboard.UserPortalActivity"
+            android:exported="false"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.PawnScan" />
     </application>
 
 </manifest>
