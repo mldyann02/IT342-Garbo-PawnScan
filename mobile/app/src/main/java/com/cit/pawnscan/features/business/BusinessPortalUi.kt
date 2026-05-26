@@ -16,7 +16,7 @@ object BusinessPortalUi {
     }
 
     fun goHome(activity: Activity) = navigate(activity, BusinessDashboardActivity::class.java)
-    fun goVerify(activity: Activity) = navigate(activity, BusinessDashboardActivity::class.java)
+    fun goVerify(activity: Activity) = navigate(activity, BusinessVerifyActivity::class.java)
     fun goHistory(activity: Activity) = navigate(activity, BusinessDashboardActivity::class.java)
     fun goMatches(activity: Activity) = navigate(activity, BusinessDashboardActivity::class.java)
     fun goProfile(activity: Activity) = navigate(activity, ProfileActivity::class.java)
