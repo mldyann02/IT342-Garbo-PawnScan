@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp"
+    android:background="@drawable/bg_glass_panel_soft"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground"
+    android:padding="16dp">
+
+    <!-- Icon Badge container -->
+    <FrameLayout
+        android:id="@+id/notif_badge_container"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:background="@drawable/bg_icon_glass"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/notif_icon"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_gravity="center"
+            android:contentDescription="Notification Icon"
+            android:src="@drawable/ic_notification"
+            app:tint="@color/brand_green" />
+    </FrameLayout>
+
+    <!-- Unread dot indicator -->
+    <View
+        android:id="@+id/notif_unread_dot"
+        android:layout_width="8dp"
+        android:layout_height="8dp"
+        android:background="@drawable/bg_avatar_circle"
+        android:backgroundTint="@color/status_stolen"
+        app:layout_constraintEnd_toEndOf="@id/notif_badge_container"
+        app:layout_constraintTop_toTopOf="@id/notif_badge_container" />
+
+    <!-- Title -->
+    <TextView
+        android:id="@+id/notif_title"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="14dp"
+        android:ellipsize="end"
+        android:includeFontPadding="false"
+        android:maxLines="1"
+        android:textColor="@color/text_white"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/notif_badge_container"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Message -->
+    <TextView
+        android:id="@+id/notif_message"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:textColor="@color/text_light_gray"
+        android:textSize="13sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@id/notif_title"
+        app:layout_constraintTop_toBottomOf="@id/notif_title" />
+
+    <!-- Relative/Absolute time tag -->
+    <TextView
+        android:id="@+id/notif_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textColor="@color/text_placeholder"
+        android:textSize="11sp"
+        app:layout_constraintStart_toStartOf="@id/notif_title"
+        app:layout_constraintTop_toBottomOf="@id/notif_message" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
