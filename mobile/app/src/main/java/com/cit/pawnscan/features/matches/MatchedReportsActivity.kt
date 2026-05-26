@@ -2,6 +2,7 @@ package com.cit.pawnscan.features.matches
 
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -39,7 +40,7 @@ class MatchedReportsActivity : AppCompatActivity() {
                     return
                 }
                 renderMatches((response.body() ?: emptyList()).sortedByDescending { it.matchedAt ?: "" })
-                PortalUi.showStatus(statusMessage, "Matched reports updated.", false)
+                statusMessage.visibility = View.GONE
             }
 
             override fun onFailure(call: Call<List<MatchedReportResponse>>, t: Throwable) {

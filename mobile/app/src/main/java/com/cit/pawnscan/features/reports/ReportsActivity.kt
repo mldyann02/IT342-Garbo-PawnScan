@@ -2,6 +2,7 @@ package com.cit.pawnscan.features.reports
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.view.LayoutInflater
 import android.widget.Button
 import android.widget.LinearLayout
@@ -53,7 +54,7 @@ class ReportsActivity : AppCompatActivity() {
                 reports.clear()
                 reports.addAll((response.body() ?: emptyList()).sortedByDescending { it.createdAt ?: "" })
                 renderReports()
-                PortalUi.showStatus(statusMessage, "Reports updated.", false)
+                statusMessage.visibility = View.GONE
             }
 
             override fun onFailure(call: Call<List<ReportResponse>>, t: Throwable) {

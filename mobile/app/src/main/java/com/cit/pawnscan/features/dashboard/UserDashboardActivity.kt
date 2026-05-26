@@ -61,7 +61,9 @@ class UserDashboardActivity : AppCompatActivity() {
     }
 
     private fun bindActions() {
-        findViewById<Button>(R.id.portal_logout).setOnClickListener { PortalUi.logout(this) }
+        findViewById<android.widget.ImageButton>(R.id.portal_notifications).setOnClickListener {
+            startActivity(android.content.Intent(this, NotificationsActivity::class.java))
+        }
         findViewById<Button>(R.id.dashboard_new_report).setOnClickListener { PortalUi.goCreateReport(this) }
         findViewById<Button>(R.id.dashboard_view_reports).setOnClickListener { PortalUi.goReports(this) }
         totalMatches.setOnClickListener { PortalUi.goMatches(this) }

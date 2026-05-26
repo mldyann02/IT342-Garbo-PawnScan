@@ -64,16 +64,15 @@
                         android:textSize="12sp" />
                 </LinearLayout>
 
-                <Button
-                    android:id="@+id/portal_logout"
-                    android:layout_width="wrap_content"
+                <ImageButton
+                    android:id="@+id/portal_notifications"
+                    android:layout_width="48dp"
                     android:layout_height="48dp"
-                    android:minWidth="72dp"
-                    android:background="@drawable/button_rounded_pill_green"
-                    android:text="@string/dashboard_logout"
-                    android:textAllCaps="false"
-                    android:textColor="@color/bg_main_dark"
-                    android:textSize="12sp" />
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@drawable/ic_notification"
+                    android:scaleType="centerInside"
+                    android:padding="12dp"
+                    android:contentDescription="Notifications" />
             </LinearLayout>
 
             <TextView

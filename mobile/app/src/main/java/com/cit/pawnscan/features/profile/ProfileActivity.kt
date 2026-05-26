@@ -1,6 +1,7 @@
 package com.cit.pawnscan.features.profile
 
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -48,7 +49,7 @@ class ProfileActivity : AppCompatActivity() {
                     return
                 }
                 renderProfile(profile)
-                PortalUi.showStatus(statusMessage, "Profile loaded.", false)
+                statusMessage.visibility = View.GONE
             }
 
             override fun onFailure(call: Call<UserProfileResponse>, t: Throwable) {
