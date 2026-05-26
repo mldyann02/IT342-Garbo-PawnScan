@@ -29,6 +29,7 @@ class BusinessVerifyActivity : AppCompatActivity() {
     private lateinit var recentList: LinearLayout
     private val recentSearches = mutableListOf<SearchLogResponse>()
     private val stolenMatches = mutableListOf<StolenMatchResponse>()
+    private var isVerifiedBusiness = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,15 +47,17 @@ class BusinessVerifyActivity : AppCompatActivity() {
         recentList = findViewById(R.id.verify_recent_searches)
 
         BusinessPortalUi.configureBottomNav(this, "verify")
-        verifyButton.isEnabled = false
+        setVerificationEnabled(false)
         verifyButton.setOnClickListener { verifySerial() }
         BusinessPortalUi.requireVerifiedBusiness(this, statusMessage) {
-            verifyButton.isEnabled = true
+            isVerifiedBusiness = true
+            setVerificationEnabled(true)
             loadRecentSearches()
         }
     }
 
     private fun verifySerial() {
+        if (!isVerifiedBusiness) return
         val serial = serialInput.text.toString().trim()
         if (serial.isBlank() || serial.length > 255 || !Regex("^[A-Za-z0-9][A-Za-z0-9 _#:/.-]*$").matches(serial)) {
             PortalUi.showStatus(statusMessage, "Enter a valid serial number.", true)
@@ -160,6 +163,17 @@ class BusinessVerifyActivity : AppCompatActivity() {
                 view.setOnClickListener { BusinessMatchDetailActivity.openFromSearch(this, search, stolenMatches) }
             }
             recentList.addView(view)
+        }
+    }
+
+    private fun setVerificationEnabled(enabled: Boolean) {
+        serialInput.isEnabled = enabled
+        verifyButton.isEnabled = enabled
+        val alpha = if (enabled) 1f else 0.5f
+        serialInput.alpha = alpha
+        verifyButton.alpha = alpha
+        if (!enabled) {
+            recentList.removeAllViews()
         }
     }
 }
