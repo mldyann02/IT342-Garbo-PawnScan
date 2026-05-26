@@ -11,6 +11,9 @@ interface AuthService {
     @POST("/api/auth/register")
     fun register(@Body request: RegisterRequest): Call<AuthResponse>
 
+    @POST("/api/auth/verify-otp")
+    fun verifyOtp(@Body request: VerifyOtpRequest): Call<AuthResponse>
+
     @POST("/api/auth/login")
     fun login(@Body request: LoginRequest): Call<AuthResponse>
 
@@ -19,6 +22,12 @@ interface AuthService {
 
     @POST("/api/auth/google")
     fun authenticateWithGoogle(@Body request: GoogleAuthRequest): Call<AuthResponse>
+
+    @PUT("/api/auth/complete-profile")
+    fun completeProfile(
+        @Header("Authorization") authorization: String,
+        @Body request: CompleteProfileRequest
+    ): Call<AuthResponse>
 
     @GET("/api/auth/profile")
     fun getProfile(@Header("Authorization") authorization: String): Call<UserProfileResponse>

@@ -46,6 +46,18 @@
             android:theme="@style/Theme.PawnScan" />
 
         <activity
+            android:name="com.cit.pawnscan.features.auth.VerifyOtpActivity"
+            android:exported="false"
+            android:label="@string/otp_title"
+            android:theme="@style/Theme.PawnScan" />
+
+        <activity
+            android:name="com.cit.pawnscan.features.auth.CompleteProfileActivity"
+            android:exported="false"
+            android:label="@string/complete_profile_title"
+            android:theme="@style/Theme.PawnScan" />
+
+        <activity
             android:name="com.cit.pawnscan.features.dashboard.TemporaryDashboardActivity"
             android:exported="false"
             android:label="@string/dashboard_welcome_title"

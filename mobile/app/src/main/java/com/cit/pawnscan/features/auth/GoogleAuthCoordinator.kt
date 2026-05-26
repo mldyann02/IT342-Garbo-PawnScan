@@ -126,7 +126,14 @@ class GoogleAuthCoordinator(
                     showStatus(authResponse.message ?: "Google authentication successful.", isError = false)
 
                     statusMessage.postDelayed({
-                        AuthSessionRouter.routeAfterAuthentication(activity)
+                        if (authResponse.registrationStatus == "INCOMPLETE") {
+                            val intent = Intent(activity, CompleteProfileActivity::class.java)
+                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            activity.startActivity(intent)
+                            activity.finish()
+                        } else {
+                            AuthSessionRouter.routeAfterAuthentication(activity)
+                        }
                     }, 900)
                     return
                 }
