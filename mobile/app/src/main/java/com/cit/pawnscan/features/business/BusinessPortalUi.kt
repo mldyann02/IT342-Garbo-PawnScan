@@ -100,10 +100,12 @@ object BusinessPortalUi {
     }
 
     private fun navigate(activity: Activity, target: Class<out Activity>, tab: String? = null) {
-        if (activity::class.java == target) return
+        if (activity::class.java == target && tab == null) return
         val intent = Intent(activity, target)
         tab?.let { intent.putExtra(BusinessHistoryActivity.EXTRA_TAB, it) }
-        intent.flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+        if (tab == null) {
+            intent.flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+        }
         activity.startActivity(intent)
         activity.overridePendingTransition(0, 0)
     }
