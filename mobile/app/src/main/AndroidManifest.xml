@@ -58,6 +58,12 @@
             android:theme="@style/Theme.PawnScan" />
 
         <activity
+            android:name="com.cit.pawnscan.features.business.BusinessDashboardActivity"
+            android:exported="false"
+            android:label="Business Portal"
+            android:theme="@style/Theme.PawnScan" />
+
+        <activity
             android:name="com.cit.pawnscan.features.dashboard.NotificationsActivity"
             android:exported="false"
             android:label="Notifications"
