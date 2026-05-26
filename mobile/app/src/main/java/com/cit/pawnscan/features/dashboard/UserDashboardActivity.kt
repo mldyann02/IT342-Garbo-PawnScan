@@ -12,6 +12,7 @@ import com.cit.pawnscan.R
 import com.cit.pawnscan.features.auth.api.UserProfileResponse
 import com.cit.pawnscan.features.reports.api.MatchedReportResponse
 import com.cit.pawnscan.features.reports.api.ReportResponse
+import com.cit.pawnscan.features.reports.ReportDetailActivity
 import com.cit.pawnscan.shared.auth.JwtStorageUtil
 import com.cit.pawnscan.shared.network.RetrofitClient
 import com.cit.pawnscan.shared.ui.PortalUi
@@ -54,7 +55,9 @@ class UserDashboardActivity : AppCompatActivity() {
         recentReportsList = findViewById(R.id.dashboard_recent_reports)
         
         recentReportsAdapter = RecentReportsAdapter(emptyList()) { report ->
-            PortalUi.goReports(this)
+            val intent = android.content.Intent(this, ReportDetailActivity::class.java)
+            ReportDetailActivity.putReport(intent, report)
+            startActivity(intent)
         }
         recentReportsList.layoutManager = LinearLayoutManager(this)
         recentReportsList.adapter = recentReportsAdapter
@@ -66,6 +69,7 @@ class UserDashboardActivity : AppCompatActivity() {
         }
         findViewById<Button>(R.id.dashboard_new_report).setOnClickListener { PortalUi.goCreateReport(this) }
         findViewById<Button>(R.id.dashboard_view_reports).setOnClickListener { PortalUi.goReports(this) }
+        findViewById<TextView>(R.id.dashboard_see_all_reports).setOnClickListener { PortalUi.goReports(this) }
         totalMatches.setOnClickListener { PortalUi.goMatches(this) }
         totalReports.setOnClickListener { PortalUi.goReports(this) }
     }

@@ -1,7 +1,7 @@
 package com.cit.pawnscan.features.dashboard
 
 import android.os.Bundle
-import android.widget.Button
+import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
 import com.cit.pawnscan.R
 
@@ -10,7 +10,7 @@ class NotificationsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_notifications)
         
-        findViewById<Button>(R.id.btn_back).setOnClickListener {
+        findViewById<ImageButton>(R.id.btn_back).setOnClickListener {
             finish()
         }
     }

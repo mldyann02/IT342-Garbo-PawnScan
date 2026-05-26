@@ -19,97 +19,101 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="20dp">
+            android:paddingStart="20dp"
+            android:paddingTop="34dp"
+            android:paddingEnd="20dp"
+            android:paddingBottom="20dp">
 
             <TextView
                 android:id="@+id/report_form_title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:includeFontPadding="false"
                 android:text="@string/portal_create_title"
                 android:textColor="@color/text_white"
                 android:textSize="28sp"
                 android:textStyle="bold" />
 
             <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Add details that help partner businesses identify your item quickly."
-                android:textColor="@color/text_muted_gray"
-                android:textSize="14sp" />
-
-            <TextView
                 android:id="@+id/report_form_status"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:background="@drawable/bg_mobile_feature_card"
+                android:background="@drawable/bg_glass_panel_soft"
                 android:padding="12dp"
                 android:textSize="12sp"
                 android:visibility="gone" />
 
-            <EditText
-                android:id="@+id/report_form_serial"
-                android:layout_width="match_parent"
-                android:layout_height="54dp"
-                android:layout_marginTop="18dp"
-                android:background="@drawable/input_field_background"
-                android:hint="@string/portal_serial_hint"
-                android:inputType="text"
-                android:maxLength="255"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
-                android:textColor="@color/text_white"
-                android:textColorHint="@color/text_placeholder"
-                android:textSize="14sp" />
-
-            <EditText
-                android:id="@+id/report_form_model"
-                android:layout_width="match_parent"
-                android:layout_height="54dp"
-                android:layout_marginTop="12dp"
-                android:background="@drawable/input_field_background"
-                android:hint="@string/portal_model_hint"
-                android:inputType="text"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
-                android:textColor="@color/text_white"
-                android:textColorHint="@color/text_placeholder"
-                android:textSize="14sp" />
-
-            <EditText
-                android:id="@+id/report_form_description"
-                android:layout_width="match_parent"
-                android:layout_height="150dp"
-                android:layout_marginTop="12dp"
-                android:background="@drawable/input_field_background"
-                android:gravity="top"
-                android:hint="@string/portal_description_hint"
-                android:inputType="textMultiLine"
-                android:padding="16dp"
-                android:textColor="@color/text_white"
-                android:textColorHint="@color/text_placeholder"
-                android:textSize="14sp" />
-
-            <Button
-                android:id="@+id/report_form_choose_files"
-                android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:layout_marginTop="14dp"
-                android:background="@drawable/button_rounded_pill_outline_green"
-                android:stateListAnimator="@null"
-                android:text="@string/portal_choose_files"
-                android:textAllCaps="false"
-                android:textColor="@color/brand_green"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/report_form_selected_files"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:textColor="@color/text_muted_gray"
-                android:textSize="12sp" />
+                android:layout_marginTop="18dp"
+                android:background="@drawable/bg_glass_panel"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <EditText
+                    android:id="@+id/report_form_serial"
+                    android:layout_width="match_parent"
+                    android:layout_height="54dp"
+                    android:background="@drawable/input_field_background"
+                    android:hint="@string/portal_serial_hint"
+                    android:inputType="text"
+                    android:maxLength="255"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:textColor="@color/text_white"
+                    android:textColorHint="@color/text_placeholder"
+                    android:textSize="14sp" />
+
+                <EditText
+                    android:id="@+id/report_form_model"
+                    android:layout_width="match_parent"
+                    android:layout_height="54dp"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/input_field_background"
+                    android:hint="@string/portal_model_hint"
+                    android:inputType="text"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:textColor="@color/text_white"
+                    android:textColorHint="@color/text_placeholder"
+                    android:textSize="14sp" />
+
+                <EditText
+                    android:id="@+id/report_form_description"
+                    android:layout_width="match_parent"
+                    android:layout_height="142dp"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/input_field_background"
+                    android:gravity="top"
+                    android:hint="@string/portal_description_hint"
+                    android:inputType="textMultiLine"
+                    android:padding="16dp"
+                    android:textColor="@color/text_white"
+                    android:textColorHint="@color/text_placeholder"
+                    android:textSize="14sp" />
+
+                <Button
+                    android:id="@+id/report_form_choose_files"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:layout_marginTop="14dp"
+                    android:background="@drawable/bg_button_glass_outline"
+                    android:stateListAnimator="@null"
+                    android:text="@string/portal_choose_files"
+                    android:textAllCaps="false"
+                    android:textColor="@color/brand_green"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/report_form_selected_files"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:textColor="@color/text_muted_gray"
+                    android:textSize="12sp" />
+            </LinearLayout>
 
             <Button
                 android:id="@+id/report_form_submit"
@@ -130,7 +134,7 @@
                 android:layout_height="48dp"
                 android:layout_marginTop="10dp"
                 android:layout_marginBottom="16dp"
-                android:background="@drawable/input_field_background"
+                android:background="@drawable/bg_button_glass_outline"
                 android:stateListAnimator="@null"
                 android:text="@string/portal_cancel_edit"
                 android:textAllCaps="false"
@@ -143,7 +147,10 @@
         android:id="@+id/portal_nav"
         layout="@layout/include_portal_bottom_nav"
         android:layout_width="0dp"
-        android:layout_height="72dp"
+        android:layout_height="74dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="12dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />

@@ -19,22 +19,34 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="20dp">
+            android:paddingStart="20dp"
+            android:paddingTop="34dp"
+            android:paddingEnd="20dp"
+            android:paddingBottom="20dp">
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:includeFontPadding="false"
                 android:text="@string/portal_matched_reports"
                 android:textColor="@color/text_white"
                 android:textSize="28sp"
                 android:textStyle="bold" />
 
-            <TextView
+            <EditText
+                android:id="@+id/matches_search"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Businesses that matched one of your reported stolen items appear here."
-                android:textColor="@color/text_muted_gray"
+                android:layout_height="50dp"
+                android:layout_marginTop="18dp"
+                android:background="@drawable/bg_search_field"
+                android:hint="Search matches"
+                android:imeOptions="actionSearch"
+                android:inputType="text"
+                android:paddingStart="18dp"
+                android:paddingEnd="18dp"
+                android:singleLine="true"
+                android:textColor="@color/text_white"
+                android:textColorHint="@color/text_placeholder"
                 android:textSize="14sp" />
 
             <TextView
@@ -42,7 +54,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:background="@drawable/bg_mobile_feature_card"
+                android:background="@drawable/bg_glass_panel_soft"
                 android:padding="12dp"
                 android:textSize="12sp"
                 android:visibility="gone" />
@@ -51,7 +63,7 @@
                 android:id="@+id/matches_list"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
+                android:layout_marginTop="16dp"
                 android:layout_marginBottom="16dp"
                 android:orientation="vertical" />
         </LinearLayout>
@@ -61,7 +73,10 @@
         android:id="@+id/portal_nav"
         layout="@layout/include_portal_bottom_nav"
         android:layout_width="0dp"
-        android:layout_height="72dp"
+        android:layout_height="74dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="12dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />

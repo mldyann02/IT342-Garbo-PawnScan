@@ -1,10 +1,12 @@
 package com.cit.pawnscan.shared.ui
 
 import android.app.Activity
+import android.content.res.ColorStateList
 import android.content.Intent
 import android.net.Uri
 import android.provider.OpenableColumns
 import android.view.View
+import android.widget.ImageView
 import android.widget.TextView
 import com.cit.pawnscan.R
 import com.cit.pawnscan.features.auth.LoginActivity
@@ -64,17 +66,21 @@ object PortalUi {
 
     fun configureBottomNav(activity: Activity, active: String) {
         val navItems = mapOf(
-            "home" to R.id.nav_home,
-            "reports" to R.id.nav_reports,
-            "new" to R.id.nav_create,
-            "matches" to R.id.nav_matches,
-            "profile" to R.id.nav_profile
+            "home" to (R.id.nav_home to R.id.nav_home_icon),
+            "reports" to (R.id.nav_reports to R.id.nav_reports_icon),
+            "new" to (R.id.nav_create to R.id.nav_create_icon),
+            "matches" to (R.id.nav_matches to R.id.nav_matches_icon),
+            "profile" to (R.id.nav_profile to R.id.nav_profile_icon)
         )
-        navItems.forEach { (key, id) ->
-            activity.findViewById<TextView?>(id)?.apply {
-                setTextColor(activity.getColor(if (key == active) R.color.brand_green else R.color.text_muted_gray))
+        navItems.forEach { (key, ids) ->
+            activity.findViewById<View?>(ids.first)?.apply {
+                val isActive = key == active
+                setBackgroundResource(if (isActive) R.drawable.bg_nav_item_active else R.drawable.bg_nav_item_glass)
+                activity.findViewById<ImageView?>(ids.second)?.imageTintList = ColorStateList.valueOf(
+                    activity.getColor(if (isActive) R.color.bg_main_dark else R.color.text_white)
+                )
                 setOnClickListener {
-                    if (key != active) {
+                    if (!isActive) {
                         when (key) {
                             "home" -> goHome(activity)
                             "reports" -> goReports(activity)
@@ -112,6 +118,25 @@ object PortalUi {
             "REJECTED" -> "Rejected"
             "APPROVED" -> "Approved"
             else -> "Approved"
+        }
+    }
+
+    fun configureStatusBadge(view: TextView, status: String?) {
+        val normalized = status ?: "APPROVED"
+        view.text = statusLabel(normalized)
+        when (normalized) {
+            "REJECTED" -> {
+                view.setBackgroundResource(R.drawable.badge_status_rejected)
+                view.setTextColor(view.context.getColor(R.color.text_red))
+            }
+            "PENDING" -> {
+                view.setBackgroundResource(R.drawable.badge_status_pending)
+                view.setTextColor(0xFFFFB020.toInt())
+            }
+            else -> {
+                view.setBackgroundResource(R.drawable.badge_status_approved)
+                view.setTextColor(view.context.getColor(R.color.brand_green))
+            }
         }
     }
 

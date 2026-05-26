@@ -33,9 +33,9 @@ class RecentReportsAdapter(
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val report = reports[position]
         holder.model.text = report.itemModel ?: "Reported item"
-        holder.status.text = PortalUi.statusLabel(report.status)
+        PortalUi.configureStatusBadge(holder.status, report.status)
         holder.serial.text = "SN: ${report.serialNumber ?: "Unavailable"}"
-        holder.description.text = report.description ?: "No description provided"
+        holder.description.text = "Evidence: ${report.files?.size ?: 0} file(s)"
         holder.date.text = "Created: ${PortalUi.formatDate(report.createdAt)}"
         
         holder.actions.visibility = View.GONE

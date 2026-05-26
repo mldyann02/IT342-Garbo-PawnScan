@@ -18,8 +18,12 @@ import retrofit2.Response
 class ProfileActivity : AppCompatActivity() {
     private lateinit var statusMessage: TextView
     private lateinit var profileMeta: TextView
+    private lateinit var profileName: TextView
+    private lateinit var editPanel: View
     private lateinit var fullNameInput: EditText
     private lateinit var phoneInput: EditText
+    private lateinit var saveButton: Button
+    private var isEditing = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,11 +33,16 @@ class ProfileActivity : AppCompatActivity() {
 
         statusMessage = findViewById(R.id.profile_status)
         profileMeta = findViewById(R.id.profile_meta)
+        profileName = findViewById(R.id.profile_display_name)
+        editPanel = findViewById(R.id.profile_edit_panel)
         fullNameInput = findViewById(R.id.profile_full_name)
         phoneInput = findViewById(R.id.profile_phone)
+        saveButton = findViewById(R.id.profile_save)
         PortalUi.configureBottomNav(this, "profile")
 
-        findViewById<Button>(R.id.profile_save).setOnClickListener { saveProfile() }
+        saveButton.setOnClickListener {
+            if (isEditing) saveProfile() else setEditing(true)
+        }
         findViewById<Button>(R.id.profile_logout).setOnClickListener { PortalUi.logout(this) }
         loadProfile()
     }
@@ -61,8 +70,16 @@ class ProfileActivity : AppCompatActivity() {
     private fun renderProfile(profile: UserProfileResponse) {
         fullNameInput.setText(profile.fullName.orEmpty())
         phoneInput.setText(profile.phoneNumber ?: "+639")
+        profileName.text = profile.fullName?.ifBlank { "PawnScan User" } ?: "PawnScan User"
         profileMeta.text =
-            "Account: ${profile.role ?: "USER"}\nEmail: ${profile.email ?: "Unavailable"}\nMember since: ${PortalUi.formatDate(profile.createdAt)}"
+            "${profile.email ?: "Unavailable"}\n${profile.phoneNumber ?: "Phone not provided"}\n${profile.role ?: "USER"} account | Member since ${PortalUi.formatDate(profile.createdAt)}"
+        setEditing(false)
+    }
+
+    private fun setEditing(editing: Boolean) {
+        isEditing = editing
+        editPanel.visibility = if (editing) View.VISIBLE else View.GONE
+        saveButton.text = if (editing) getString(R.string.portal_save_profile) else "Edit Profile"
     }
 
     private fun saveProfile() {

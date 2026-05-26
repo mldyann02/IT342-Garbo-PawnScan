@@ -76,7 +76,19 @@
             android:theme="@style/Theme.PawnScan" />
 
         <activity
+            android:name="com.cit.pawnscan.features.reports.ReportDetailActivity"
+            android:exported="false"
+            android:label="@string/portal_all_reports"
+            android:theme="@style/Theme.PawnScan" />
+
+        <activity
             android:name="com.cit.pawnscan.features.matches.MatchedReportsActivity"
+            android:exported="false"
+            android:label="@string/portal_matched_reports"
+            android:theme="@style/Theme.PawnScan" />
+
+        <activity
+            android:name="com.cit.pawnscan.features.matches.MatchDetailActivity"
             android:exported="false"
             android:label="@string/portal_matched_reports"
             android:theme="@style/Theme.PawnScan" />

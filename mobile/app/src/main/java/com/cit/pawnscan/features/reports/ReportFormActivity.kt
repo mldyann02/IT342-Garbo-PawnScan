@@ -2,6 +2,9 @@ package com.cit.pawnscan.features.reports
 
 import android.net.Uri
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -45,7 +48,9 @@ class ReportFormActivity : AppCompatActivity() {
         PortalUi.configureBottomNav(this, "new")
         readEditIntent()
         bindActions()
+        bindValidation()
         updateSelectedFilesText()
+        updateSubmitState()
     }
 
     private fun bindViews() {
@@ -64,7 +69,20 @@ class ReportFormActivity : AppCompatActivity() {
         submitButton.setOnClickListener { submitReport() }
     }
 
+    private fun bindValidation() {
+        val watcher = object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = updateSubmitState()
+            override fun afterTextChanged(s: Editable?) = Unit
+        }
+        serialInput.addTextChangedListener(watcher)
+        modelInput.addTextChangedListener(watcher)
+        descriptionInput.addTextChangedListener(watcher)
+    }
+
     private fun readEditIntent() {
+        findViewById<Button>(R.id.report_form_cancel).visibility =
+            if (intent.hasExtra(EXTRA_REPORT_ID)) View.VISIBLE else View.GONE
         if (!intent.hasExtra(EXTRA_REPORT_ID)) return
         reportId = intent.getLongExtra(EXTRA_REPORT_ID, -1L).takeIf { it > 0 }
         val status = intent.getStringExtra(EXTRA_STATUS).orEmpty()
@@ -152,6 +170,16 @@ class ReportFormActivity : AppCompatActivity() {
         } else {
             selectedFiles.joinToString("\n") { PortalUi.displayName(this, it) }
         }
+        updateSubmitState()
+    }
+
+    private fun updateSubmitState() {
+        val hasRequiredText = serialInput.text.toString().trim().isNotBlank() &&
+            modelInput.text.toString().trim().isNotBlank() &&
+            descriptionInput.text.toString().trim().isNotBlank()
+        val hasEvidence = reportId != null || selectedFiles.isNotEmpty()
+        submitButton.isEnabled = hasRequiredText && hasEvidence
+        submitButton.alpha = if (submitButton.isEnabled) 1f else 0.45f
     }
 
     companion object {
