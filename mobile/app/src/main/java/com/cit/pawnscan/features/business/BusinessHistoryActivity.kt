@@ -128,6 +128,9 @@ class BusinessHistoryActivity : AppCompatActivity() {
                 view.findViewById<TextView>(R.id.search_model).text = search.itemModel ?: "Model unavailable"
                 view.findViewById<TextView>(R.id.search_date).text = PortalUi.formatDate(search.timestamp)
                 configureBadge(view.findViewById(R.id.search_result), search.result)
+                if (search.result == "STOLEN") {
+                    view.setOnClickListener { BusinessMatchDetailActivity.openFromSearch(this, search, matches) }
+                }
                 list.addView(view)
             }
         } else {

@@ -13,6 +13,7 @@ import com.cit.pawnscan.R
 import com.cit.pawnscan.features.auth.api.UserProfileResponse
 import com.cit.pawnscan.features.dashboard.NotificationsActivity
 import com.cit.pawnscan.features.business.api.SearchLogResponse
+import com.cit.pawnscan.features.business.api.StolenMatchResponse
 import com.cit.pawnscan.shared.network.RetrofitClient
 import com.cit.pawnscan.shared.ui.PortalUi
 import retrofit2.Call
@@ -24,6 +25,8 @@ class BusinessDashboardActivity : AppCompatActivity() {
     private lateinit var businessName: TextView
     private lateinit var businessMeta: TextView
     private lateinit var recentList: LinearLayout
+    private val recentSearches = mutableListOf<SearchLogResponse>()
+    private val stolenMatches = mutableListOf<StolenMatchResponse>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -85,13 +88,32 @@ class BusinessDashboardActivity : AppCompatActivity() {
                         PortalUi.showStatus(statusMessage, "Unable to load recent verifications.", true)
                         return
                     }
-                    renderRecent(response.body().orEmpty())
+                    recentSearches.clear()
+                    recentSearches.addAll(response.body().orEmpty())
+                    renderRecent(recentSearches)
                     statusMessage.visibility = View.GONE
+                    loadStolenMatches()
                 }
 
                 override fun onFailure(call: Call<List<SearchLogResponse>>, t: Throwable) {
                     PortalUi.showStatus(statusMessage, "Could not reach the server for verification history.", true)
                 }
+            })
+    }
+
+    private fun loadStolenMatches() {
+        val header = PortalUi.requireAuth(this) ?: return
+        RetrofitClient.getVerificationService().getStolenMatches(header, 0, 100)
+            .enqueue(object : Callback<List<StolenMatchResponse>> {
+                override fun onResponse(call: Call<List<StolenMatchResponse>>, response: Response<List<StolenMatchResponse>>) {
+                    if (response.isSuccessful) {
+                        stolenMatches.clear()
+                        stolenMatches.addAll(response.body().orEmpty())
+                        renderRecent(recentSearches)
+                    }
+                }
+
+                override fun onFailure(call: Call<List<StolenMatchResponse>>, t: Throwable) = Unit
             })
     }
 
@@ -107,6 +129,9 @@ class BusinessDashboardActivity : AppCompatActivity() {
             view.findViewById<TextView>(R.id.search_model).text = search.itemModel ?: "Model unavailable"
             view.findViewById<TextView>(R.id.search_date).text = PortalUi.formatDate(search.timestamp)
             configureVerificationBadge(view.findViewById(R.id.search_result), search.result)
+            if (search.result == "STOLEN") {
+                view.setOnClickListener { BusinessMatchDetailActivity.openFromSearch(this, search, stolenMatches) }
+            }
             recentList.addView(view)
         }
     }

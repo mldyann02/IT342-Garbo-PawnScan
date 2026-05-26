@@ -10,6 +10,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.cit.pawnscan.R
 import com.cit.pawnscan.features.business.api.SearchLogResponse
+import com.cit.pawnscan.features.business.api.StolenMatchResponse
 import com.cit.pawnscan.features.business.api.VerifySearchResponse
 import com.cit.pawnscan.shared.network.RetrofitClient
 import com.cit.pawnscan.shared.ui.PortalUi
@@ -26,6 +27,8 @@ class BusinessVerifyActivity : AppCompatActivity() {
     private lateinit var resultSerial: TextView
     private lateinit var resultDetails: TextView
     private lateinit var recentList: LinearLayout
+    private val recentSearches = mutableListOf<SearchLogResponse>()
+    private val stolenMatches = mutableListOf<StolenMatchResponse>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -113,10 +116,31 @@ class BusinessVerifyActivity : AppCompatActivity() {
         RetrofitClient.getVerificationService().getSearchHistory(header, 0, 5)
             .enqueue(object : Callback<List<SearchLogResponse>> {
                 override fun onResponse(call: Call<List<SearchLogResponse>>, response: Response<List<SearchLogResponse>>) {
-                    if (response.isSuccessful) renderRecent(response.body().orEmpty())
+                    if (response.isSuccessful) {
+                        recentSearches.clear()
+                        recentSearches.addAll(response.body().orEmpty())
+                        renderRecent(recentSearches)
+                        loadStolenMatches()
+                    }
                 }
 
                 override fun onFailure(call: Call<List<SearchLogResponse>>, t: Throwable) = Unit
+            })
+    }
+
+    private fun loadStolenMatches() {
+        val header = PortalUi.requireAuth(this) ?: return
+        RetrofitClient.getVerificationService().getStolenMatches(header, 0, 100)
+            .enqueue(object : Callback<List<StolenMatchResponse>> {
+                override fun onResponse(call: Call<List<StolenMatchResponse>>, response: Response<List<StolenMatchResponse>>) {
+                    if (response.isSuccessful) {
+                        stolenMatches.clear()
+                        stolenMatches.addAll(response.body().orEmpty())
+                        renderRecent(recentSearches)
+                    }
+                }
+
+                override fun onFailure(call: Call<List<StolenMatchResponse>>, t: Throwable) = Unit
             })
     }
 
@@ -132,6 +156,9 @@ class BusinessVerifyActivity : AppCompatActivity() {
             badge.text = if (isStolen) "Stolen Match" else "Clean"
             badge.setBackgroundResource(if (isStolen) R.drawable.badge_status_rejected else R.drawable.badge_status_approved)
             badge.setTextColor(getColor(if (isStolen) R.color.text_red else R.color.brand_green))
+            if (isStolen) {
+                view.setOnClickListener { BusinessMatchDetailActivity.openFromSearch(this, search, stolenMatches) }
+            }
             recentList.addView(view)
         }
     }

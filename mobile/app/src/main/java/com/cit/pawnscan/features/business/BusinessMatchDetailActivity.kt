@@ -1,11 +1,13 @@
 package com.cit.pawnscan.features.business
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.widget.ImageButton
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.cit.pawnscan.R
+import com.cit.pawnscan.features.business.api.SearchLogResponse
 import com.cit.pawnscan.features.business.api.StolenMatchResponse
 import com.cit.pawnscan.shared.ui.PortalUi
 
@@ -38,6 +40,28 @@ class BusinessMatchDetailActivity : AppCompatActivity() {
         private const val EXTRA_EMAIL = "email"
         private const val EXTRA_PHONE = "phone"
         private const val EXTRA_FILE_COUNT = "file_count"
+
+        fun openFromSearch(activity: Activity, search: SearchLogResponse, matches: List<StolenMatchResponse>) {
+            if (search.result != "STOLEN") return
+            val match = matches.firstOrNull {
+                (search.matchedReportId != null && it.matchedReportId == search.matchedReportId) ||
+                    (!search.searchedSerial.isNullOrBlank() && it.searchedSerial.equals(search.searchedSerial, ignoreCase = true))
+            } ?: StolenMatchResponse(
+                searchedSerial = search.searchedSerial,
+                timestamp = search.timestamp,
+                matchedReportId = search.matchedReportId,
+                itemModel = search.itemModel,
+                description = "Open the Stolen Matches tab for the full owner and evidence details.",
+                dateReported = null,
+                victimName = null,
+                victimEmail = null,
+                victimPhoneNumber = null,
+                files = emptyList()
+            )
+            val intent = Intent(activity, BusinessMatchDetailActivity::class.java)
+            putMatch(intent, match)
+            activity.startActivity(intent)
+        }
 
         fun putMatch(intent: Intent, match: StolenMatchResponse) {
             intent.putExtra(EXTRA_SERIAL, match.searchedSerial)
