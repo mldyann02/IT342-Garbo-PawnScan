@@ -3,39 +3,81 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="12dp"
-    android:background="@drawable/bg_metric_card"
+    android:background="@drawable/bg_detail_hero"
     android:clickable="true"
     android:focusable="true"
-    android:minHeight="120dp"
+    android:foreground="?attr/selectableItemBackground"
+    android:minHeight="132dp"
     android:orientation="vertical"
     android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/badge_status_approved"
+            android:gravity="center"
+            android:minWidth="96dp"
+            android:paddingStart="10dp"
+            android:paddingTop="5dp"
+            android:paddingEnd="10dp"
+            android:paddingBottom="5dp"
+            android:text="Matched"
+            android:textColor="@color/brand_green"
+            android:textSize="10sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/match_date"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:gravity="end"
+            android:maxLines="1"
+            android:textColor="@color/text_placeholder"
+            android:textSize="12sp" />
+    </LinearLayout>
 
     <TextView
         android:id="@+id/match_model"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
         android:ellipsize="end"
         android:includeFontPadding="false"
         android:maxLines="1"
         android:textColor="@color/text_white"
-        android:textSize="16sp"
+        android:textSize="19sp"
         android:textStyle="bold" />
 
     <TextView
         android:id="@+id/match_serial"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="8dp"
         android:ellipsize="end"
         android:maxLines="1"
         android:textColor="#B3FFFFFF"
         android:textSize="13sp" />
 
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="14dp"
+        android:background="#1FFFFFFF" />
+
     <TextView
         android:id="@+id/match_business"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="12dp"
         android:ellipsize="end"
         android:maxLines="1"
         android:textColor="@color/brand_green"
@@ -46,7 +88,7 @@
         android:id="@+id/match_contact"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
+        android:layout_marginTop="7dp"
         android:ellipsize="end"
         android:maxLines="1"
         android:textColor="@color/text_light_gray"
@@ -61,12 +103,4 @@
         android:maxLines="1"
         android:textColor="@color/text_muted_gray"
         android:textSize="13sp" />
-
-    <TextView
-        android:id="@+id/match_date"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:textColor="@color/text_placeholder"
-        android:textSize="12sp" />
 </LinearLayout>

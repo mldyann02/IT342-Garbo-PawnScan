@@ -29,8 +29,8 @@ class MatchDetailActivity : AppCompatActivity() {
             "Serial number\n${intent.getStringExtra(EXTRA_SERIAL).orEmpty().ifBlank { "Unavailable" }}"
         findViewById<TextView>(R.id.match_detail_date).text =
             "Matched\n${PortalUi.formatDate(intent.getStringExtra(EXTRA_MATCHED_AT))}"
-        findViewById<TextView>(R.id.match_detail_business).text = businessName
-        findViewById<TextView>(R.id.match_detail_contact).text = contact
+        findViewById<TextView>(R.id.match_detail_business).text = "Matched by\n$businessName"
+        findViewById<TextView>(R.id.match_detail_contact).text = "Business contact\n$contact"
         findViewById<TextView>(R.id.match_detail_description).text =
             "Report details\n${intent.getStringExtra(EXTRA_DESCRIPTION).orEmpty().ifBlank { "No description provided" }}"
     }
