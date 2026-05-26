@@ -70,16 +70,16 @@ object BusinessPortalUi {
     fun goProfile(activity: Activity) = navigate(activity, BusinessProfileActivity::class.java)
 
     fun configureBottomNav(activity: Activity, active: String) {
+        val activeKey = if (active == "matches") "history" else active
         val navItems = mapOf(
             "home" to (R.id.nav_home to R.id.nav_home_icon),
             "history" to (R.id.nav_reports to R.id.nav_reports_icon),
             "verify" to (R.id.nav_create to R.id.nav_create_icon),
-            "matches" to (R.id.nav_matches to R.id.nav_matches_icon),
             "profile" to (R.id.nav_profile to R.id.nav_profile_icon)
         )
         navItems.forEach { (key, ids) ->
             activity.findViewById<View?>(ids.first)?.apply {
-                val isActive = key == active
+                val isActive = key == activeKey
                 setBackgroundResource(if (isActive) R.drawable.bg_nav_item_active else R.drawable.bg_nav_item_glass)
                 activity.findViewById<ImageView?>(ids.second)?.imageTintList = ColorStateList.valueOf(
                     activity.getColor(if (isActive) R.color.bg_main_dark else R.color.text_white)
@@ -90,7 +90,6 @@ object BusinessPortalUi {
                             "home" -> goHome(activity)
                             "history" -> goHistory(activity)
                             "verify" -> goVerify(activity)
-                            "matches" -> goMatches(activity)
                             "profile" -> goProfile(activity)
                         }
                     }

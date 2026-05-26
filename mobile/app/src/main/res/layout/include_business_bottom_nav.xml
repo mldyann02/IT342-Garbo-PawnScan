@@ -46,7 +46,7 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:layout_gravity="center"
-            android:src="@drawable/ic_nav_reports" />
+            android:src="@drawable/ic_nav_history" />
     </FrameLayout>
 
     <FrameLayout
@@ -65,26 +65,7 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:layout_gravity="center"
-            android:src="@drawable/ic_nav_add" />
-    </FrameLayout>
-
-    <FrameLayout
-        android:id="@+id/nav_matches"
-        android:layout_width="0dp"
-        android:layout_height="56dp"
-        android:layout_marginHorizontal="3dp"
-        android:layout_weight="1"
-        android:background="@drawable/bg_nav_item_glass"
-        android:clickable="true"
-        android:contentDescription="Stolen matches"
-        android:focusable="true">
-
-        <ImageView
-            android:id="@+id/nav_matches_icon"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_gravity="center"
-            android:src="@drawable/ic_nav_matches" />
+            android:src="@drawable/ic_nav_scan" />
     </FrameLayout>
 
     <FrameLayout

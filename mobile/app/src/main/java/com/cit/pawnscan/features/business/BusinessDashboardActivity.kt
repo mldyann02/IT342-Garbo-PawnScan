@@ -1,14 +1,17 @@
 package com.cit.pawnscan.features.business
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.cit.pawnscan.R
 import com.cit.pawnscan.features.auth.api.UserProfileResponse
+import com.cit.pawnscan.features.dashboard.NotificationsActivity
 import com.cit.pawnscan.features.business.api.SearchLogResponse
 import com.cit.pawnscan.shared.network.RetrofitClient
 import com.cit.pawnscan.shared.ui.PortalUi
@@ -34,6 +37,9 @@ class BusinessDashboardActivity : AppCompatActivity() {
         recentList = findViewById(R.id.business_recent_searches)
 
         BusinessPortalUi.configureBottomNav(this, "home")
+        findViewById<ImageButton>(R.id.business_notifications).setOnClickListener {
+            startActivity(Intent(this, NotificationsActivity::class.java))
+        }
         findViewById<Button>(R.id.business_verify_now).setOnClickListener {
             BusinessPortalUi.goVerify(this)
         }
@@ -59,7 +65,7 @@ class BusinessDashboardActivity : AppCompatActivity() {
                     val business = profile.businessProfile
                     businessName.text = business?.businessName?.ifBlank { "Business Portal" } ?: "Business Portal"
                     val verification = if (business?.verified == true || business?.isVerified == true) "Verified" else "Under review"
-                    businessMeta.text = "${profile.email ?: "Signed in"}\nPermit: ${business?.permitNumber ?: "Not provided"}\n$verification"
+                    businessMeta.text = "${profile.email ?: "Signed in"} | $verification"
                 }
             }
 
