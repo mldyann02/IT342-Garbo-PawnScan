@@ -74,12 +74,14 @@ object PortalUi {
             activity.findViewById<TextView?>(id)?.apply {
                 setTextColor(activity.getColor(if (key == active) R.color.brand_green else R.color.text_muted_gray))
                 setOnClickListener {
-                    when (key) {
-                        "home" -> goHome(activity)
-                        "reports" -> goReports(activity)
-                        "new" -> goCreateReport(activity)
-                        "matches" -> goMatches(activity)
-                        "profile" -> goProfile(activity)
+                    if (key != active) {
+                        when (key) {
+                            "home" -> goHome(activity)
+                            "reports" -> goReports(activity)
+                            "new" -> goCreateReport(activity)
+                            "matches" -> goMatches(activity)
+                            "profile" -> goProfile(activity)
+                        }
                     }
                 }
             }
@@ -125,6 +127,9 @@ object PortalUi {
 
     private fun navigate(activity: Activity, target: Class<out Activity>) {
         if (activity::class.java == target) return
-        activity.startActivity(Intent(activity, target))
+        val intent = Intent(activity, target)
+        intent.flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+        activity.startActivity(intent)
+        activity.overridePendingTransition(0, 0)
     }
 }

@@ -4,9 +4,10 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
-import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.cit.pawnscan.R
 import com.cit.pawnscan.features.auth.api.UserProfileResponse
 import com.cit.pawnscan.features.reports.api.MatchedReportResponse
@@ -24,7 +25,8 @@ class UserDashboardActivity : AppCompatActivity() {
     private lateinit var userEmail: TextView
     private lateinit var totalReports: TextView
     private lateinit var totalMatches: TextView
-    private lateinit var recentReportsList: LinearLayout
+    private lateinit var recentReportsList: RecyclerView
+    private lateinit var recentReportsAdapter: RecentReportsAdapter
     private var matchCount = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,6 +52,12 @@ class UserDashboardActivity : AppCompatActivity() {
         totalReports = findViewById(R.id.dashboard_total_reports)
         totalMatches = findViewById(R.id.dashboard_total_matches)
         recentReportsList = findViewById(R.id.dashboard_recent_reports)
+        
+        recentReportsAdapter = RecentReportsAdapter(emptyList()) { report ->
+            PortalUi.goReports(this)
+        }
+        recentReportsList.layoutManager = LinearLayoutManager(this)
+        recentReportsList.adapter = recentReportsAdapter
     }
 
     private fun bindActions() {
@@ -95,7 +103,7 @@ class UserDashboardActivity : AppCompatActivity() {
                 val reports = (response.body() ?: emptyList()).sortedByDescending { it.createdAt ?: "" }
                 totalReports.text = "${reports.size}\nReports"
                 renderRecentReports(reports.take(3))
-                PortalUi.showStatus(statusMessage, "Portal updated.", false)
+                statusMessage.visibility = View.GONE
             }
 
             override fun onFailure(call: Call<List<ReportResponse>>, t: Throwable) {
@@ -121,31 +129,8 @@ class UserDashboardActivity : AppCompatActivity() {
     }
 
     private fun renderRecentReports(reports: List<ReportResponse>) {
-        recentReportsList.removeAllViews()
-        if (reports.isEmpty()) {
-            recentReportsList.addView(emptyText(getString(R.string.portal_empty_reports)))
-            return
-        }
-        reports.forEach { report ->
-            val view = LayoutInflater.from(this).inflate(R.layout.item_user_report_card, recentReportsList, false)
-            view.findViewById<TextView>(R.id.report_model).text = report.itemModel ?: "Reported item"
-            view.findViewById<TextView>(R.id.report_status).text = PortalUi.statusLabel(report.status)
-            view.findViewById<TextView>(R.id.report_serial).text = "SN: ${report.serialNumber ?: "Unavailable"}"
-            view.findViewById<TextView>(R.id.report_description).text = report.description ?: "No description provided"
-            view.findViewById<TextView>(R.id.report_date).text = "Created: ${PortalUi.formatDate(report.createdAt)}"
-            view.findViewById<LinearLayout>(R.id.report_actions).visibility = View.GONE
-            view.setOnClickListener { PortalUi.goReports(this) }
-            recentReportsList.addView(view)
-        }
+        recentReportsAdapter.updateReports(reports)
     }
 
-    private fun emptyText(message: String): TextView {
-        return TextView(this).apply {
-            text = message
-            setTextColor(getColor(R.color.text_muted_gray))
-            textSize = 14f
-            setPadding(18, 24, 18, 24)
-            setBackgroundResource(R.drawable.bg_mobile_feature_card)
-        }
-    }
+    // emptyText method removed as empty state is better handled outside or within the adapter, but for now we simply show an empty list.
 }

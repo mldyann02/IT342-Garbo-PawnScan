@@ -7,7 +7,7 @@
     android:background="@drawable/bg_screen_gradient"
     tools:context=".features.dashboard.UserDashboardActivity">
 
-    <ScrollView
+    <androidx.core.widget.NestedScrollView
         android:id="@+id/portal_content"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -67,13 +67,12 @@
                 <Button
                     android:id="@+id/portal_logout"
                     android:layout_width="wrap_content"
-                    android:layout_height="40dp"
-                    android:background="@drawable/input_field_background"
+                    android:layout_height="48dp"
                     android:minWidth="72dp"
-                    android:stateListAnimator="@null"
+                    android:background="@drawable/button_rounded_pill_green"
                     android:text="@string/dashboard_logout"
                     android:textAllCaps="false"
-                    android:textColor="@color/text_light_gray"
+                    android:textColor="@color/bg_main_dark"
                     android:textSize="12sp" />
             </LinearLayout>
 
@@ -111,7 +110,6 @@
                 android:layout_height="54dp"
                 android:layout_marginTop="22dp"
                 android:background="@drawable/button_rounded_pill_green"
-                android:stateListAnimator="@null"
                 android:text="@string/portal_create_title"
                 android:textAllCaps="false"
                 android:textColor="@color/bg_main_dark"
@@ -121,10 +119,9 @@
             <Button
                 android:id="@+id/dashboard_view_reports"
                 android:layout_width="match_parent"
-                android:layout_height="50dp"
+                android:layout_height="54dp"
                 android:layout_marginTop="10dp"
-                android:background="@drawable/button_rounded_pill_outline_green"
-                android:stateListAnimator="@null"
+                android:background="@drawable/bg_google_button"
                 android:text="@string/portal_all_reports"
                 android:textAllCaps="false"
                 android:textColor="@color/brand_green"
@@ -137,29 +134,41 @@
                 android:layout_marginTop="22dp"
                 android:orientation="horizontal">
 
-                <TextView
-                    android:id="@+id/dashboard_total_reports"
+                <FrameLayout
                     android:layout_width="0dp"
                     android:layout_height="92dp"
                     android:layout_marginEnd="6dp"
                     android:layout_weight="1"
-                    android:background="@drawable/bg_mobile_feature_card"
-                    android:gravity="center"
-                    android:textColor="@color/text_white"
-                    android:textSize="20sp"
-                    android:textStyle="bold" />
+                    android:background="@drawable/bg_metric_card">
 
-                <TextView
-                    android:id="@+id/dashboard_total_matches"
+                    <TextView
+                        android:id="@+id/dashboard_total_reports"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:textColor="@color/text_white"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:background="?attr/selectableItemBackground" />
+                </FrameLayout>
+
+                <FrameLayout
                     android:layout_width="0dp"
                     android:layout_height="92dp"
                     android:layout_marginStart="6dp"
                     android:layout_weight="1"
-                    android:background="@drawable/bg_mobile_feature_card"
-                    android:gravity="center"
-                    android:textColor="@color/text_white"
-                    android:textSize="20sp"
-                    android:textStyle="bold" />
+                    android:background="@drawable/bg_metric_card">
+
+                    <TextView
+                        android:id="@+id/dashboard_total_matches"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:textColor="@color/text_white"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:background="?attr/selectableItemBackground" />
+                </FrameLayout>
             </LinearLayout>
 
             <TextView
@@ -171,15 +180,17 @@
                 android:textSize="19sp"
                 android:textStyle="bold" />
 
-            <LinearLayout
+            <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/dashboard_recent_reports"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="14dp"
                 android:layout_marginBottom="16dp"
-                android:orientation="vertical" />
+                android:nestedScrollingEnabled="false"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+                
         </LinearLayout>
-    </ScrollView>
+    </androidx.core.widget.NestedScrollView>
 
     <include
         android:id="@+id/portal_nav"

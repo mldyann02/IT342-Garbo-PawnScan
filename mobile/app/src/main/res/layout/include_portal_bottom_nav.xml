@@ -5,61 +5,92 @@
     android:background="@drawable/bg_nav_glass"
     android:gravity="center"
     android:orientation="horizontal"
-    android:paddingStart="8dp"
-    android:paddingEnd="8dp">
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp">
 
     <TextView
         android:id="@+id/nav_home"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:clickable="true"
+        android:drawablePadding="4dp"
+        android:focusable="true"
         android:gravity="center"
+        android:includeFontPadding="false"
         android:text="@string/portal_dashboard"
         android:textColor="@color/text_muted_gray"
         android:textSize="12sp"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        android:drawableTop="@drawable/ic_nav_home" />
 
     <TextView
         android:id="@+id/nav_reports"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:clickable="true"
+        android:drawablePadding="4dp"
+        android:focusable="true"
         android:gravity="center"
+        android:includeFontPadding="false"
         android:text="@string/portal_reports"
         android:textColor="@color/text_muted_gray"
         android:textSize="12sp"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        android:drawableTop="@drawable/ic_nav_reports" />
 
     <TextView
         android:id="@+id/nav_create"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:clickable="true"
+        android:drawablePadding="4dp"
+        android:focusable="true"
         android:gravity="center"
+        android:includeFontPadding="false"
         android:text="@string/portal_new_report"
         android:textColor="@color/text_muted_gray"
         android:textSize="12sp"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        android:drawableTop="@drawable/ic_nav_add" />
 
     <TextView
         android:id="@+id/nav_matches"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:clickable="true"
+        android:drawablePadding="4dp"
+        android:focusable="true"
         android:gravity="center"
+        android:includeFontPadding="false"
         android:text="@string/portal_matches"
         android:textColor="@color/text_muted_gray"
         android:textSize="12sp"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        android:drawableTop="@drawable/ic_nav_matches" />
 
     <TextView
         android:id="@+id/nav_profile"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:clickable="true"
+        android:drawablePadding="4dp"
+        android:focusable="true"
         android:gravity="center"
+        android:includeFontPadding="false"
         android:text="@string/portal_profile"
         android:textColor="@color/text_muted_gray"
         android:textSize="12sp"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        android:drawableTop="@drawable/ic_nav_profile" />
+
 </LinearLayout>
