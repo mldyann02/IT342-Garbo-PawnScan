@@ -23,7 +23,7 @@ import retrofit2.Response
 
 class GoogleAuthCoordinator(
     private val activity: AppCompatActivity,
-    private val button: Button,
+    private val button: View,
     private val statusMessage: TextView,
     private val signInLauncher: ActivityResultLauncher<Intent>,
     private val roleProvider: () -> String?
@@ -162,10 +162,16 @@ class GoogleAuthCoordinator(
 
     private fun setLoading(isLoading: Boolean) {
         button.isEnabled = !isLoading
-        button.text = if (isLoading) {
+        val textStr = if (isLoading) {
             activity.getString(R.string.auth_google_connecting)
         } else {
             activity.getString(R.string.auth_continue_google)
+        }
+        if (button is TextView) {
+            button.text = textStr
+        } else {
+            val tv = button.findViewById<TextView>(R.id.google_button_text)
+            tv?.text = textStr
         }
     }
 

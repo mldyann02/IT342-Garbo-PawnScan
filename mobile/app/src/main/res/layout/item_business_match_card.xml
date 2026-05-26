@@ -7,7 +7,6 @@
     android:clickable="true"
     android:focusable="true"
     android:foreground="?attr/selectableItemBackground"
-    android:minHeight="132dp"
     android:orientation="vertical"
     android:padding="16dp">
 
@@ -20,33 +19,32 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/badge_status_approved"
+            android:background="@drawable/badge_status_rejected"
             android:gravity="center"
             android:minWidth="96dp"
             android:paddingStart="10dp"
             android:paddingTop="5dp"
             android:paddingEnd="10dp"
             android:paddingBottom="5dp"
-            android:text="Matched"
-            android:textColor="@color/brand_green"
+            android:text="Stolen Match"
+            android:textColor="@color/text_red"
             android:textSize="10sp"
             android:textStyle="bold" />
 
         <TextView
-            android:id="@+id/match_date"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
             android:layout_weight="1"
-            android:ellipsize="end"
             android:gravity="end"
-            android:maxLines="1"
-            android:textColor="@color/text_placeholder"
-            android:textSize="12sp" />
+            android:text="View"
+            android:textColor="@color/brand_green"
+            android:textSize="12sp"
+            android:textStyle="bold" />
     </LinearLayout>
 
     <TextView
-        android:id="@+id/match_model"
+        android:id="@+id/business_match_model"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
@@ -58,7 +56,7 @@
         android:textStyle="bold" />
 
     <TextView
-        android:id="@+id/match_serial"
+        android:id="@+id/business_match_serial"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
@@ -73,34 +71,30 @@
         android:layout_marginTop="14dp"
         android:background="#1FFFFFFF" />
 
-    <TextView
-        android:id="@+id/match_business"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
-        android:ellipsize="end"
-        android:maxLines="1"
-        android:textColor="@color/brand_green"
-        android:textSize="14sp"
-        android:textStyle="bold" />
+        android:baselineAligned="false"
+        android:orientation="horizontal">
 
-    <TextView
-        android:id="@+id/match_contact"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="7dp"
-        android:ellipsize="end"
-        android:maxLines="1"
-        android:textColor="@color/text_light_gray"
-        android:textSize="13sp" />
+        <TextView
+            android:id="@+id/business_match_owner"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="@color/text_light_gray"
+            android:textSize="13sp" />
 
-    <TextView
-        android:id="@+id/match_address"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:ellipsize="end"
-        android:maxLines="1"
-        android:textColor="@color/text_muted_gray"
-        android:textSize="13sp" />
+        <TextView
+            android:id="@+id/business_match_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:gravity="end"
+            android:textColor="@color/text_placeholder"
+            android:textSize="12sp" />
+    </LinearLayout>
 </LinearLayout>

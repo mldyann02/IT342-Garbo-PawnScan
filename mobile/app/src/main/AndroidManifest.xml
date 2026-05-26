@@ -58,6 +58,36 @@
             android:theme="@style/Theme.PawnScan" />
 
         <activity
+            android:name="com.cit.pawnscan.features.business.BusinessDashboardActivity"
+            android:exported="false"
+            android:label="Business Portal"
+            android:theme="@style/Theme.PawnScan" />
+
+        <activity
+            android:name="com.cit.pawnscan.features.business.BusinessVerifyActivity"
+            android:exported="false"
+            android:label="Verify Item"
+            android:theme="@style/Theme.PawnScan" />
+
+        <activity
+            android:name="com.cit.pawnscan.features.business.BusinessHistoryActivity"
+            android:exported="false"
+            android:label="Search History"
+            android:theme="@style/Theme.PawnScan" />
+
+        <activity
+            android:name="com.cit.pawnscan.features.business.BusinessMatchDetailActivity"
+            android:exported="false"
+            android:label="Stolen Match"
+            android:theme="@style/Theme.PawnScan" />
+
+        <activity
+            android:name="com.cit.pawnscan.features.business.BusinessProfileActivity"
+            android:exported="false"
+            android:label="Business Profile"
+            android:theme="@style/Theme.PawnScan" />
+
+        <activity
             android:name="com.cit.pawnscan.features.dashboard.NotificationsActivity"
             android:exported="false"
             android:label="Notifications"

@@ -7,6 +7,7 @@ import android.os.Looper
 import android.os.SystemClock
 import com.cit.pawnscan.features.auth.LoginActivity
 import com.cit.pawnscan.features.auth.api.UserProfileResponse
+import com.cit.pawnscan.features.business.BusinessDashboardActivity
 import com.cit.pawnscan.features.dashboard.UserDashboardActivity
 import com.cit.pawnscan.features.landing.MainActivity
 import com.cit.pawnscan.shared.network.RetrofitClient
@@ -16,6 +17,7 @@ import retrofit2.Response
 
 object AuthSessionRouter {
     private const val ADMIN_ROLE = "ADMIN"
+    private const val BUSINESS_ROLE = "BUSINESS"
 
     fun routeFromSplash(activity: Activity, minimumSplashMillis: Long = 2000L) {
         val startedAt = SystemClock.elapsedRealtime()
@@ -103,7 +105,12 @@ object AuthSessionRouter {
     }
 
     private fun launchAuthenticatedPortal(activity: Activity) {
-        launchAndFinish(activity, UserDashboardActivity::class.java)
+        val target = if (JwtStorageUtil.getUserRole(activity) == BUSINESS_ROLE) {
+            BusinessDashboardActivity::class.java
+        } else {
+            UserDashboardActivity::class.java
+        }
+        launchAndFinish(activity, target)
     }
 
     private fun launchAndFinish(activity: Activity, target: Class<out Activity>) {

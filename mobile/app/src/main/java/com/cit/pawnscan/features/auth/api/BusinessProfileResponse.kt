@@ -5,5 +5,8 @@ data class BusinessProfileResponse(
     val businessAddress: String?,
     val permitNumber: String?,
     val verified: Boolean?,
-    val isVerified: Boolean?
+    val isVerified: Boolean?,
+    val rejected: Boolean?,
+    val isRejected: Boolean?,
+    val rejectionReason: String?
 )
