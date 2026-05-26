@@ -17,8 +17,12 @@ object BusinessPortalUi {
 
     fun goHome(activity: Activity) = navigate(activity, BusinessDashboardActivity::class.java)
     fun goVerify(activity: Activity) = navigate(activity, BusinessVerifyActivity::class.java)
-    fun goHistory(activity: Activity) = navigate(activity, BusinessDashboardActivity::class.java)
-    fun goMatches(activity: Activity) = navigate(activity, BusinessDashboardActivity::class.java)
+    fun goHistory(activity: Activity) {
+        navigate(activity, BusinessHistoryActivity::class.java, BusinessHistoryActivity.TAB_SEARCHES)
+    }
+    fun goMatches(activity: Activity) {
+        navigate(activity, BusinessHistoryActivity::class.java, BusinessHistoryActivity.TAB_MATCHES)
+    }
     fun goProfile(activity: Activity) = navigate(activity, ProfileActivity::class.java)
 
     fun configureBottomNav(activity: Activity, active: String) {
@@ -51,9 +55,10 @@ object BusinessPortalUi {
         }
     }
 
-    private fun navigate(activity: Activity, target: Class<out Activity>) {
+    private fun navigate(activity: Activity, target: Class<out Activity>, tab: String? = null) {
         if (activity::class.java == target) return
         val intent = Intent(activity, target)
+        tab?.let { intent.putExtra(BusinessHistoryActivity.EXTRA_TAB, it) }
         intent.flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
         activity.startActivity(intent)
         activity.overridePendingTransition(0, 0)
