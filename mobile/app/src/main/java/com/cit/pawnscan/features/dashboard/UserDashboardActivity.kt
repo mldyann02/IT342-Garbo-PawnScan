@@ -38,6 +38,8 @@ class UserDashboardActivity : AppCompatActivity() {
         PortalUi.configureBottomNav(this, "home")
         userEmail.text = JwtStorageUtil.getUserEmail(this) ?: "Signed in"
         userName.text = "PawnScan User"
+        totalReports.text = "0\nReports"
+        totalMatches.text = "0\nMatches"
         loadDashboard()
     }
 

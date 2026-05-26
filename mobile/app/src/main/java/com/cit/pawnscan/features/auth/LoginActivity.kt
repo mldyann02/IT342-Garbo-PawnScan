@@ -12,7 +12,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.cit.pawnscan.R
 import com.cit.pawnscan.features.auth.api.LoginRequest
-import com.cit.pawnscan.features.dashboard.UserDashboardActivity
+import com.cit.pawnscan.shared.auth.AuthSessionRouter
 import com.cit.pawnscan.shared.auth.JwtStorageUtil
 import com.cit.pawnscan.shared.network.RetrofitClient
 import com.cit.pawnscan.shared.validation.ValidationUtil
@@ -163,7 +163,7 @@ class LoginActivity : AppCompatActivity() {
 
                     // Navigate to dashboard after delay
                     findViewById<TextView>(R.id.status_message).postDelayed({
-                        navigateToDashboard()
+                        AuthSessionRouter.routeAfterAuthentication(this@LoginActivity)
                     }, 1500)
                 } else {
                     // Handle error response from server
@@ -219,11 +219,6 @@ class LoginActivity : AppCompatActivity() {
         startActivity(intent)
     }
 
-    private fun navigateToDashboard() {
-        val intent = Intent(this, UserDashboardActivity::class.java)
-        startActivity(intent)
-        finish()
-    }
 }
 
 

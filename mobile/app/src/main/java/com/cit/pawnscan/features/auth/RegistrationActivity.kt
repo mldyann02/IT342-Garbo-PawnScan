@@ -13,7 +13,6 @@ import androidx.appcompat.app.AppCompatActivity
 import com.cit.pawnscan.R
 import com.cit.pawnscan.features.auth.api.RegisterRequest
 import com.cit.pawnscan.shared.network.RetrofitClient
-import com.cit.pawnscan.shared.auth.JwtStorageUtil
 import com.cit.pawnscan.shared.validation.ValidationUtil
 import retrofit2.Call
 import retrofit2.Callback
@@ -298,17 +297,6 @@ class RegistrationActivity : AppCompatActivity() {
             ) {
                 if (response.isSuccessful && response.body() != null) {
                     val authResponse = response.body()!!
-                    
-                    // Save token and user information
-                    if (!authResponse.token.isNullOrEmpty()) {
-                        JwtStorageUtil.saveToken(this@RegistrationActivity, authResponse.token)
-                    }
-                    if (!authResponse.email.isNullOrEmpty()) {
-                        JwtStorageUtil.saveUserEmail(this@RegistrationActivity, authResponse.email)
-                    }
-                    if (!authResponse.role.isNullOrEmpty()) {
-                        JwtStorageUtil.saveUserRole(this@RegistrationActivity, authResponse.role)
-                    }
 
                     // Show success message
                     val successMsg = authResponse.message ?: "Registration successful!"
