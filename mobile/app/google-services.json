@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "63663007755",
+    "project_id": "pawnscan-0x4d",
+    "storage_bucket": "pawnscan-0x4d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:63663007755:android:570f609e176a5053757f0e",
+        "android_client_info": {
+          "package_name": "com.cit.pawnscan"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBnmACorkgzhDII_gAwKDZH71u2lSEOzLw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
