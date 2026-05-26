@@ -43,8 +43,12 @@ class BusinessVerifyActivity : AppCompatActivity() {
         recentList = findViewById(R.id.verify_recent_searches)
 
         BusinessPortalUi.configureBottomNav(this, "verify")
+        verifyButton.isEnabled = false
         verifyButton.setOnClickListener { verifySerial() }
-        loadRecentSearches()
+        BusinessPortalUi.requireVerifiedBusiness(this, statusMessage) {
+            verifyButton.isEnabled = true
+            loadRecentSearches()
+        }
     }
 
     private fun verifySerial() {

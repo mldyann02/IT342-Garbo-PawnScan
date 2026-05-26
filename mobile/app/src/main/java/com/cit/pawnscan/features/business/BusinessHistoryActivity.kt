@@ -49,7 +49,9 @@ class BusinessHistoryActivity : AppCompatActivity() {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = render()
             override fun afterTextChanged(s: Editable?) = Unit
         })
-        loadData()
+        BusinessPortalUi.requireVerifiedBusiness(this, statusMessage) {
+            loadData()
+        }
     }
 
     private fun bindTabs() {

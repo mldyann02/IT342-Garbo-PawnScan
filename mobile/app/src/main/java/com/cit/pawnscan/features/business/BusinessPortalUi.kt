@@ -5,14 +5,58 @@ import android.content.Intent
 import android.content.res.ColorStateList
 import android.view.View
 import android.widget.ImageView
+import android.widget.TextView
 import com.cit.pawnscan.R
-import com.cit.pawnscan.features.profile.ProfileActivity
+import com.cit.pawnscan.features.auth.api.UserProfileResponse
+import com.cit.pawnscan.features.dashboard.UserDashboardActivity
+import com.cit.pawnscan.features.business.BusinessProfileActivity
+import com.cit.pawnscan.shared.auth.JwtStorageUtil
+import com.cit.pawnscan.shared.network.RetrofitClient
 import com.cit.pawnscan.shared.ui.PortalUi
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 object BusinessPortalUi {
     fun requireBusiness(activity: Activity): String? {
         val header = PortalUi.requireAuth(activity) ?: return null
+        if (JwtStorageUtil.getUserRole(activity) != "BUSINESS") {
+            navigate(activity, UserDashboardActivity::class.java)
+            activity.finish()
+            return null
+        }
         return header
+    }
+
+    fun requireVerifiedBusiness(activity: Activity, statusView: TextView, onVerified: () -> Unit) {
+        val header = requireBusiness(activity) ?: return
+        RetrofitClient.getAuthService().getProfile(header).enqueue(object : Callback<UserProfileResponse> {
+            override fun onResponse(call: Call<UserProfileResponse>, response: Response<UserProfileResponse>) {
+                val business = response.body()?.businessProfile
+                val verified = business?.verified == true || business?.isVerified == true
+                val rejected = business?.rejected == true || business?.isRejected == true
+                when {
+                    verified -> {
+                        statusView.visibility = View.GONE
+                        onVerified()
+                    }
+                    rejected -> PortalUi.showStatus(
+                        statusView,
+                        "Your business account was rejected. ${business?.rejectionReason ?: "Please contact support."}",
+                        true
+                    )
+                    else -> PortalUi.showStatus(
+                        statusView,
+                        "Your business account is under review. Verification features unlock once approved.",
+                        false
+                    )
+                }
+            }
+
+            override fun onFailure(call: Call<UserProfileResponse>, t: Throwable) {
+                PortalUi.showStatus(statusView, "Could not verify your business account status.", true)
+            }
+        })
     }
 
     fun goHome(activity: Activity) = navigate(activity, BusinessDashboardActivity::class.java)
@@ -23,7 +67,7 @@ object BusinessPortalUi {
     fun goMatches(activity: Activity) {
         navigate(activity, BusinessHistoryActivity::class.java, BusinessHistoryActivity.TAB_MATCHES)
     }
-    fun goProfile(activity: Activity) = navigate(activity, ProfileActivity::class.java)
+    fun goProfile(activity: Activity) = navigate(activity, BusinessProfileActivity::class.java)
 
     fun configureBottomNav(activity: Activity, active: String) {
         val navItems = mapOf(
