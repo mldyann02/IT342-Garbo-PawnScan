@@ -76,6 +76,7 @@ class BusinessDashboardActivity : AppCompatActivity() {
 
         loadProfile()
         refreshVerificationAccess()
+        requestNotificationPermission()
     }
 
     override fun onResume() {
@@ -199,6 +200,14 @@ class BusinessDashboardActivity : AppCompatActivity() {
             textSize = 14f
             setPadding(18, 24, 18, 24)
             setBackgroundResource(R.drawable.bg_glass_panel_soft)
+        }
+    }
+
+    private fun requestNotificationPermission() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 101)
+            }
         }
     }
 }

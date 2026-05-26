@@ -44,6 +44,7 @@ class UserDashboardActivity : AppCompatActivity() {
         totalReports.text = "0\nReports"
         totalMatches.text = "0\nMatches"
         loadDashboard()
+        requestNotificationPermission()
     }
 
     private fun bindViews() {
@@ -139,4 +140,11 @@ class UserDashboardActivity : AppCompatActivity() {
     }
 
     // emptyText method removed as empty state is better handled outside or within the adapter, but for now we simply show an empty list.
+    private fun requestNotificationPermission() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 101)
+            }
+        }
+    }
 }
