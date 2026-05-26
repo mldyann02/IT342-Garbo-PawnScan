@@ -28,6 +28,7 @@ class BusinessHistoryActivity : AppCompatActivity() {
     private val searches = mutableListOf<SearchLogResponse>()
     private val matches = mutableListOf<StolenMatchResponse>()
     private var activeTab = TAB_SEARCHES
+    private var isVerifiedBusiness = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,24 +45,29 @@ class BusinessHistoryActivity : AppCompatActivity() {
 
         BusinessPortalUi.configureBottomNav(this, if (activeTab == TAB_MATCHES) "matches" else "history")
         bindTabs()
+        setSearchEnabled(false)
         searchInput.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = render()
             override fun afterTextChanged(s: Editable?) = Unit
         })
         BusinessPortalUi.requireVerifiedBusiness(this, statusMessage) {
+            isVerifiedBusiness = true
+            setSearchEnabled(true)
             loadData()
         }
     }
 
     private fun bindTabs() {
         tabSearches.setOnClickListener {
+            if (!isVerifiedBusiness) return@setOnClickListener
             activeTab = TAB_SEARCHES
             BusinessPortalUi.configureBottomNav(this, "history")
             updateTabs()
             render()
         }
         tabMatches.setOnClickListener {
+            if (!isVerifiedBusiness) return@setOnClickListener
             activeTab = TAB_MATCHES
             BusinessPortalUi.configureBottomNav(this, "matches")
             updateTabs()
@@ -173,6 +179,19 @@ class BusinessHistoryActivity : AppCompatActivity() {
             textSize = 14f
             setPadding(18, 24, 18, 24)
             setBackgroundResource(R.drawable.bg_glass_panel_soft)
+        }
+    }
+
+    private fun setSearchEnabled(enabled: Boolean) {
+        searchInput.isEnabled = enabled
+        tabSearches.isEnabled = enabled
+        tabMatches.isEnabled = enabled
+        val alpha = if (enabled) 1f else 0.5f
+        searchInput.alpha = alpha
+        tabSearches.alpha = alpha
+        tabMatches.alpha = alpha
+        if (!enabled) {
+            list.removeAllViews()
         }
     }
 

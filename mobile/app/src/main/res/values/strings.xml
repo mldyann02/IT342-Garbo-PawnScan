@@ -69,6 +69,32 @@
     <string name="login_show_password">Show password</string>
     <string name="login_hide_password">Hide password</string>
 
+    <!-- OTP Verification Strings -->
+    <string name="otp_title">Verify Your Email</string>
+    <string name="otp_sent_to_email">We sent a 6-digit code to %1$s</string>
+    <string name="otp_missing_email">Enter the code sent to your email address</string>
+    <string name="otp_code_label">Verification Code</string>
+    <string name="otp_code_hint">000000</string>
+    <string name="otp_verify_button">Verify Account</string>
+    <string name="otp_verifying_button">Verifying...</string>
+    <string name="otp_success">Email verified successfully.</string>
+    <string name="otp_already_verified">Already verified?\u0020</string>
+    <string name="otp_error_missing_email">Email is missing. Please register again.</string>
+    <string name="otp_error_invalid_code">Please enter a valid 6-digit code.</string>
+    <string name="otp_error_failed">Failed to verify the code. Please try again.</string>
+    <string name="otp_error_network">We could not reach the server. Please try again.</string>
+
+    <!-- Complete Profile Strings -->
+    <string name="complete_profile_title">Complete Your Profile</string>
+    <string name="complete_profile_user_subtitle">Add your contact number to finish your account setup.</string>
+    <string name="complete_profile_business_subtitle">Add your contact and business details to finish your account setup.</string>
+    <string name="complete_profile_button">Complete Profile</string>
+    <string name="complete_profile_saving_button">Saving...</string>
+    <string name="complete_profile_success">Profile completed successfully.</string>
+    <string name="complete_profile_error_session">Your session expired. Please sign in again.</string>
+    <string name="complete_profile_error_failed">Failed to save profile. Please try again.</string>
+    <string name="complete_profile_error_network">We could not reach the server. Please try again.</string>
+
     <!-- Temporary Dashboard Strings -->
     <string name="dashboard_badge">Temporary Dashboard</string>
     <string name="dashboard_welcome_title">Login Successful</string>

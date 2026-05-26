@@ -25,8 +25,11 @@ class BusinessDashboardActivity : AppCompatActivity() {
     private lateinit var businessName: TextView
     private lateinit var businessMeta: TextView
     private lateinit var recentList: LinearLayout
+    private lateinit var verifyButton: Button
+    private lateinit var viewHistory: TextView
     private val recentSearches = mutableListOf<SearchLogResponse>()
     private val stolenMatches = mutableListOf<StolenMatchResponse>()
+    private var isVerifiedBusiness = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,25 +41,48 @@ class BusinessDashboardActivity : AppCompatActivity() {
         businessName = findViewById(R.id.business_name)
         businessMeta = findViewById(R.id.business_meta)
         recentList = findViewById(R.id.business_recent_searches)
+        verifyButton = findViewById(R.id.business_verify_now)
+        viewHistory = findViewById(R.id.business_view_history)
 
         BusinessPortalUi.configureBottomNav(this, "home")
         findViewById<ImageButton>(R.id.business_notifications).setOnClickListener {
             startActivity(Intent(this, NotificationsActivity::class.java))
         }
-        findViewById<Button>(R.id.business_verify_now).setOnClickListener {
-            BusinessPortalUi.goVerify(this)
+        verifyButton.isEnabled = false
+        viewHistory.isEnabled = false
+        updateVerifyButtonState(false)
+        verifyButton.setOnClickListener {
+            if (isVerifiedBusiness) {
+                BusinessPortalUi.goVerify(this)
+            } else {
+                PortalUi.showStatus(
+                    statusMessage,
+                    "Your business account is under review. Verification features unlock once approved.",
+                    false
+                )
+            }
         }
-        findViewById<TextView>(R.id.business_view_history).setOnClickListener {
-            BusinessPortalUi.goHistory(this)
+        viewHistory.setOnClickListener {
+            if (isVerifiedBusiness) {
+                BusinessPortalUi.goHistory(this)
+            } else {
+                PortalUi.showStatus(
+                    statusMessage,
+                    "Your business account is under review. Verification features unlock once approved.",
+                    false
+                )
+            }
         }
 
         loadProfile()
-        loadRecentSearches()
+        refreshVerificationAccess()
     }
 
     override fun onResume() {
         super.onResume()
-        if (::recentList.isInitialized) loadRecentSearches()
+        if (::recentList.isInitialized) {
+            refreshVerificationAccess()
+        }
     }
 
     private fun loadProfile() {
@@ -99,6 +125,29 @@ class BusinessDashboardActivity : AppCompatActivity() {
                     PortalUi.showStatus(statusMessage, "Could not reach the server for verification history.", true)
                 }
             })
+    }
+
+    private fun refreshVerificationAccess() {
+        isVerifiedBusiness = false
+        verifyButton.isEnabled = false
+        viewHistory.isEnabled = false
+        updateVerifyButtonState(false)
+        recentList.removeAllViews()
+        BusinessPortalUi.requireVerifiedBusiness(this, statusMessage) {
+            isVerifiedBusiness = true
+            verifyButton.isEnabled = true
+            viewHistory.isEnabled = true
+            updateVerifyButtonState(true)
+            statusMessage.visibility = View.GONE
+            loadRecentSearches()
+        }
+    }
+
+    private fun updateVerifyButtonState(enabled: Boolean) {
+        verifyButton.setBackgroundResource(
+            if (enabled) R.drawable.button_rounded_pill_green else R.drawable.button_rounded_pill_disabled
+        )
+        verifyButton.setTextColor(getColor(if (enabled) R.color.bg_main_dark else R.color.text_muted_gray))
     }
 
     private fun loadStolenMatches() {

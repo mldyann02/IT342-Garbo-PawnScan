@@ -302,9 +302,9 @@ class RegistrationActivity : AppCompatActivity() {
                     val successMsg = authResponse.message ?: "Registration successful!"
                     showStatusMessage(successMsg, isError = false)
 
-                    // Navigate to login after delay (pass registered email and role)
+                    // Navigate to OTP verification after registration.
                     findViewById<TextView>(R.id.status_message).postDelayed({
-                        navigateToLogin(authResponse.email, authResponse.role)
+                        navigateToVerifyOtp(authResponse.email ?: email, authResponse.role ?: role)
                     }, 1500)
                 } else {
                     // Handle error response from server
@@ -385,6 +385,14 @@ class RegistrationActivity : AppCompatActivity() {
         val intent = Intent(this, LoginActivity::class.java)
         if (!registeredEmail.isNullOrEmpty()) intent.putExtra("registered_email", registeredEmail)
         if (!registeredRole.isNullOrEmpty()) intent.putExtra("registered_role", registeredRole)
+        startActivity(intent)
+        finish()
+    }
+
+    private fun navigateToVerifyOtp(email: String, role: String) {
+        val intent = Intent(this, VerifyOtpActivity::class.java)
+        intent.putExtra(VerifyOtpActivity.EXTRA_EMAIL, email)
+        intent.putExtra(VerifyOtpActivity.EXTRA_ROLE, role)
         startActivity(intent)
         finish()
     }

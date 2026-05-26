@@ -6,6 +6,7 @@ import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import com.cit.pawnscan.features.auth.LoginActivity
+import com.cit.pawnscan.features.auth.CompleteProfileActivity
 import com.cit.pawnscan.features.auth.api.UserProfileResponse
 import com.cit.pawnscan.features.business.BusinessDashboardActivity
 import com.cit.pawnscan.features.dashboard.UserDashboardActivity
@@ -40,8 +41,13 @@ object AuthSessionRouter {
                     runAfterMinimumSplash(activity, startedAt, minimumSplashMillis) {
                         when {
                             response.isSuccessful && response.body() != null -> {
-                                saveProfileSnapshot(activity, response.body()!!)
-                                routeAfterAuthentication(activity)
+                                val profile = response.body()!!
+                                saveProfileSnapshot(activity, profile)
+                                if (profile.registrationStatus == "INCOMPLETE") {
+                                    launchAndFinish(activity, CompleteProfileActivity::class.java)
+                                } else {
+                                    routeAfterAuthentication(activity)
+                                }
                             }
                             response.code() == 401 || response.code() == 403 -> {
                                 JwtStorageUtil.clearAll(activity)
