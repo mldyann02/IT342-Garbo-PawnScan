@@ -171,22 +171,34 @@
                         android:background="@color/border_soft" />
                 </LinearLayout>
 
-                <Button
+                <LinearLayout
                     android:id="@+id/btn_google_login"
                     android:layout_width="match_parent"
                     android:layout_height="54dp"
                     android:layout_marginTop="24dp"
                     android:background="@drawable/bg_google_button"
-                    android:drawableStart="@drawable/ic_google_g"
-                    android:drawablePadding="12dp"
-                    android:paddingStart="24dp"
-                    android:paddingEnd="24dp"
-                    android:stateListAnimator="@null"
-                    android:text="@string/auth_continue_google"
-                    android:textAllCaps="false"
-                    android:textColor="@color/text_white"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/ic_google_g"
+                        android:contentDescription="@string/auth_continue_google" />
+
+                    <TextView
+                        android:id="@+id/google_button_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:text="@string/auth_continue_google"
+                        android:textAllCaps="false"
+                        android:textColor="@color/text_white"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"

@@ -12,7 +12,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.cit.pawnscan.R
 import com.cit.pawnscan.features.auth.api.LoginRequest
-import com.cit.pawnscan.features.landing.SplashActivity
+import com.cit.pawnscan.features.landing.MainActivity
 import com.cit.pawnscan.shared.auth.AuthSessionRouter
 import com.cit.pawnscan.shared.auth.JwtStorageUtil
 import com.cit.pawnscan.shared.network.RetrofitClient
@@ -38,7 +38,7 @@ class LoginActivity : AppCompatActivity() {
         // Initialize views
         val backButton = findViewById<ImageButton>(R.id.back_button)
         val btnSignIn = findViewById<Button>(R.id.btn_sign_in)
-        val btnGoogleLogin = findViewById<Button>(R.id.btn_google_login)
+        val btnGoogleLogin = findViewById<View>(R.id.btn_google_login)
         val registerLink = findViewById<TextView>(R.id.register_link)
 
         // Form inputs
@@ -75,10 +75,6 @@ class LoginActivity : AppCompatActivity() {
 
         // Back button
         backButton.setOnClickListener {
-            val intent = Intent(this, SplashActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-            }
-            startActivity(intent)
             finish()
         }
 

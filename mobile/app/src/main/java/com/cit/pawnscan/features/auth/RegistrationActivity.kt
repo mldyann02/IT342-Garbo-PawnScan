@@ -39,7 +39,7 @@ class RegistrationActivity : AppCompatActivity() {
         val btnIndividual = findViewById<Button>(R.id.btn_individual)
         val btnBusiness = findViewById<Button>(R.id.btn_business)
         val btnCreateAccount = findViewById<Button>(R.id.btn_create_account)
-        val btnGoogleRegister = findViewById<Button>(R.id.btn_google_register)
+        val btnGoogleRegister = findViewById<View>(R.id.btn_google_register)
         val signInLink = findViewById<TextView>(R.id.sign_in_link)
 //        val navSignIn = findViewById<TextView>(R.id.nav_sign_in)
 //        val navGetStarted = findViewById<Button>(R.id.nav_get_started)
