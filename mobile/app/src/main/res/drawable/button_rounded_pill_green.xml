@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <solid android:color="@color/brand_green" />
+    <gradient
+        android:angle="0"
+        android:endColor="#00D37F"
+        android:startColor="#4FE6B1" />
     <corners android:radius="28dp" />
-    <!-- Subtle shadow effect through stroke -->
     <stroke
-        android:width="0dp"
-        android:color="@color/brand_green" />
+        android:width="1dp"
+        android:color="#6600D37F" />
 </shape>

@@ -25,6 +25,11 @@
         <item name="buttonStyle">@style/Widget.AppCompat.Button.Colored</item>
     </style>
 
+    <!-- Subtle Bottom Navigation Indicator -->
+    <style name="App.BottomNav.ActiveIndicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
+        <item name="android:color">@android:color/transparent</item>
+    </style>
+
     <!-- Extra bold headline style -->
     <style name="HeadlineExtraBold">
         <item name="android:textStyle">bold</item>

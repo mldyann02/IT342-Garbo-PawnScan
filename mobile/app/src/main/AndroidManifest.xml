@@ -50,6 +50,54 @@
             android:exported="false"
             android:label="@string/dashboard_welcome_title"
             android:theme="@style/Theme.PawnScan" />
+
+        <activity
+            android:name="com.cit.pawnscan.features.dashboard.UserDashboardActivity"
+            android:exported="false"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.PawnScan" />
+
+        <activity
+            android:name="com.cit.pawnscan.features.dashboard.NotificationsActivity"
+            android:exported="false"
+            android:label="Notifications"
+            android:theme="@style/Theme.PawnScan" />
+
+        <activity
+            android:name="com.cit.pawnscan.features.reports.ReportsActivity"
+            android:exported="false"
+            android:label="@string/portal_all_reports"
+            android:theme="@style/Theme.PawnScan" />
+
+        <activity
+            android:name="com.cit.pawnscan.features.reports.ReportFormActivity"
+            android:exported="false"
+            android:label="@string/portal_create_title"
+            android:theme="@style/Theme.PawnScan" />
+
+        <activity
+            android:name="com.cit.pawnscan.features.reports.ReportDetailActivity"
+            android:exported="false"
+            android:label="@string/portal_all_reports"
+            android:theme="@style/Theme.PawnScan" />
+
+        <activity
+            android:name="com.cit.pawnscan.features.matches.MatchedReportsActivity"
+            android:exported="false"
+            android:label="@string/portal_matched_reports"
+            android:theme="@style/Theme.PawnScan" />
+
+        <activity
+            android:name="com.cit.pawnscan.features.matches.MatchDetailActivity"
+            android:exported="false"
+            android:label="@string/portal_matched_reports"
+            android:theme="@style/Theme.PawnScan" />
+
+        <activity
+            android:name="com.cit.pawnscan.features.profile.ProfileActivity"
+            android:exported="false"
+            android:label="@string/portal_profile_title"
+            android:theme="@style/Theme.PawnScan" />
     </application>
 
 </manifest>

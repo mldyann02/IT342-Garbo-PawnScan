@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_home"
+        android:icon="@drawable/ic_nav_home"
+        android:title="@string/portal_dashboard" />
+    <item
+        android:id="@+id/nav_reports"
+        android:icon="@drawable/ic_nav_reports"
+        android:title="@string/portal_reports" />
+    <item
+        android:id="@+id/nav_create"
+        android:icon="@drawable/ic_nav_add"
+        android:title="@string/portal_new_report" />
+    <item
+        android:id="@+id/nav_matches"
+        android:icon="@drawable/ic_nav_matches"
+        android:title="@string/portal_matches" />
+    <item
+        android:id="@+id/nav_profile"
+        android:icon="@drawable/ic_nav_profile"
+        android:title="@string/portal_profile" />
+</menu>

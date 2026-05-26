@@ -2,6 +2,7 @@ package com.cit.pawnscan.shared.network
 
 import com.cit.pawnscan.BuildConfig
 import com.cit.pawnscan.features.auth.api.AuthService
+import com.cit.pawnscan.features.reports.api.ReportService
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
@@ -20,6 +21,10 @@ object RetrofitClient {
 
     fun getAuthService(): AuthService {
         return getInstance().create(AuthService::class.java)
+    }
+
+    fun getReportService(): ReportService {
+        return getInstance().create(ReportService::class.java)
     }
 
     private fun normalizedBaseUrl(): String {
