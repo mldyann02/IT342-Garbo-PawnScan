@@ -55,6 +55,9 @@ class AuthServiceImplTest {
     private OtpService otpService;
 
     @Mock
+    private PasswordResetTokenRepository passwordResetTokenRepository;
+
+    @Mock
     private GoogleIdToken googleIdToken;
 
     private AuthServiceImpl authService;
@@ -68,8 +71,10 @@ class AuthServiceImplTest {
                 jwtService,
                 googleIdTokenVerifier,
                 emailService,
-                otpService);
+                otpService,
+                passwordResetTokenRepository);
         ReflectionTestUtils.setField(authService, "googleWebClientId", "google-client-id");
+        ReflectionTestUtils.setField(authService, "baseUrl", "http://localhost:3000");
     }
 
     @Test
