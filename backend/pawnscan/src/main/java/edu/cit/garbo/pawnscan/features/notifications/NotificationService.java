@@ -23,4 +23,8 @@ public interface NotificationService {
     void clearNotifications(String authenticatedEmail);
 
     SseEmitter subscribe(String authenticatedEmail);
+
+    void registerFcmToken(String authenticatedEmail, String token, String platform);
+
+    void unregisterFcmToken(String authenticatedEmail, String token);
 }

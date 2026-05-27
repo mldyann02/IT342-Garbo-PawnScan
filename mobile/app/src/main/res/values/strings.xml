@@ -1,17 +1,22 @@
-﻿<resources>
+<resources>
     <string name="app_name">PawnScan</string>
     
     <!-- Landing Page Strings -->
-    <string name="landing_badge_text">Real-time Stolen Item Verification</string>
-    <string name="landing_headline_line1">Stop stolen</string>
-    <string name="landing_headline_line2">goods</string>
-    <string name="landing_headline_line3">before they</string>
-    <string name="landing_headline_green">sell.</string>
+    <string name="landing_badge_text">Real-time Item Verification</string>
+    <string name="landing_headline_line1">Protect your assets,</string>
+    <string name="landing_headline_line2">secure your</string>
+    <string name="landing_headline_green">business.</string>
     
-    <string name="landing_subheadline">PawnScan connects victims, businesses, and law enforcement through a unified registry. Report stolen items, verify serial numbers instantly, and recover what\'s yours.</string>
+    <string name="landing_subheadline">Connect individuals and businesses to prevent stolen items from entering the market. Report, verify, and secure transactions with confidence.</string>
     
-    <string name="landing_cta_primary">Report a Stolen Item </string>
-    <string name="landing_cta_secondary">Business Verification</string>
+    <string name="landing_cta_primary">Report an Item</string>
+    <string name="landing_cta_secondary">Partner as Business</string>
+    <string name="landing_feature_verify_title">Instant Verification</string>
+    <string name="landing_feature_verify_body">Cross-check serial numbers before a transaction moves forward.</string>
+    <string name="landing_feature_secure_title">Secure Records</string>
+    <string name="landing_feature_secure_body">Keep sensitive item and account details protected.</string>
+    <string name="landing_feature_network_title">Trusted Network</string>
+    <string name="landing_feature_network_body">Work with verified users and business partners.</string>
     
     <string name="nav_sign_in">Sign In</string>
     <string name="nav_get_started">Get Started</string>
@@ -39,7 +44,8 @@
     <!-- CTA and Links -->
     <string name="registration_cta_button">Register Account</string>
     <string name="registration_registering_button">Registering...</string>
-    <string name="registration_sign_in_link">Already registered? Sign in here.</string>
+    <string name="registration_already_registered_text">Already registered?\u0020</string>
+    <string name="registration_sign_in_action">Sign in here.</string>
     <string name="registration_terms">By creating an account, you agree to our Terms of Service</string>
     
     <!-- Messages -->
@@ -49,13 +55,45 @@
     <!-- Login Page Strings -->
     <string name="login_title">Welcome Back</string>
     <string name="login_subtitle">Use your registered email and password</string>
+    <string name="auth_secure_badge">Secure Access</string>
+    <string name="auth_join_badge">Join the Network</string>
     <string name="login_email_hint">Email Address</string>
     <string name="login_password_hint">Password</string>
     <string name="login_sign_in_button">Sign In</string>
     <string name="login_signing_in_button">Signing In...</string>
-    <string name="login_register_link">Don\'t have an account? Create one here.</string>
+    <string name="auth_continue_with">Or continue with</string>
+    <string name="auth_continue_google">Google</string>
+    <string name="auth_google_connecting">Connecting...</string>
+    <string name="login_no_account_text">No account yet?\u0020</string>
+    <string name="login_register_action">Register here.</string>
     <string name="login_show_password">Show password</string>
     <string name="login_hide_password">Hide password</string>
+
+    <!-- OTP Verification Strings -->
+    <string name="otp_title">Verify Your Email</string>
+    <string name="otp_sent_to_email">We sent a 6-digit code to %1$s</string>
+    <string name="otp_missing_email">Enter the code sent to your email address</string>
+    <string name="otp_code_label">Verification Code</string>
+    <string name="otp_code_hint">000000</string>
+    <string name="otp_verify_button">Verify Account</string>
+    <string name="otp_verifying_button">Verifying...</string>
+    <string name="otp_success">Email verified successfully.</string>
+    <string name="otp_already_verified">Already verified?\u0020</string>
+    <string name="otp_error_missing_email">Email is missing. Please register again.</string>
+    <string name="otp_error_invalid_code">Please enter a valid 6-digit code.</string>
+    <string name="otp_error_failed">Failed to verify the code. Please try again.</string>
+    <string name="otp_error_network">We could not reach the server. Please try again.</string>
+
+    <!-- Complete Profile Strings -->
+    <string name="complete_profile_title">Complete Your Profile</string>
+    <string name="complete_profile_user_subtitle">Add your contact number to finish your account setup.</string>
+    <string name="complete_profile_business_subtitle">Add your contact and business details to finish your account setup.</string>
+    <string name="complete_profile_button">Complete Profile</string>
+    <string name="complete_profile_saving_button">Saving...</string>
+    <string name="complete_profile_success">Profile completed successfully.</string>
+    <string name="complete_profile_error_session">Your session expired. Please sign in again.</string>
+    <string name="complete_profile_error_failed">Failed to save profile. Please try again.</string>
+    <string name="complete_profile_error_network">We could not reach the server. Please try again.</string>
 
     <!-- Temporary Dashboard Strings -->
     <string name="dashboard_badge">Temporary Dashboard</string>
@@ -64,4 +102,63 @@
     <string name="dashboard_user_email">Email: %1$s</string>
     <string name="dashboard_user_role">Role: %1$s</string>
     <string name="dashboard_logout">Log Out</string>
+
+    <!-- User Portal Strings -->
+    <string name="portal_title">Keep your items protected.</string>
+    <string name="portal_subtitle">Track reports, file incident details, and watch for matches from partner businesses.</string>
+    <string name="portal_dashboard">Home</string>
+    <string name="portal_reports">Reports</string>
+    <string name="portal_new_report">New</string>
+    <string name="portal_matches">Matches</string>
+    <string name="portal_profile">Profile</string>
+    <string name="portal_recent_reports">Recent Reports</string>
+    <string name="portal_all_reports">Your Reports</string>
+    <string name="portal_matched_reports">Matched Reports</string>
+    <string name="portal_profile_title">My Profile</string>
+    <string name="portal_create_title">Report a Stolen Item</string>
+    <string name="portal_serial_hint">Serial Number</string>
+    <string name="portal_model_hint">Item Model</string>
+    <string name="portal_description_hint">Details and condition</string>
+    <string name="portal_choose_files">Choose Evidence</string>
+    <string name="portal_submit_report">Submit Report</string>
+    <string name="portal_update_report">Save Changes</string>
+    <string name="portal_cancel_edit">Cancel Edit</string>
+    <string name="portal_edit">Edit</string>
+    <string name="portal_delete">Delete</string>
+    <string name="portal_refresh">Refresh</string>
+    <string name="portal_save_profile">Save Profile</string>
+    <string name="portal_full_name_hint">Full Name</string>
+    <string name="portal_phone_hint">Phone Number (+639XXXXXXXXX)</string>
+    <string name="portal_empty_reports">No reports yet. File your first stolen item report.</string>
+    <string name="portal_empty_matches">No matched reports yet.</string>
+    <string name="evidence_preview_title">Evidence Preview</string>
+    <string name="evidence_prev">Previous</string>
+    <string name="evidence_next">Next</string>
+    <string name="evidence_page">Page %1$d of %2$d</string>
+
+    <!-- Forgot Password Strings -->
+    <string name="login_forgot_password">Forgot password?</string>
+    <string name="forgot_password_title">Reset Password</string>
+    <string name="forgot_password_subtitle">Enter your email and we\'ll send you a secure reset link</string>
+    <string name="forgot_password_email_label">Email Address</string>
+    <string name="forgot_password_send_button">Send Reset Link</string>
+    <string name="forgot_password_sending_button">Sending&#8230;</string>
+    <string name="forgot_password_success">If that email is registered, a password reset link has been sent. Please check your inbox.</string>
+    <string name="forgot_password_invalid_email">Please enter a valid email address.</string>
+    <string name="forgot_password_error_network">We could not reach the server. Please try again.</string>
+    <string name="forgot_password_back_text">Back to\u0020</string>
+
+    <!-- Reset Password Strings -->
+    <string name="reset_password_title">New Password</string>
+    <string name="reset_password_subtitle">Choose a strong password for your account</string>
+    <string name="reset_password_new_label">New Password</string>
+    <string name="reset_password_confirm_label">Confirm Password</string>
+    <string name="reset_password_button">Reset Password</string>
+    <string name="reset_password_resetting_button">Resetting&#8230;</string>
+    <string name="reset_password_success">Your password has been reset successfully. Redirecting to login&#8230;</string>
+    <string name="reset_password_invalid_token">Invalid or expired reset link. Please request a new one.</string>
+    <string name="reset_password_error_length">Password must be at least 8 characters.</string>
+    <string name="reset_password_error_mismatch">Passwords do not match.</string>
+    <string name="reset_password_error_failed">Failed to reset password. The link may have expired.</string>
+    <string name="reset_password_error_network">We could not reach the server. Please try again.</string>
 </resources>

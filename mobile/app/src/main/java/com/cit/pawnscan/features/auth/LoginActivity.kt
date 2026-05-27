@@ -8,13 +8,16 @@ import android.widget.Button
 import android.widget.ImageButton
 import android.widget.EditText
 import android.widget.TextView
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.cit.pawnscan.R
-import com.cit.pawnscan.features.auth.api.AuthService
 import com.cit.pawnscan.features.auth.api.LoginRequest
-import com.cit.pawnscan.features.dashboard.TemporaryDashboardActivity
+import com.cit.pawnscan.features.landing.MainActivity
+import com.cit.pawnscan.shared.auth.AuthSessionRouter
 import com.cit.pawnscan.shared.auth.JwtStorageUtil
 import com.cit.pawnscan.shared.network.RetrofitClient
+import com.cit.pawnscan.shared.notification.FcmTokenRegistrar
+import com.cit.pawnscan.shared.validation.ValidationUtil
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -22,14 +25,21 @@ import retrofit2.Response
 class LoginActivity : AppCompatActivity() {
 
     private var isPasswordVisible = false
+    private lateinit var googleAuthCoordinator: GoogleAuthCoordinator
+    private val googleSignInLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        googleAuthCoordinator.handleSignInResult(result.data)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
         // Initialize views
-        val backButton = findViewById<Button>(R.id.back_button)
+        val backButton = findViewById<ImageButton>(R.id.back_button)
         val btnSignIn = findViewById<Button>(R.id.btn_sign_in)
+        val btnGoogleLogin = findViewById<View>(R.id.btn_google_login)
         val registerLink = findViewById<TextView>(R.id.register_link)
 
         // Form inputs
@@ -56,7 +66,6 @@ class LoginActivity : AppCompatActivity() {
         
         // Check if user came from registration page
         val registrationEmail = intent.getStringExtra("registered_email")
-        val registrationRole = intent.getStringExtra("registered_role")
         if (!registrationEmail.isNullOrEmpty()) {
             showStatusMessage(
                 "Registration successful! Please log in with your credentials.",
@@ -84,9 +93,24 @@ class LoginActivity : AppCompatActivity() {
             handleLogin(email, password, btnSignIn)
         }
 
+        googleAuthCoordinator = GoogleAuthCoordinator(
+            activity = this,
+            button = btnGoogleLogin,
+            statusMessage = findViewById(R.id.status_message),
+            signInLauncher = googleSignInLauncher,
+            roleProvider = { null }
+        )
+        googleAuthCoordinator.bind()
+
         // Register link
         registerLink.setOnClickListener {
             navigateToRegistration()
+        }
+
+        // Forgot password link
+        val forgotPasswordLink = findViewById<TextView>(R.id.forgot_password_link)
+        forgotPasswordLink.setOnClickListener {
+            startActivity(Intent(this, ForgotPasswordActivity::class.java))
         }
     }
 
@@ -140,6 +164,7 @@ class LoginActivity : AppCompatActivity() {
                     if (!authResponse.role.isNullOrEmpty()) {
                         JwtStorageUtil.saveUserRole(this@LoginActivity, authResponse.role)
                     }
+                    FcmTokenRegistrar.registerCurrentToken(this@LoginActivity)
 
                     // Show success message
                     val successMsg = authResponse.message ?: "Login successful!"
@@ -147,19 +172,20 @@ class LoginActivity : AppCompatActivity() {
 
                     // Navigate to dashboard after delay
                     findViewById<TextView>(R.id.status_message).postDelayed({
-                        navigateToDashboard()
+                        AuthSessionRouter.routeAfterAuthentication(this@LoginActivity)
                     }, 1500)
                 } else {
                     // Handle error response from server
                     val errorMsg = try {
                         val errorBody = response.errorBody()?.string()
                         if (!errorBody.isNullOrEmpty()) {
-                            parseErrorMessage(errorBody)
+                            val parsedMsg = AuthErrorParser.parse(errorBody, "Please check your credentials and try again.")
+                            "Login failed: $parsedMsg"
                         } else {
-                            "Login failed. Please check your credentials."
+                            "Login failed: Please check your credentials and try again."
                         }
                     } catch (e: Exception) {
-                        "Login failed. Please check your credentials."
+                        "Login failed: Please check your credentials and try again."
                     }
                     showStatusMessage(errorMsg, isError = true)
                     submitButton.isEnabled = true
@@ -168,13 +194,7 @@ class LoginActivity : AppCompatActivity() {
             }
 
             override fun onFailure(call: Call<com.cit.pawnscan.features.auth.api.AuthResponse>, t: Throwable) {
-                val errorMsg = when {
-                    t.message?.contains("Unable to resolve host") == true ->
-                        "Network error: Cannot reach server. Check your connection."
-                    t.message?.contains("timeout") == true ->
-                        "Request timeout: Server took too long to respond."
-                    else -> "Login failed: ${t.message ?: "Unknown error"}"
-                }
+                val errorMsg = "Login failed: We could not reach the server. Please try again."
                 showStatusMessage(errorMsg, isError = true)
                 submitButton.isEnabled = true
                 submitButton.text = resources.getString(R.string.login_sign_in_button)
@@ -183,23 +203,12 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun validateLoginForm(email: String, password: String): String? {
-        return when {
-            email.isEmpty() -> "Email is required"
-            !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() ->
-                "Please enter a valid email address"
-            password.isEmpty() -> "Password is required"
-            password.length < 8 -> "Password must be at least 8 characters"
-            else -> null
+        val emailError = ValidationUtil.validateEmail(email)
+        val passwordError = ValidationUtil.validatePassword(password)
+        if (emailError != null || passwordError != null) {
+            return "Login failed: Please check your credentials and try again."
         }
-    }
-
-    private fun parseErrorMessage(errorBody: String): String {
-        return try {
-            val json = org.json.JSONObject(errorBody)
-            json.optString("message", "Login failed. Please try again.")
-        } catch (e: Exception) {
-            "Login failed. Please try again."
-        }
+        return null
     }
 
     private fun showStatusMessage(message: String, isError: Boolean) {
@@ -219,11 +228,6 @@ class LoginActivity : AppCompatActivity() {
         startActivity(intent)
     }
 
-    private fun navigateToDashboard() {
-        val intent = Intent(this, TemporaryDashboardActivity::class.java)
-        startActivity(intent)
-        finish()
-    }
 }
 
 

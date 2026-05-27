@@ -1,5 +1,7 @@
 package edu.cit.garbo.pawnscan.features.auth;
 
+import edu.cit.garbo.pawnscan.features.auth.dto.ForgotPasswordRequest;
+import edu.cit.garbo.pawnscan.features.auth.dto.ResetPasswordRequest;
 import edu.cit.garbo.pawnscan.features.auth.dto.AuthResponse;
 import edu.cit.garbo.pawnscan.features.auth.dto.GoogleAuthConfigResponse;
 import edu.cit.garbo.pawnscan.features.auth.dto.GoogleAuthRequest;
@@ -29,6 +31,10 @@ public interface AuthService {
     AuthResponse completeProfile(String email, CompleteProfileRequest request);
 
     AuthResponse verifyOtp(VerifyOtpRequest request);
+
+    void forgotPassword(ForgotPasswordRequest request);
+
+    void resetPassword(ResetPasswordRequest request);
 }
 
 

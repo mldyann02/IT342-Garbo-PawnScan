@@ -1,21 +1,20 @@
 package com.cit.pawnscan.shared.network
 
+import com.cit.pawnscan.BuildConfig
 import com.cit.pawnscan.features.auth.api.AuthService
+import com.cit.pawnscan.features.business.api.VerificationService
+import com.cit.pawnscan.features.reports.api.ReportService
+import com.cit.pawnscan.features.dashboard.api.NotificationService
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitClient {
-    // Update this URL based on your server configuration
-    // For Android emulator testing: http://10.0.2.2:8080
-    // For physical device: use your server IP address
-    private const val BASE_URL = "http://10.0.2.2:8080"
-
     private var retrofit: Retrofit? = null
 
     fun getInstance(): Retrofit {
         if (retrofit == null) {
             retrofit = Retrofit.Builder()
-                .baseUrl(BASE_URL)
+                .baseUrl(normalizedBaseUrl())
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
         }
@@ -24,6 +23,23 @@ object RetrofitClient {
 
     fun getAuthService(): AuthService {
         return getInstance().create(AuthService::class.java)
+    }
+
+    fun getReportService(): ReportService {
+        return getInstance().create(ReportService::class.java)
+    }
+
+    fun getVerificationService(): VerificationService {
+        return getInstance().create(VerificationService::class.java)
+    }
+
+    fun getNotificationService(): NotificationService {
+        return getInstance().create(NotificationService::class.java)
+    }
+
+    private fun normalizedBaseUrl(): String {
+        val configuredUrl = BuildConfig.PAWNSCAN_API_BASE_URL.trim()
+        return if (configuredUrl.endsWith("/")) configuredUrl else "$configuredUrl/"
     }
 }
 

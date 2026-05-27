@@ -15,6 +15,9 @@ data class AuthResponse(
     @SerializedName("role")
     val role: String? = null,
 
+    @SerializedName("registrationStatus")
+    val registrationStatus: String? = null,
+
     @SerializedName("token")
     val token: String? = null,
 

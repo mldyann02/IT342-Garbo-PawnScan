@@ -17,18 +17,15 @@ class MainActivity : AppCompatActivity() {
 
         // Initialize views
         val btnReportStolen = findViewById<Button>(R.id.btn_report_stolen)
-        val btnBusinessVerification = findViewById<Button>(R.id.btn_business_verification)
-        val navSignIn = findViewById<TextView>(R.id.nav_sign_in)
-        val navGetStarted = findViewById<Button>(R.id.nav_get_started)
+        val navSignIn = findViewById<Button>(R.id.nav_sign_in)
+        val navGetStarted = findViewById<TextView>(R.id.nav_get_started)
 
         // Set click listeners
         btnReportStolen.setOnClickListener {
             navigateToReportStolen()
         }
 
-        btnBusinessVerification.setOnClickListener {
-            navigateToBusinessVerification()
-        }
+
 
         navSignIn.setOnClickListener {
             navigateToLogin()
@@ -42,12 +39,14 @@ class MainActivity : AppCompatActivity() {
     private fun navigateToReportStolen() {
         // Redirecting to Registration as per the web landing page logic
         val intent = Intent(this, RegistrationActivity::class.java)
+        intent.putExtra("account_type", "USER")
         startActivity(intent)
     }
 
     private fun navigateToBusinessVerification() {
         // Redirecting to Registration for business as per web logic
         val intent = Intent(this, RegistrationActivity::class.java)
+        intent.putExtra("account_type", "BUSINESS")
         startActivity(intent)
     }
 
@@ -58,6 +57,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun navigateToGetStarted() {
         val intent = Intent(this, RegistrationActivity::class.java)
+        intent.putExtra("account_type", "USER")
         startActivity(intent)
     }
 }

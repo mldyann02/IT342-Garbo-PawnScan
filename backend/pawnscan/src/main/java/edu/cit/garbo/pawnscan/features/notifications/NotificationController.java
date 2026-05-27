@@ -1,8 +1,10 @@
 package edu.cit.garbo.pawnscan.features.notifications;
 
+import edu.cit.garbo.pawnscan.features.notifications.dto.FcmTokenRequest;
 import edu.cit.garbo.pawnscan.features.notifications.dto.NotificationResponse;
 import edu.cit.garbo.pawnscan.shared.security.JwtService;
 import io.jsonwebtoken.Claims;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -62,6 +64,27 @@ public class NotificationController {
     @PreAuthorize("isAuthenticated()")
     public Map<String, Boolean> clearNotifications(Authentication authentication) {
         notificationService.clearNotifications(resolveAuthenticatedName(authentication));
+        return Map.of("success", true);
+    }
+
+    @PostMapping("/fcm-tokens")
+    @PreAuthorize("isAuthenticated()")
+    public Map<String, Boolean> registerFcmToken(
+            Authentication authentication,
+            @Valid @org.springframework.web.bind.annotation.RequestBody FcmTokenRequest request) {
+        notificationService.registerFcmToken(
+                resolveAuthenticatedName(authentication),
+                request.getToken(),
+                request.getPlatform());
+        return Map.of("success", true);
+    }
+
+    @PostMapping("/fcm-tokens/unregister")
+    @PreAuthorize("isAuthenticated()")
+    public Map<String, Boolean> unregisterFcmToken(
+            Authentication authentication,
+            @Valid @org.springframework.web.bind.annotation.RequestBody FcmTokenRequest request) {
+        notificationService.unregisterFcmToken(resolveAuthenticatedName(authentication), request.getToken());
         return Map.of("success", true);
     }
 
