@@ -3,8 +3,8 @@ package com.cit.pawnscan.features.reports
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import android.widget.Button
 import android.widget.ImageButton
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -47,13 +47,68 @@ class ReportDetailActivity : AppCompatActivity() {
             "Created\n${PortalUi.formatDate(intent.getStringExtra(EXTRA_CREATED_AT))}"
         findViewById<TextView>(R.id.report_detail_description).text =
             description.ifBlank { "No description provided" }
+
+        val evidenceUrls = intent.getStringArrayListExtra(EXTRA_FILE_URLS) ?: arrayListOf()
+        val evidenceTypes = intent.getStringArrayListExtra(EXTRA_FILE_TYPES) ?: arrayListOf()
+        val evidenceCount = if (evidenceUrls.isNotEmpty()) evidenceUrls.size
+        else intent.getIntExtra(EXTRA_FILE_COUNT, 0)
         findViewById<TextView>(R.id.report_detail_files).text =
-            "Evidence attached: ${intent.getIntExtra(EXTRA_FILE_COUNT, 0)} file(s)"
+            "Evidence attached: $evidenceCount file(s)"
+        renderEvidenceList(
+            evidenceUrls,
+            evidenceTypes,
+            findViewById(R.id.report_detail_files_container),
+            findViewById(R.id.report_detail_files_empty)
+        )
 
         findViewById<TextView>(R.id.report_detail_rejection).apply {
             visibility = if (status == "REJECTED" && rejection.isNotBlank()) View.VISIBLE else View.GONE
             text = "Rejection reason\n$rejection"
         }
+    }
+
+    private fun renderEvidenceList(
+        urls: List<String>,
+        types: List<String>,
+        container: LinearLayout,
+        emptyView: TextView
+    ) {
+        container.removeAllViews()
+        if (urls.isEmpty()) {
+            emptyView.visibility = View.VISIBLE
+            return
+        }
+
+        emptyView.visibility = View.GONE
+        val spacing = (10 * resources.displayMetrics.density).toInt()
+        val padding = (14 * resources.displayMetrics.density).toInt()
+        urls.forEachIndexed { index, rawUrl ->
+            val normalized = PortalUi.resolveEvidenceUrl(rawUrl) ?: return@forEachIndexed
+            val label = buildEvidenceLabel(types.getOrNull(index), normalized, index)
+            val entry = TextView(this).apply {
+                text = label
+                setBackgroundResource(R.drawable.bg_button_glass_outline)
+                setTextColor(getColor(R.color.text_white))
+                textSize = 14f
+                setPadding(padding, padding, padding, padding)
+                setOnClickListener {
+                    PortalUi.openEvidencePreview(this@ReportDetailActivity, normalized, types.getOrNull(index))
+                }
+            }
+            val params = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            params.topMargin = spacing
+            container.addView(entry, params)
+        }
+    }
+
+    private fun buildEvidenceLabel(fileType: String?, url: String, index: Int): String {
+        val normalizedType = fileType?.uppercase() ?: ""
+        val isPdf = normalizedType == "PDF" || url.endsWith(".pdf", ignoreCase = true)
+        val typeLabel = if (isPdf) "PDF" else "Image"
+        return "Evidence ${index + 1} - $typeLabel"
     }
 
     private fun openEdit() {
@@ -97,6 +152,8 @@ class ReportDetailActivity : AppCompatActivity() {
         private const val EXTRA_DESCRIPTION = "description"
         private const val EXTRA_REJECTION = "rejection"
         private const val EXTRA_FILE_COUNT = "file_count"
+        private const val EXTRA_FILE_URLS = "file_urls"
+        private const val EXTRA_FILE_TYPES = "file_types"
 
         fun putReport(intent: Intent, report: ReportResponse) {
             intent.putExtra(EXTRA_ID, report.id ?: -1L)
@@ -106,7 +163,18 @@ class ReportDetailActivity : AppCompatActivity() {
             intent.putExtra(EXTRA_CREATED_AT, report.createdAt)
             intent.putExtra(EXTRA_DESCRIPTION, report.description)
             intent.putExtra(EXTRA_REJECTION, report.rejectionReason)
-            intent.putExtra(EXTRA_FILE_COUNT, report.files?.size ?: 0)
+            val files = report.files?.mapNotNull { file ->
+                file.fileUrl?.let { url -> url to (file.fileType ?: "") }
+            } ?: emptyList()
+            intent.putExtra(EXTRA_FILE_COUNT, files.size)
+            intent.putStringArrayListExtra(
+                EXTRA_FILE_URLS,
+                ArrayList(files.map { it.first })
+            )
+            intent.putStringArrayListExtra(
+                EXTRA_FILE_TYPES,
+                ArrayList(files.map { it.second })
+            )
         }
     }
 }
