@@ -131,4 +131,30 @@
     <string name="portal_phone_hint">Phone Number (+639XXXXXXXXX)</string>
     <string name="portal_empty_reports">No reports yet. File your first stolen item report.</string>
     <string name="portal_empty_matches">No matched reports yet.</string>
+
+    <!-- Forgot Password Strings -->
+    <string name="login_forgot_password">Forgot password?</string>
+    <string name="forgot_password_title">Reset Password</string>
+    <string name="forgot_password_subtitle">Enter your email and we\'ll send you a secure reset link</string>
+    <string name="forgot_password_email_label">Email Address</string>
+    <string name="forgot_password_send_button">Send Reset Link</string>
+    <string name="forgot_password_sending_button">Sending&#8230;</string>
+    <string name="forgot_password_success">If that email is registered, a password reset link has been sent. Please check your inbox.</string>
+    <string name="forgot_password_invalid_email">Please enter a valid email address.</string>
+    <string name="forgot_password_error_network">We could not reach the server. Please try again.</string>
+    <string name="forgot_password_back_text">Back to\u0020</string>
+
+    <!-- Reset Password Strings -->
+    <string name="reset_password_title">New Password</string>
+    <string name="reset_password_subtitle">Choose a strong password for your account</string>
+    <string name="reset_password_new_label">New Password</string>
+    <string name="reset_password_confirm_label">Confirm Password</string>
+    <string name="reset_password_button">Reset Password</string>
+    <string name="reset_password_resetting_button">Resetting&#8230;</string>
+    <string name="reset_password_success">Your password has been reset successfully. Redirecting to login&#8230;</string>
+    <string name="reset_password_invalid_token">Invalid or expired reset link. Please request a new one.</string>
+    <string name="reset_password_error_length">Password must be at least 8 characters.</string>
+    <string name="reset_password_error_mismatch">Passwords do not match.</string>
+    <string name="reset_password_error_failed">Failed to reset password. The link may have expired.</string>
+    <string name="reset_password_error_network">We could not reach the server. Please try again.</string>
 </resources>

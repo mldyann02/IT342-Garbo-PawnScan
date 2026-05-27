@@ -286,6 +286,14 @@ export default function LoginForm() {
                     {errors.password}
                   </p>
                 )}
+                <div className="mt-2 flex justify-end">
+                  <Link
+                    href="/forgot-password"
+                    className="text-sm font-medium text-brand transition hover:underline"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
               </div>
 
               {apiMessage && (

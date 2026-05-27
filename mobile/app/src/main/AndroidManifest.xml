@@ -65,6 +65,18 @@
             android:theme="@style/Theme.PawnScan" />
 
         <activity
+            android:name="com.cit.pawnscan.features.auth.ForgotPasswordActivity"
+            android:exported="false"
+            android:label="@string/forgot_password_title"
+            android:theme="@style/Theme.PawnScan" />
+
+        <activity
+            android:name="com.cit.pawnscan.features.auth.ResetPasswordActivity"
+            android:exported="false"
+            android:label="@string/reset_password_title"
+            android:theme="@style/Theme.PawnScan" />
+
+        <activity
             android:name="com.cit.pawnscan.features.auth.CompleteProfileActivity"
             android:exported="false"
             android:label="@string/complete_profile_title"

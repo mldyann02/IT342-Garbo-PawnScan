@@ -3,11 +3,13 @@ package edu.cit.garbo.pawnscan.features.auth;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import edu.cit.garbo.pawnscan.features.auth.dto.AuthResponse;
+import edu.cit.garbo.pawnscan.features.auth.dto.ForgotPasswordRequest;
 import edu.cit.garbo.pawnscan.features.auth.dto.GoogleAuthConfigResponse;
 import edu.cit.garbo.pawnscan.features.auth.dto.GoogleAuthRequest;
 import edu.cit.garbo.pawnscan.features.auth.dto.CompleteProfileRequest;
 import edu.cit.garbo.pawnscan.features.auth.dto.LoginRequest;
 import edu.cit.garbo.pawnscan.features.auth.dto.RegisterRequest;
+import edu.cit.garbo.pawnscan.features.auth.dto.ResetPasswordRequest;
 import edu.cit.garbo.pawnscan.features.auth.dto.VerifyOtpRequest;
 import edu.cit.garbo.pawnscan.features.auth.dto.UserProfileResponse;
 import edu.cit.garbo.pawnscan.features.auth.dto.UserProfileUpdateRequest;
@@ -35,8 +37,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
+import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -51,9 +55,13 @@ public class AuthServiceImpl implements AuthService {
     private final GoogleIdTokenVerifier googleIdTokenVerifier;
     private final EmailService emailService;
     private final OtpService otpService;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
 
     @Value("${google.web-client-id:${google.client-id:}}")
     private String googleWebClientId;
+
+    @Value("${app.base-url:http://localhost:3000}")
+    private String baseUrl;
 
     @Override
     @Transactional
@@ -430,5 +438,52 @@ public class AuthServiceImpl implements AuthService {
 
     private boolean isBlank(String value) {
         return value == null || value.trim().isEmpty();
+    }
+
+    @Override
+    @Transactional
+    public void forgotPassword(ForgotPasswordRequest request) {
+        // Always respond as if successful to prevent email enumeration attacks
+        userRepository.findByEmail(request.getEmail()).ifPresent(user -> {
+            // Invalidate any existing unused tokens for this email
+            passwordResetTokenRepository.invalidateAllForEmail(user.getEmail());
+
+            String token = UUID.randomUUID().toString();
+            PasswordResetToken resetToken = PasswordResetToken.builder()
+                    .email(user.getEmail())
+                    .token(token)
+                    .expiresAt(LocalDateTime.now().plusMinutes(60))
+                    .used(false)
+                    .build();
+            passwordResetTokenRepository.save(resetToken);
+
+            String resetLink = baseUrl + "/reset-password?token=" + token;
+            emailService.sendPasswordResetEmail(user.getEmail(), resetLink);
+        });
+    }
+
+    @Override
+    @Transactional
+    public void resetPassword(ResetPasswordRequest request) {
+        PasswordResetToken resetToken = passwordResetTokenRepository
+                .findByToken(request.getToken())
+                .orElseThrow(() -> new InvalidCredentialsException("Invalid or expired password reset link"));
+
+        if (resetToken.isUsed()) {
+            throw new InvalidCredentialsException("This password reset link has already been used");
+        }
+
+        if (resetToken.getExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new InvalidCredentialsException("This password reset link has expired. Please request a new one");
+        }
+
+        User user = userRepository.findByEmail(resetToken.getEmail())
+                .orElseThrow(() -> new InvalidCredentialsException("User account not found"));
+
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        resetToken.setUsed(true);
+        passwordResetTokenRepository.save(resetToken);
     }
 }

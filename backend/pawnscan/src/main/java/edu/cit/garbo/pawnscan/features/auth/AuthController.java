@@ -1,11 +1,13 @@
 package edu.cit.garbo.pawnscan.features.auth;
 
 import edu.cit.garbo.pawnscan.features.auth.dto.AuthResponse;
+import edu.cit.garbo.pawnscan.features.auth.dto.ForgotPasswordRequest;
 import edu.cit.garbo.pawnscan.features.auth.dto.GoogleAuthConfigResponse;
 import edu.cit.garbo.pawnscan.features.auth.dto.GoogleAuthRequest;
 import edu.cit.garbo.pawnscan.features.auth.dto.LoginRequest;
 import edu.cit.garbo.pawnscan.features.auth.dto.RegisterRequest;
 import edu.cit.garbo.pawnscan.features.auth.dto.CompleteProfileRequest;
+import edu.cit.garbo.pawnscan.features.auth.dto.ResetPasswordRequest;
 import edu.cit.garbo.pawnscan.features.auth.dto.VerifyOtpRequest;
 import edu.cit.garbo.pawnscan.features.auth.dto.UserProfileResponse;
 import edu.cit.garbo.pawnscan.features.auth.dto.UserProfileUpdateRequest;
@@ -93,6 +95,23 @@ public class AuthController {
         }
 
         return ResponseEntity.ok(authService.completeProfile(authentication.getName(), request));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<java.util.Map<String, String>> forgotPassword(
+            @Valid @RequestBody ForgotPasswordRequest request) {
+        authService.forgotPassword(request);
+        // Always return 200 to prevent email enumeration
+        return ResponseEntity.ok(java.util.Map.of(
+                "message", "If that email is registered, a password reset link has been sent."));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<java.util.Map<String, String>> resetPassword(
+            @Valid @RequestBody ResetPasswordRequest request) {
+        authService.resetPassword(request);
+        return ResponseEntity.ok(java.util.Map.of(
+                "message", "Your password has been reset successfully. You can now log in with your new password."));
     }
 }
 
