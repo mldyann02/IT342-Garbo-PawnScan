@@ -40,30 +40,37 @@
             android:textSize="22sp"
             android:textStyle="bold" />
 
-        <!-- Mark all read action -->
-        <ImageButton
-            android:id="@+id/btn_mark_all_read"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginEnd="8dp"
-            android:background="@drawable/bg_icon_glass"
-            android:contentDescription="Mark all read"
-            android:padding="12dp"
-            android:scaleType="centerInside"
-            android:src="@drawable/ic_sparkle"
-            app:tint="@color/brand_green" />
+        <LinearLayout
+            android:layout_width="88dp"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="vertical">
 
-        <!-- Clear all action -->
-        <ImageButton
-            android:id="@+id/btn_clear_all"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="@drawable/bg_icon_glass"
-            android:contentDescription="Clear all"
-            android:padding="12dp"
-            android:scaleType="centerInside"
-            android:src="@drawable/ic_delete"
-            app:tint="@color/status_stolen" />
+            <ImageButton
+                android:id="@+id/btn_clear_all"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="@drawable/bg_icon_glass"
+                android:contentDescription="Clear all"
+                android:padding="12dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_delete"
+                app:tint="@color/status_stolen" />
+
+            <TextView
+                android:id="@+id/btn_mark_all_read"
+                android:layout_width="match_parent"
+                android:layout_height="32dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:text="Mark all read"
+                android:textColor="@color/brand_green"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
     </LinearLayout>
 
     <!-- Swipe to Refresh containing notifications list -->

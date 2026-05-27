@@ -11,6 +11,11 @@ interface NotificationService {
         @Query("size") size: Int = 50
     ): Call<List<NotificationResponse>>
 
+    @GET("api/notifications/unread-count")
+    fun getUnreadCount(
+        @Header("Authorization") token: String
+    ): Call<UnreadCountResponse>
+
     @PATCH("api/notifications/{id}/read")
     fun markAsRead(
         @Header("Authorization") token: String,
@@ -25,5 +30,17 @@ interface NotificationService {
     @DELETE("api/notifications")
     fun clearNotifications(
         @Header("Authorization") token: String
+    ): Call<Map<String, Boolean>>
+
+    @POST("api/notifications/fcm-tokens")
+    fun registerFcmToken(
+        @Header("Authorization") token: String,
+        @Body request: FcmTokenRequest
+    ): Call<Map<String, Boolean>>
+
+    @POST("api/notifications/fcm-tokens/unregister")
+    fun unregisterFcmToken(
+        @Header("Authorization") token: String,
+        @Body request: FcmTokenRequest
     ): Call<Map<String, Boolean>>
 }

@@ -16,6 +16,7 @@ import com.cit.pawnscan.features.profile.ProfileActivity
 import com.cit.pawnscan.features.reports.ReportFormActivity
 import com.cit.pawnscan.features.reports.ReportsActivity
 import com.cit.pawnscan.shared.auth.JwtStorageUtil
+import com.cit.pawnscan.shared.notification.FcmTokenRegistrar
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -37,6 +38,7 @@ object PortalUi {
     }
 
     fun logout(activity: Activity) {
+        FcmTokenRegistrar.unregisterCurrentToken(activity)
         JwtStorageUtil.clearAll(activity)
         val intent = Intent(activity, LoginActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK

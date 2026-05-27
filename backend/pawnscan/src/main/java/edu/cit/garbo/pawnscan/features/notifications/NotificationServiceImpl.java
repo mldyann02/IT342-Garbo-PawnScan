@@ -1,7 +1,9 @@
 package edu.cit.garbo.pawnscan.features.notifications;
 
 import edu.cit.garbo.pawnscan.features.notifications.dto.NotificationResponse;
+import edu.cit.garbo.pawnscan.features.notifications.entity.FcmDeviceToken;
 import edu.cit.garbo.pawnscan.features.notifications.entity.Notification;
+import edu.cit.garbo.pawnscan.features.notifications.repository.FcmDeviceTokenRepository;
 import edu.cit.garbo.pawnscan.features.notifications.repository.NotificationRepository;
 import edu.cit.garbo.pawnscan.shared.exception.ForbiddenActionException;
 import edu.cit.garbo.pawnscan.shared.user.User;
@@ -32,7 +34,9 @@ public class NotificationServiceImpl implements NotificationService {
     private static final int MAX_PAGE_SIZE = 100;
 
     private final NotificationRepository notificationRepository;
+    private final FcmDeviceTokenRepository fcmDeviceTokenRepository;
     private final UserRepository userRepository;
+    private final FcmPushService fcmPushService;
     private final Map<Long, CopyOnWriteArrayList<SseEmitter>> emittersByUser = new ConcurrentHashMap<>();
 
     @Override
@@ -57,6 +61,7 @@ public class NotificationServiceImpl implements NotificationService {
 
         NotificationResponse response = toResponse(saved);
         pushToRecipient(recipient.getUserId(), response);
+        fcmPushService.sendToUserDevices(recipient.getUserId(), response);
         return response;
     }
 
@@ -137,6 +142,27 @@ public class NotificationServiceImpl implements NotificationService {
         return emitter;
     }
 
+    @Override
+    @Transactional
+    public void registerFcmToken(String authenticatedEmail, String token, String platform) {
+        User user = getAuthenticatedUser(authenticatedEmail);
+        String normalizedToken = normalizeToken(token);
+
+        FcmDeviceToken deviceToken = fcmDeviceTokenRepository.findByToken(normalizedToken)
+                .orElseGet(FcmDeviceToken::new);
+        deviceToken.setUser(user);
+        deviceToken.setToken(normalizedToken);
+        deviceToken.setPlatform(normalizePlatform(platform));
+        fcmDeviceTokenRepository.save(deviceToken);
+    }
+
+    @Override
+    @Transactional
+    public void unregisterFcmToken(String authenticatedEmail, String token) {
+        User user = getAuthenticatedUser(authenticatedEmail);
+        fcmDeviceTokenRepository.deleteByUserUserIdAndToken(user.getUserId(), normalizeToken(token));
+    }
+
     private User getAuthenticatedUser(String authenticatedEmail) {
         if (authenticatedEmail == null || authenticatedEmail.isBlank()) {
             throw new ForbiddenActionException("Unauthorized access");
@@ -179,6 +205,20 @@ public class NotificationServiceImpl implements NotificationService {
             return 20;
         }
         return Math.min(size, MAX_PAGE_SIZE);
+    }
+
+    private String normalizeToken(String token) {
+        if (token == null || token.isBlank()) {
+            throw new IllegalArgumentException("FCM token is required");
+        }
+        return token.trim();
+    }
+
+    private String normalizePlatform(String platform) {
+        if (platform == null || platform.isBlank()) {
+            return "android";
+        }
+        return platform.trim().toLowerCase();
     }
 
     private NotificationResponse toResponse(Notification notification) {

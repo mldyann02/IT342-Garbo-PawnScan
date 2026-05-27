@@ -5,6 +5,7 @@ import android.view.View
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.ProgressBar
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -24,7 +25,7 @@ class NotificationsActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var emptyState: LinearLayout
     private lateinit var progressBar: ProgressBar
-    private lateinit var btnMarkAllRead: ImageButton
+    private lateinit var btnMarkAllRead: TextView
     private lateinit var btnClearAll: ImageButton
 
     private lateinit var adapter: NotificationAdapter

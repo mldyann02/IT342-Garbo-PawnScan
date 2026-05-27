@@ -15,6 +15,7 @@ import com.cit.pawnscan.features.auth.api.CompleteProfileRequest
 import com.cit.pawnscan.shared.auth.AuthSessionRouter
 import com.cit.pawnscan.shared.auth.JwtStorageUtil
 import com.cit.pawnscan.shared.network.RetrofitClient
+import com.cit.pawnscan.shared.notification.FcmTokenRegistrar
 import com.cit.pawnscan.shared.validation.ValidationUtil
 import retrofit2.Call
 import retrofit2.Callback
@@ -129,6 +130,7 @@ class CompleteProfileActivity : AppCompatActivity() {
                         authResponse.role?.takeIf { it.isNotBlank() }?.let {
                             JwtStorageUtil.saveUserRole(this@CompleteProfileActivity, it)
                         }
+                        FcmTokenRegistrar.registerCurrentToken(this@CompleteProfileActivity)
                         showStatusMessage(
                             authResponse.message ?: getString(R.string.complete_profile_success),
                             isError = false

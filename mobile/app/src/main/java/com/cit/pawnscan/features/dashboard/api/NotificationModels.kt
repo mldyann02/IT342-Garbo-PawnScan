@@ -10,3 +10,12 @@ data class NotificationResponse(
     @SerializedName("read") val read: Boolean,
     @SerializedName("createdAt") val createdAt: String?
 )
+
+data class FcmTokenRequest(
+    @SerializedName("token") val token: String,
+    @SerializedName("platform") val platform: String = "android"
+)
+
+data class UnreadCountResponse(
+    @SerializedName("count") val count: Long
+)

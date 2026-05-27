@@ -27,6 +27,7 @@ class BusinessDashboardActivity : AppCompatActivity() {
     private lateinit var recentList: LinearLayout
     private lateinit var verifyButton: Button
     private lateinit var viewHistory: TextView
+    private lateinit var notificationBadge: TextView
     private val recentSearches = mutableListOf<SearchLogResponse>()
     private val stolenMatches = mutableListOf<StolenMatchResponse>()
     private var isVerifiedBusiness = false
@@ -43,6 +44,7 @@ class BusinessDashboardActivity : AppCompatActivity() {
         recentList = findViewById(R.id.business_recent_searches)
         verifyButton = findViewById(R.id.business_verify_now)
         viewHistory = findViewById(R.id.business_view_history)
+        notificationBadge = findViewById(R.id.business_notification_badge)
 
         BusinessPortalUi.configureBottomNav(this, "home")
         findViewById<ImageButton>(R.id.business_notifications).setOnClickListener {
@@ -75,6 +77,7 @@ class BusinessDashboardActivity : AppCompatActivity() {
         }
 
         loadProfile()
+        loadUnreadNotifications()
         refreshVerificationAccess()
         requestNotificationPermission()
     }
@@ -83,6 +86,7 @@ class BusinessDashboardActivity : AppCompatActivity() {
         super.onResume()
         if (::recentList.isInitialized) {
             refreshVerificationAccess()
+            loadUnreadNotifications()
         }
     }
 
@@ -165,6 +169,36 @@ class BusinessDashboardActivity : AppCompatActivity() {
 
                 override fun onFailure(call: Call<List<StolenMatchResponse>>, t: Throwable) = Unit
             })
+    }
+
+    private fun loadUnreadNotifications() {
+        val header = PortalUi.requireAuth(this) ?: return
+        RetrofitClient.getNotificationService().getUnreadCount(header)
+            .enqueue(object : Callback<com.cit.pawnscan.features.dashboard.api.UnreadCountResponse> {
+                override fun onResponse(
+                    call: Call<com.cit.pawnscan.features.dashboard.api.UnreadCountResponse>,
+                    response: Response<com.cit.pawnscan.features.dashboard.api.UnreadCountResponse>
+                ) {
+                    val count = response.body()?.count ?: 0
+                    updateNotificationBadge(count)
+                }
+
+                override fun onFailure(
+                    call: Call<com.cit.pawnscan.features.dashboard.api.UnreadCountResponse>,
+                    t: Throwable
+                ) {
+                    notificationBadge.visibility = View.GONE
+                }
+            })
+    }
+
+    private fun updateNotificationBadge(count: Long) {
+        if (count <= 0) {
+            notificationBadge.visibility = View.GONE
+            return
+        }
+        notificationBadge.text = if (count > 99) "99+" else count.toString()
+        notificationBadge.visibility = View.VISIBLE
     }
 
     private fun renderRecent(searches: List<SearchLogResponse>) {

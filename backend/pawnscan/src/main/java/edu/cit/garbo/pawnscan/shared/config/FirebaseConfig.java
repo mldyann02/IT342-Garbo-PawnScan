@@ -1,6 +1,7 @@
 package edu.cit.garbo.pawnscan.shared.config;
 
 import com.google.auth.oauth2.GoogleCredentials;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import jakarta.annotation.PostConstruct;
@@ -17,6 +18,7 @@ import java.nio.charset.StandardCharsets;
 public class FirebaseConfig {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FirebaseConfig.class);
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @Value("${pawnscan.firebase.credentials}")
     private String firebaseCredentials;
@@ -30,8 +32,9 @@ public class FirebaseConfig {
 
         try {
             if (FirebaseApp.getApps().isEmpty()) {
+                String credentialsJson = normalizeCredentials(firebaseCredentials);
                 ByteArrayInputStream stream = new ByteArrayInputStream(
-                        firebaseCredentials.getBytes(StandardCharsets.UTF_8)
+                        credentialsJson.getBytes(StandardCharsets.UTF_8)
                 );
 
                 FirebaseOptions options = FirebaseOptions.builder()
@@ -46,5 +49,16 @@ public class FirebaseConfig {
         } catch (IOException e) {
             LOGGER.error("Failed to initialize Firebase Admin SDK", e);
         }
+    }
+
+    private String normalizeCredentials(String credentials) throws IOException {
+        String trimmed = credentials.trim();
+        if (trimmed.startsWith("'") && trimmed.endsWith("'")) {
+            trimmed = trimmed.substring(1, trimmed.length() - 1).trim();
+        }
+        if (trimmed.startsWith("\"") && trimmed.endsWith("\"")) {
+            return OBJECT_MAPPER.readValue(trimmed, String.class);
+        }
+        return trimmed;
     }
 }
