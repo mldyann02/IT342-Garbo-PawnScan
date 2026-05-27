@@ -207,6 +207,23 @@
                     android:layout_marginTop="10dp"
                     android:textColor="@color/text_muted_gray"
                     android:textSize="13sp" />
+
+                <TextView
+                    android:id="@+id/report_detail_files_empty"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="No evidence uploaded."
+                    android:textColor="@color/text_muted_gray"
+                    android:textSize="13sp"
+                    android:visibility="gone" />
+
+                <LinearLayout
+                    android:id="@+id/report_detail_files_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="vertical" />
             </LinearLayout>
         </LinearLayout>
     </ScrollView>

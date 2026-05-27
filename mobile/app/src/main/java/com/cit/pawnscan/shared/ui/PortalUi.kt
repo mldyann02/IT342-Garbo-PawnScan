@@ -8,6 +8,7 @@ import android.provider.OpenableColumns
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
+import com.cit.pawnscan.BuildConfig
 import com.cit.pawnscan.R
 import com.cit.pawnscan.features.auth.LoginActivity
 import com.cit.pawnscan.features.dashboard.UserDashboardActivity
@@ -150,6 +151,24 @@ object PortalUi {
             }
         }
         return "evidence-${System.currentTimeMillis()}"
+    }
+
+    fun resolveEvidenceUrl(path: String?): String? {
+        if (path.isNullOrBlank()) return null
+        if (path.startsWith("http://") || path.startsWith("https://")) return path
+        val base = BuildConfig.PAWNSCAN_API_BASE_URL.trim().trimEnd('/')
+        return if (path.startsWith("/")) "$base$path" else "$base/$path"
+    }
+
+    fun openExternalUrl(activity: Activity, url: String) {
+        activity.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+    }
+
+    fun openEvidencePreview(activity: Activity, url: String, fileType: String?) {
+        val intent = Intent(activity, EvidencePreviewActivity::class.java)
+        intent.putExtra(EvidencePreviewActivity.EXTRA_URL, url)
+        intent.putExtra(EvidencePreviewActivity.EXTRA_TYPE, fileType)
+        activity.startActivity(intent)
     }
 
     private fun navigate(activity: Activity, target: Class<out Activity>) {

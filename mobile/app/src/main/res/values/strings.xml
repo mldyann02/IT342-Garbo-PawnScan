@@ -131,6 +131,10 @@
     <string name="portal_phone_hint">Phone Number (+639XXXXXXXXX)</string>
     <string name="portal_empty_reports">No reports yet. File your first stolen item report.</string>
     <string name="portal_empty_matches">No matched reports yet.</string>
+    <string name="evidence_preview_title">Evidence Preview</string>
+    <string name="evidence_prev">Previous</string>
+    <string name="evidence_next">Next</string>
+    <string name="evidence_page">Page %1$d of %2$d</string>
 
     <!-- Forgot Password Strings -->
     <string name="login_forgot_password">Forgot password?</string>
