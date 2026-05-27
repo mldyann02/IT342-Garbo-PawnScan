@@ -16,6 +16,7 @@ import com.cit.pawnscan.features.landing.MainActivity
 import com.cit.pawnscan.shared.auth.AuthSessionRouter
 import com.cit.pawnscan.shared.auth.JwtStorageUtil
 import com.cit.pawnscan.shared.network.RetrofitClient
+import com.cit.pawnscan.shared.notification.FcmTokenRegistrar
 import com.cit.pawnscan.shared.validation.ValidationUtil
 import retrofit2.Call
 import retrofit2.Callback
@@ -157,6 +158,7 @@ class LoginActivity : AppCompatActivity() {
                     if (!authResponse.role.isNullOrEmpty()) {
                         JwtStorageUtil.saveUserRole(this@LoginActivity, authResponse.role)
                     }
+                    FcmTokenRegistrar.registerCurrentToken(this@LoginActivity)
 
                     // Show success message
                     val successMsg = authResponse.message ?: "Login successful!"

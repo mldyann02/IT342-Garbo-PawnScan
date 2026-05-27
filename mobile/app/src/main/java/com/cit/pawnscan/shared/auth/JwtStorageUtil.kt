@@ -1,6 +1,7 @@
 package com.cit.pawnscan.shared.auth
 
 import android.content.Context
+import android.util.Log
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 
@@ -9,8 +10,19 @@ object JwtStorageUtil {
     private const val JWT_TOKEN_KEY = "jwt_token"
     private const val USER_EMAIL_KEY = "user_email"
     private const val USER_ROLE_KEY = "user_role"
+    private const val TAG = "JwtStorageUtil"
 
     private fun getEncryptedPreferences(context: Context): EncryptedSharedPreferences {
+        return try {
+            createEncryptedPreferences(context)
+        } catch (ex: Exception) {
+            Log.w(TAG, "Secure preferences could not be opened; resetting local session.", ex)
+            context.applicationContext.deleteSharedPreferences(PREFS_NAME)
+            createEncryptedPreferences(context)
+        }
+    }
+
+    private fun createEncryptedPreferences(context: Context): EncryptedSharedPreferences {
         val masterKey = MasterKey.Builder(context)
             .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
             .build()

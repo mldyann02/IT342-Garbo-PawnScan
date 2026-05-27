@@ -26,6 +26,7 @@ class UserDashboardActivity : AppCompatActivity() {
     private lateinit var userEmail: TextView
     private lateinit var totalReports: TextView
     private lateinit var totalMatches: TextView
+    private lateinit var notificationBadge: TextView
     private lateinit var recentReportsList: RecyclerView
     private lateinit var recentReportsAdapter: RecentReportsAdapter
     private var matchCount = 0
@@ -44,6 +45,14 @@ class UserDashboardActivity : AppCompatActivity() {
         totalReports.text = "0\nReports"
         totalMatches.text = "0\nMatches"
         loadDashboard()
+        requestNotificationPermission()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (::notificationBadge.isInitialized) {
+            loadUnreadNotifications()
+        }
     }
 
     private fun bindViews() {
@@ -52,6 +61,7 @@ class UserDashboardActivity : AppCompatActivity() {
         userEmail = findViewById(R.id.portal_user_email)
         totalReports = findViewById(R.id.dashboard_total_reports)
         totalMatches = findViewById(R.id.dashboard_total_matches)
+        notificationBadge = findViewById(R.id.portal_notification_badge)
         recentReportsList = findViewById(R.id.dashboard_recent_reports)
         
         recentReportsAdapter = RecentReportsAdapter(emptyList()) { report ->
@@ -78,6 +88,7 @@ class UserDashboardActivity : AppCompatActivity() {
         loadProfile()
         loadReports()
         loadMatches()
+        loadUnreadNotifications()
     }
 
     private fun loadProfile() {
@@ -134,9 +145,46 @@ class UserDashboardActivity : AppCompatActivity() {
         })
     }
 
+    private fun loadUnreadNotifications() {
+        val header = PortalUi.requireAuth(this) ?: return
+        RetrofitClient.getNotificationService().getUnreadCount(header)
+            .enqueue(object : Callback<com.cit.pawnscan.features.dashboard.api.UnreadCountResponse> {
+                override fun onResponse(
+                    call: Call<com.cit.pawnscan.features.dashboard.api.UnreadCountResponse>,
+                    response: Response<com.cit.pawnscan.features.dashboard.api.UnreadCountResponse>
+                ) {
+                    val count = response.body()?.count ?: 0
+                    updateNotificationBadge(count)
+                }
+
+                override fun onFailure(
+                    call: Call<com.cit.pawnscan.features.dashboard.api.UnreadCountResponse>,
+                    t: Throwable
+                ) {
+                    notificationBadge.visibility = View.GONE
+                }
+            })
+    }
+
+    private fun updateNotificationBadge(count: Long) {
+        if (count <= 0) {
+            notificationBadge.visibility = View.GONE
+            return
+        }
+        notificationBadge.text = if (count > 99) "99+" else count.toString()
+        notificationBadge.visibility = View.VISIBLE
+    }
+
     private fun renderRecentReports(reports: List<ReportResponse>) {
         recentReportsAdapter.updateReports(reports)
     }
 
     // emptyText method removed as empty state is better handled outside or within the adapter, but for now we simply show an empty list.
+    private fun requestNotificationPermission() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 101)
+            }
+        }
+    }
 }

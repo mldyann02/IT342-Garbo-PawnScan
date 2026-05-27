@@ -4,7 +4,6 @@ import edu.cit.garbo.pawnscan.features.businessprofile.dto.BusinessProfileReques
 import edu.cit.garbo.pawnscan.features.businessprofile.dto.BusinessProfileResponse;
 import edu.cit.garbo.pawnscan.features.businessprofile.dto.BusinessVerificationRequest;
 import edu.cit.garbo.pawnscan.shared.user.UserRole;
-import edu.cit.garbo.pawnscan.features.businessprofile.BusinessProfileService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

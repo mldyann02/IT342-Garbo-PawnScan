@@ -16,6 +16,7 @@ import com.cit.pawnscan.features.auth.api.VerifyOtpRequest
 import com.cit.pawnscan.shared.auth.AuthSessionRouter
 import com.cit.pawnscan.shared.auth.JwtStorageUtil
 import com.cit.pawnscan.shared.network.RetrofitClient
+import com.cit.pawnscan.shared.notification.FcmTokenRegistrar
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -80,6 +81,7 @@ class VerifyOtpActivity : AppCompatActivity() {
                     if (response.isSuccessful && response.body() != null) {
                         val authResponse = response.body()!!
                         saveAuthResponse(authResponse, email)
+                        FcmTokenRegistrar.registerCurrentToken(this@VerifyOtpActivity)
                         showStatusMessage(authResponse.message ?: getString(R.string.otp_success), isError = false)
                         findViewById<TextView>(R.id.status_message).postDelayed({
                             AuthSessionRouter.routeAfterAuthentication(this@VerifyOtpActivity)

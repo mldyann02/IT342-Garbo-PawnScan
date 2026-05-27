@@ -69,15 +69,36 @@
                     android:textSize="12sp" />
             </LinearLayout>
 
-            <ImageButton
-                android:id="@+id/portal_notifications"
+            <FrameLayout
                 android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:background="@drawable/bg_icon_glass"
-                android:contentDescription="Notifications"
-                android:padding="12dp"
-                android:scaleType="centerInside"
-                android:src="@drawable/ic_notification" />
+                android:layout_height="48dp">
+
+                <ImageButton
+                    android:id="@+id/portal_notifications"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="@drawable/bg_icon_glass"
+                    android:contentDescription="Notifications"
+                    android:padding="12dp"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/ic_notification" />
+
+                <TextView
+                    android:id="@+id/portal_notification_badge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="18dp"
+                    android:layout_gravity="top|end"
+                    android:background="@drawable/bg_notification_badge"
+                    android:gravity="center"
+                    android:includeFontPadding="false"
+                    android:minWidth="18dp"
+                    android:paddingStart="5dp"
+                    android:paddingEnd="5dp"
+                    android:textColor="@color/text_white"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+            </FrameLayout>
         </LinearLayout>
     </LinearLayout>
 

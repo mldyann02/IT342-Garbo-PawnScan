@@ -14,6 +14,7 @@ import com.cit.pawnscan.features.auth.api.GoogleAuthRequest
 import com.cit.pawnscan.shared.auth.AuthSessionRouter
 import com.cit.pawnscan.shared.auth.JwtStorageUtil
 import com.cit.pawnscan.shared.network.RetrofitClient
+import com.cit.pawnscan.shared.notification.FcmTokenRegistrar
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
@@ -123,6 +124,7 @@ class GoogleAuthCoordinator(
                 if (response.isSuccessful && response.body() != null) {
                     val authResponse = response.body()!!
                     saveAuthResponse(authResponse)
+                    FcmTokenRegistrar.registerCurrentToken(activity)
                     showStatus(authResponse.message ?: "Google authentication successful.", isError = false)
 
                     statusMessage.postDelayed({
