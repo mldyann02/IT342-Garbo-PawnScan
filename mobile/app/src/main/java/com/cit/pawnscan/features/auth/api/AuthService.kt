@@ -37,6 +37,12 @@ interface AuthService {
         @Header("Authorization") authorization: String,
         @Body request: UserProfileUpdateRequest
     ): Call<UserProfileResponse>
+
+    @POST("/api/auth/forgot-password")
+    fun forgotPassword(@Body request: ForgotPasswordRequest): Call<MessageResponse>
+
+    @POST("/api/auth/reset-password")
+    fun resetPassword(@Body request: ResetPasswordRequest): Call<MessageResponse>
 }
 
 

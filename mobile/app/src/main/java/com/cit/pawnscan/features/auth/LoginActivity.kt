@@ -106,6 +106,12 @@ class LoginActivity : AppCompatActivity() {
         registerLink.setOnClickListener {
             navigateToRegistration()
         }
+
+        // Forgot password link
+        val forgotPasswordLink = findViewById<TextView>(R.id.forgot_password_link)
+        forgotPasswordLink.setOnClickListener {
+            startActivity(Intent(this, ForgotPasswordActivity::class.java))
+        }
     }
 
     private fun togglePasswordVisibility(input: EditText, button: ImageButton, isVisible: Boolean) {

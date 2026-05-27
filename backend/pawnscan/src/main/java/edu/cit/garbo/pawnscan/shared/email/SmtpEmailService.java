@@ -89,6 +89,40 @@ public class SmtpEmailService implements EmailService {
         sendHtmlEmail(to, "PawnScan Report Update: " + itemModel, html, "report status");
     }
 
+    @Override
+    @Async
+    public void sendPasswordResetEmail(String to, String resetLink) {
+        String safeLink = HtmlUtils.htmlEscape(resetLink);
+        String html = """
+                <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; max-width: 600px; margin: 0 auto;">
+                    <div style="text-align: center; margin-bottom: 24px;">
+                        <h2 style="color: #00d287; margin-bottom: 4px;">PawnScan</h2>
+                    </div>
+                    <h3 style="margin-bottom: 8px;">Password Reset Request</h3>
+                    <p>We received a request to reset your PawnScan account password.</p>
+                    <p>Click the button below to choose a new password. This link expires in <strong>60 minutes</strong>.</p>
+                    <div style="text-align: center; margin: 32px 0;">
+                        <a href="%s"
+                           style="display: inline-block; background-color: #00d287; color: #0b0f1a; font-weight: bold;
+                                  font-size: 16px; padding: 14px 32px; border-radius: 8px; text-decoration: none;">
+                            Reset My Password
+                        </a>
+                    </div>
+                    <p style="font-size: 13px; color: #666;">
+                        If you didn't request a password reset, you can safely ignore this email — your password will not change.
+                    </p>
+                    <p style="font-size: 13px; color: #666;">
+                        If the button above doesn't work, copy and paste this link into your browser:<br>
+                        <a href="%s" style="color: #00d287; word-break: break-all;">%s</a>
+                    </p>
+                    <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
+                    <p style="font-size: 12px; color: #999;">Best regards,<br><strong>The PawnScan Team</strong></p>
+                </div>
+                """.formatted(safeLink, safeLink, safeLink);
+
+        sendHtmlEmail(to, "Reset Your PawnScan Password", html, "password reset");
+    }
+
     private void sendHtmlEmail(String to, String subject, String html, String emailType) {
         if (!StringUtils.hasText(to)) {
             LOGGER.warn("Skipped {} email because the recipient address is blank", emailType);

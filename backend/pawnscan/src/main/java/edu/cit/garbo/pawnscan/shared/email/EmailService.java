@@ -9,4 +9,6 @@ public interface EmailService {
     void sendWelcomeEmail(String to, String fullName);
 
     void sendReportStatusEmail(String to, Report report, String newStatus);
+
+    void sendPasswordResetEmail(String to, String resetLink);
 }
