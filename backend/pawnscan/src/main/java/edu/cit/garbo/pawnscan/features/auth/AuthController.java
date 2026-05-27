@@ -9,7 +9,6 @@ import edu.cit.garbo.pawnscan.features.auth.dto.CompleteProfileRequest;
 import edu.cit.garbo.pawnscan.features.auth.dto.VerifyOtpRequest;
 import edu.cit.garbo.pawnscan.features.auth.dto.UserProfileResponse;
 import edu.cit.garbo.pawnscan.features.auth.dto.UserProfileUpdateRequest;
-import edu.cit.garbo.pawnscan.features.auth.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

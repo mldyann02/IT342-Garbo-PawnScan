@@ -140,9 +140,18 @@ class NotificationsActivity : AppCompatActivity() {
             // Show mark all/clear actions only if we have notifications
             btnClearAll.visibility = View.VISIBLE
             
-            // Show "mark all read" action if there is at least one unread notification
+            // Always show the "mark all read" action if notifications exist, but toggle disabled state
+            btnMarkAllRead.visibility = View.VISIBLE
             val hasUnread = notifications.any { !it.read }
-            btnMarkAllRead.visibility = if (hasUnread) View.VISIBLE else View.GONE
+            if (hasUnread) {
+                btnMarkAllRead.isEnabled = true
+                btnMarkAllRead.setTextColor(getColor(R.color.brand_green))
+                btnMarkAllRead.alpha = 1.0f
+            } else {
+                btnMarkAllRead.isEnabled = false
+                btnMarkAllRead.setTextColor(getColor(R.color.text_muted_gray))
+                btnMarkAllRead.alpha = 0.5f
+            }
 
             adapter.updateItems(notifications)
         }

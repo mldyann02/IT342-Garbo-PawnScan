@@ -40,37 +40,16 @@
             android:textSize="22sp"
             android:textStyle="bold" />
 
-        <LinearLayout
-            android:layout_width="88dp"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="vertical">
-
-            <ImageButton
-                android:id="@+id/btn_clear_all"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:background="@drawable/bg_icon_glass"
-                android:contentDescription="Clear all"
-                android:padding="12dp"
-                android:scaleType="centerInside"
-                android:src="@drawable/ic_delete"
-                app:tint="@color/status_stolen" />
-
-            <TextView
-                android:id="@+id/btn_mark_all_read"
-                android:layout_width="match_parent"
-                android:layout_height="32dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center"
-                android:includeFontPadding="false"
-                android:text="Mark all read"
-                android:textColor="@color/brand_green"
-                android:textSize="11sp"
-                android:textStyle="bold" />
-        </LinearLayout>
+        <ImageButton
+            android:id="@+id/btn_clear_all"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@drawable/bg_icon_glass"
+            android:contentDescription="Clear all"
+            android:padding="12dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_delete"
+            app:tint="@color/status_stolen" />
     </LinearLayout>
 
     <!-- Swipe to Refresh containing notifications list -->
@@ -83,17 +62,40 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/notifications_header">
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/notifications_list"
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:clipToPadding="false"
-            android:paddingStart="20dp"
-            android:paddingTop="10dp"
-            android:paddingEnd="20dp"
-            android:paddingBottom="24dp"
-            android:visibility="gone" />
+            android:layout_height="match_parent">
 
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/notifications_list"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:paddingStart="20dp"
+                android:paddingTop="48dp"
+                android:paddingEnd="20dp"
+                android:paddingBottom="24dp"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/btn_mark_all_read"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top|end"
+                android:layout_marginEnd="20dp"
+                android:layout_marginTop="8dp"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingStart="12dp"
+                android:paddingTop="6dp"
+                android:paddingEnd="12dp"
+                android:paddingBottom="6dp"
+                android:text="Mark all as read"
+                android:textColor="@color/brand_green"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+        </FrameLayout>
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
     <!-- Empty state glass panel container -->
