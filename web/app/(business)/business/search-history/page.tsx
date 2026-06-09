@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getAuthUser, getAuthRole, getJwt } from "@/shared/auth";
 import {
@@ -40,7 +40,7 @@ function inferEvidenceType(
   return "IMAGE";
 }
 
-export default function SearchHistoryPage() {
+function SearchHistoryContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [history, setHistory] = useState<SearchLog[]>([]);
@@ -732,6 +732,14 @@ export default function SearchHistoryPage() {
       )}
     </div>
     </VerificationGuard>
+  );
+}
+
+export default function SearchHistoryPage() {
+  return (
+    <Suspense fallback={null}>
+      <SearchHistoryContent />
+    </Suspense>
   );
 }
 

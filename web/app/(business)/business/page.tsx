@@ -108,7 +108,7 @@ export default function BusinessDashboardPage() {
                   <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-8 h-8"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 </div>
                 <h3 className="text-lg font-bold text-white mb-2">No verifications yet</h3>
-                <p className="text-sm text-slate-400 mb-6">You haven't scanned any items today.</p>
+                <p className="text-sm text-slate-400 mb-6">You haven&apos;t scanned any items today.</p>
                 <Link href="/business/verify" className="inline-flex items-center justify-center rounded-xl bg-slate-800 px-6 py-2.5 text-sm font-semibold text-white transition-all hover:bg-slate-700">
                   Start Scanning
                 </Link>

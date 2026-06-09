@@ -1,6 +1,7 @@
 package edu.cit.garbo.pawnscan;
 
 import edu.cit.garbo.pawnscan.features.businessprofile.repository.BusinessProfileRepository;
+import edu.cit.garbo.pawnscan.features.auth.PasswordResetTokenRepository;
 import edu.cit.garbo.pawnscan.features.notifications.repository.FcmDeviceTokenRepository;
 import edu.cit.garbo.pawnscan.features.notifications.repository.NotificationRepository;
 import edu.cit.garbo.pawnscan.features.reports.repository.ReportFileRepository;
@@ -29,6 +30,9 @@ class PawnscanApplicationTests {
 
 	@MockBean
 	private OtpRepository otpRepository;
+
+	@MockBean
+	private PasswordResetTokenRepository passwordResetTokenRepository;
 
 	@MockBean
 	private ReportFileRepository reportFileRepository;

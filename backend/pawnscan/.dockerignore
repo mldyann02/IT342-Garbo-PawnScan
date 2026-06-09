@@ -2,5 +2,7 @@ target
 .mvn
 mvnw
 mvnw.cmd
+.env
+.env.*
 Dockerfile
 *.log

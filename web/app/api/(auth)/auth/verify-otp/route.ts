@@ -1,13 +1,19 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
+const backendBaseUrl =
+  process.env.BACKEND_URL ||
+  process.env.NEXT_PUBLIC_BACKEND_URL ||
+  "http://localhost:8080";
+const backendApiUrl = backendBaseUrl.endsWith("/api")
+  ? backendBaseUrl
+  : `${backendBaseUrl.replace(/\/$/, "")}/api`;
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    const response = await fetch(`${BACKEND_URL}/auth/verify-otp`, {
+    const response = await fetch(`${backendApiUrl}/auth/verify-otp`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

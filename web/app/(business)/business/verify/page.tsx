@@ -154,7 +154,7 @@ export default function VerifyItemPage() {
           </h1>
           <p className="mt-4 max-w-3xl text-sm text-slate-300 sm:text-base">
             Enter a serial number to check PawnScan approved stolen records and
-            Bike Index's public stolen-bike registry. Every lookup is logged
+            Bike Index&apos;s public stolen-bike registry. Every lookup is logged
             automatically to your business history.
           </p>
 

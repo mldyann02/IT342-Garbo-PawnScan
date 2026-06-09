@@ -31,7 +31,10 @@ services:
       JWT_SECRET: ${JWT_SECRET:-ReplaceWithASecureRandomSecretKeyOfAtLeast32Chars!}
       UPLOAD_BASE_DIR: ${UPLOAD_BASE_DIR:-uploads}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_WEB_CLIENT_ID: ${GOOGLE_WEB_CLIENT_ID:-${GOOGLE_CLIENT_ID:-}}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      BIKE_INDEX_API_BASE_URL: ${BIKE_INDEX_API_BASE_URL:-https://bikeindex.org/api/v3}
+      FIREBASE_CREDENTIALS: ${FIREBASE_CREDENTIALS:-}
       SMTP_HOST: ${SMTP_HOST:-smtp.sendgrid.net}
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USERNAME: ${SMTP_USERNAME:-apikey}
@@ -41,6 +44,9 @@ services:
       SMTP_STARTTLS: ${SMTP_STARTTLS:-true}
       SMTP_STARTTLS_REQUIRED: ${SMTP_STARTTLS_REQUIRED:-false}
       SMTP_SSL_TRUST: ${SMTP_SSL_TRUST:-smtp.sendgrid.net}
+      SMTP_CONNECTION_TIMEOUT: ${SMTP_CONNECTION_TIMEOUT:-5000}
+      SMTP_TIMEOUT: ${SMTP_TIMEOUT:-5000}
+      SMTP_WRITE_TIMEOUT: ${SMTP_WRITE_TIMEOUT:-5000}
       APP_MAIL_FROM: ${APP_MAIL_FROM:-pawnscan1@gmail.com}
     ports:
       - "8080:8080"
@@ -55,7 +61,7 @@ services:
     depends_on:
       - backend
     environment:
-      BACKEND_URL: ${BACKEND_URL:-http://backend:8080}
+      BACKEND_URL: http://backend:8080
       NEXT_PUBLIC_BACKEND_URL: ${NEXT_PUBLIC_BACKEND_URL:-http://localhost:8080}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${NEXT_PUBLIC_GOOGLE_CLIENT_ID:-}

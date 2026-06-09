@@ -120,7 +120,15 @@ export default function RegisterForm() {
         v = "+639";
       }
       const digits = v.slice(4).replace(/\D/g, "");
-      v = "+639" + digits.slice(0, 9);
+      let normalizedDigits = digits;
+      if (normalizedDigits.startsWith("09")) {
+        normalizedDigits = normalizedDigits.slice(2);
+      } else if (normalizedDigits.startsWith("0")) {
+        normalizedDigits = normalizedDigits.slice(1);
+      } else if (normalizedDigits.startsWith("9") && normalizedDigits.length > 9) {
+        normalizedDigits = normalizedDigits.slice(1);
+      }
+      v = "+639" + normalizedDigits.slice(0, 9);
 
       setValues((current) => ({
         ...current,
@@ -243,6 +251,9 @@ export default function RegisterForm() {
 
       if (registeredEmail) {
         params.set("email", registeredEmail);
+      }
+      if (data.role) {
+        params.set("role", data.role);
       }
 
       setApiMessage({
@@ -608,7 +619,7 @@ export default function RegisterForm() {
                     <EyeIcon open={isConfirmPasswordVisible} />
                   </button>
                 </div>
-                {submitAttempted &&
+                {(submitAttempted || values.confirmPassword.length > 0) &&
                   errors.confirmPassword && (
                     <p className="mt-1 text-sm text-status-stolen">
                       {errors.confirmPassword}
@@ -633,7 +644,7 @@ export default function RegisterForm() {
               <button
                 type="submit"
                 aria-label="Register Account"
-                disabled={isSubmitting}
+                disabled={!canSubmit}
                 className="min-h-12 w-full rounded-[10px] bg-brand px-4 py-3 text-base font-semibold text-slate-950 transition hover:brightness-90 active:scale-95 active:brightness-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isSubmitting ? "Registering..." : "Register Account"}
